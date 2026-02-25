@@ -7,42 +7,42 @@ class MsProductHero extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; width: 320px; flex-shrink: 0; }
+    :host { display: block; width: 280px; flex-shrink: 0; }
     .card {
       background: #fff;
       border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 8px;
+      padding: 14px;
       cursor: pointer;
-      transition: background 0.15s ease, box-shadow 0.15s ease;
+      transition: background 0.12s ease, box-shadow 0.12s ease;
       height: 100%;
       box-sizing: border-box;
     }
     .card:hover {
       background: #fafafa;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
     .header {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     .icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
       object-fit: cover;
       flex-shrink: 0;
       background: #f0f0f0;
     }
     .header-info { flex: 1; min-width: 0; }
     .title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      color: #131316;
-      line-height: 1.3;
-      margin-bottom: 4px;
+      color: #1a1a1a;
+      line-height: 1.25;
+      margin-bottom: 3px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -50,18 +50,18 @@ class MsProductHero extends LitElement {
       text-overflow: ellipsis;
       word-break: break-word;
     }
-    .rating-row { margin-bottom: 4px; }
+    .rating-row { margin-bottom: 3px; }
     .category {
       display: inline-block;
       font-size: 11px;
       color: #616161;
-      background: #e5e5e5;
-      padding: 2px 8px;
+      background: #ebebeb;
+      padding: 1px 6px;
       border-radius: 3px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .description {
-      font-size: 13px;
+      font-size: 12px;
       color: #616161;
       line-height: 1.5;
       display: -webkit-box;
@@ -70,21 +70,21 @@ class MsProductHero extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       word-break: break-word;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .price-area {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
     }
-    .price-free { font-size: 13px; color: #0e7a0d; font-weight: 600; }
-    .price-value { font-size: 13px; color: #131316; font-weight: 600; }
-    .price-original { font-size: 12px; color: #767676; text-decoration: line-through; }
-    .price-discounted { font-size: 13px; color: #131316; font-weight: 600; }
+    .price-free { font-size: 12px; color: #0e7a0d; font-weight: 600; }
+    .price-value { font-size: 12px; color: #1a1a1a; font-weight: 600; }
+    .price-original { font-size: 11px; color: #767676; text-decoration: line-through; }
+    .price-discounted { font-size: 12px; color: #1a1a1a; font-weight: 600; }
     .discount-badge {
-      font-size: 10px; font-weight: 700; color: #fff;
-      background: #c42b1c; padding: 2px 5px; border-radius: 3px; line-height: 1.2;
+      font-size: 9px; font-weight: 700; color: #fff;
+      background: #c42b1c; padding: 1px 4px; border-radius: 2px; line-height: 1.2;
     }
     .gamepass-badge {
       font-size: 8px; font-weight: 700; color: #fff;

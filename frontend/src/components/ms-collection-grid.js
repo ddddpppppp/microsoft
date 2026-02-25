@@ -12,57 +12,83 @@ class MsCollectionGrid extends LitElement {
       display: block;
       max-width: 1600px;
       margin: 0 auto;
-      padding: 0 40px;
+      padding: 0 20px;
       box-sizing: border-box;
     }
-    .section { margin-bottom: 40px; }
+    /* 与官网一致：白底卡片、圆角、格间缝隙明显 */
+    .grid-section-wrap {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .section { margin-bottom: 32px; }
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
-      padding: 0 2px;
+    }
+    .section-title-area {
+      display: flex;
+      align-items: center;
+      gap: 2px;
     }
     .section-title-link {
-      font-size: 14px;
-      font-weight: 600;
-      color: #0067b8;
+      display: flex;
+      align-items: center;
+      gap: 2px;
       text-decoration: none;
+      color: inherit;
+      cursor: pointer;
     }
-    .section-title-link:hover { text-decoration: underline; }
+    .section-title-link:hover .section-title {
+      text-decoration: underline;
+    }
     .section-title {
       font-size: 20px;
       font-weight: 700;
-      color: #131316;
+      color: #1a1a1a;
       margin: 0;
     }
-    .title-arrow {
-      font-size: 16px;
-      font-weight: 600;
-      color: #131316;
+    .title-chevron {
+      font-size: 18px;
+      color: #1a1a1a;
+      margin-left: 2px;
     }
+    .view-all-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0067b8;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .view-all-link:hover { text-decoration: underline; }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px 24px;
+      gap: 12px 20px;
     }
     .grid-item {
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 10px 12px;
+      border-radius: 6px;
       cursor: pointer;
       text-decoration: none;
       color: inherit;
-      transition: background 0.15s;
-      min-height: 72px;
+      transition: background 0.12s;
+      min-height: 64px;
     }
     .grid-item:hover { background: rgba(0, 0, 0, 0.04); }
     .item-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
       object-fit: cover;
       flex-shrink: 0;
       background: #f0f0f0;
@@ -72,49 +98,50 @@ class MsCollectionGrid extends LitElement {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
     .item-title {
-      font-size: 14px;
-      color: #131316;
+      font-size: 13px;
+      color: #1a1a1a;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.3;
+      font-weight: 400;
     }
     .item-meta {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
     }
     .item-rating {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 1px;
     }
-    .stars { display: flex; gap: 1px; }
-    .star { font-size: 10px; color: #FFB900; }
+    .stars { display: flex; gap: 0; }
+    .star { font-size: 9px; color: #FFB900; }
     .star.empty { color: #d1d1d1; }
-    .rating-count { font-size: 11px; color: #616161; margin-left: 2px; }
-    .item-price { font-size: 13px; color: #616161; white-space: nowrap; }
-    .price-original { text-decoration: line-through; color: #767676; font-size: 12px; margin-right: 4px; }
-    .price-current { color: #131316; }
+    .rating-count { font-size: 10px; color: #616161; margin-left: 2px; }
+    .item-price { font-size: 12px; color: #616161; white-space: nowrap; }
+    .price-original { text-decoration: line-through; color: #767676; font-size: 11px; margin-right: 4px; }
+    .price-current { color: #1a1a1a; }
     .price-free { color: #0e7a0d; }
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-weight: 600;
+      gap: 2px;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 2px;
+      font-weight: 700;
       white-space: nowrap;
     }
     .badge-gamepass { background: #107c10; color: #fff; }
     .badge-discount { background: #c42b1c; color: #fff; }
     .item-subtitle {
-      font-size: 12px;
+      font-size: 11px;
       color: #767676;
       white-space: nowrap;
       overflow: hidden;
@@ -122,7 +149,7 @@ class MsCollectionGrid extends LitElement {
     }
     @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } :host { padding: 0 16px; } }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } :host { padding: 0 12px; } }
   `;
 
   constructor() {
@@ -176,12 +203,18 @@ class MsCollectionGrid extends LitElement {
     const items = (this.products || []).slice(0, 12);
     return html`
       <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">${this.title}</h2>
-          <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>查看全部 <span class="title-arrow">›</span></a>
-        </div>
-        <div class="grid">
-          ${items.map((product, i) => html`
+        <div class="grid-section-wrap">
+          <div class="section-header">
+            <div class="section-title-area">
+              <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>
+                <h2 class="section-title">${this.title}</h2>
+                <span class="title-chevron">&#8250;</span>
+              </a>
+            </div>
+            <a class="view-all-link" href=${this.viewAllUrl || '#'} data-nav>查看全部 &#8250;</a>
+          </div>
+          <div class="grid">
+          ${items.map((product) => html`
             <a class="grid-item" href=${product.product_id ? '/detail/' + product.product_id : '#'} data-nav
               @click=${(e) => { e.preventDefault(); this._onItemClick(product); }}>
               <img class="item-icon" src=${product.icon_url || product.image_url || ''} alt=${product.title || product.name || ''} loading="lazy" />

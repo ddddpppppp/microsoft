@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit';
 import '../components/ms-hero-carousel.js';
-import '../components/ms-featured-row.js';
 import '../components/ms-collection-row.js';
 import '../components/ms-collection-grid.js';
 import '../components/ms-collection-cards.js';
@@ -12,7 +11,7 @@ class HomePage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 40px; background: #fff; }
+    :host { display: block; padding-bottom: 48px; background: transparent; }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -29,16 +28,36 @@ class HomePage extends LitElement {
       margin-bottom: 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .section-spacer { height: 24px; }
+    .section-spacer { height: 16px; }
+    /* 外层只做间距，不设白底，让中间缝隙露出灰底 */
+    .two-column-wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      /*padding: 36px;*/
+      background: transparent;
+      box-sizing: border-box;
+    }
+    /* 两栏中间留缝，缝隙处为 body 灰底 */
     .two-column {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0 24px;
-      max-width: 1600px;
-      margin: 0 auto;
+    }
+    .two-column ms-collection-row {
+      width: 100%;
+      min-width: 0;
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      box-sizing: border-box;
     }
     @media (max-width: 900px) {
-      .two-column { grid-template-columns: 1fr; }
+      .two-column-wrap { padding: 24px 20px; }
+      .two-column { grid-template-columns: 1fr; gap: 0; }
+      .two-column ms-collection-row:first-child,
+      .two-column ms-collection-row:last-child {
+        padding: 0;
+      }
     }
   `;
 
@@ -113,6 +132,17 @@ class HomePage extends LitElement {
     }
   }
 
+  _buildHeroSideCards(featuredBanners) {
+    if (!featuredBanners?.length) return [];
+    if (featuredBanners.length >= 3) {
+      return [
+        featuredBanners[0],
+        { type: 'split', left: featuredBanners[1], right: featuredBanners[2] }
+      ];
+    }
+    return featuredBanners.slice(0, 2);
+  }
+
   _getCollectionCards() {
     if (!this.data?.collections) return [];
     const cardCollections = this.data.collections.filter(c =>
@@ -136,8 +166,7 @@ class HomePage extends LitElement {
 
     const heroBanners = this.data.heroBanners || [];
     const featuredBanners = this.data.featuredBanners || [];
-    const sideCards = featuredBanners.slice(0, 2);
-    const bottomFeatured = featuredBanners;
+    const sideCards = this._buildHeroSideCards(featuredBanners);
 
     const collections = (this.data.collections || [])
       .filter(c => c.section_type !== 'collection_cards')
@@ -154,19 +183,15 @@ class HomePage extends LitElement {
 
       <div class="section-spacer"></div>
 
-      ${bottomFeatured.length > 0 ? html`
-        <ms-featured-row .banners=${bottomFeatured}></ms-featured-row>
-      ` : ''}
-
       ${(trendingGames || trendingApps) ? html`
-        <div class="two-column">
-          ${trendingGames ? html`
+        <div class="two-column-wrap">
+          <div class="two-column">
+            ${trendingGames ? html`
             <ms-collection-row
               .title=${trendingGames.name}
               .viewAllUrl=${trendingGames.view_all_url || ''}
               .products=${this._prepareProducts(trendingGames)}
-              variant="default"
-              style="padding: 0 16px 0 40px;"
+              variant="twoColGrid"
             ></ms-collection-row>
           ` : ''}
           ${trendingApps ? html`
@@ -174,10 +199,10 @@ class HomePage extends LitElement {
               .title=${trendingApps.name}
               .viewAllUrl=${trendingApps.view_all_url || ''}
               .products=${this._prepareProducts(trendingApps)}
-              variant="default"
-              style="padding: 0 40px 0 16px;"
+              variant="twoColGrid"
             ></ms-collection-row>
           ` : ''}
+          </div>
         </div>
       ` : ''}
 

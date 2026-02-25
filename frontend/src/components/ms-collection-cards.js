@@ -14,27 +14,26 @@ class MsCollectionCards extends LitElement {
       display: block;
       max-width: 1600px;
       margin: 0 auto;
-      padding: 0 40px;
+      padding: 0 20px;
       box-sizing: border-box;
     }
-    .section { margin-bottom: 40px; }
+    .section { margin-bottom: 32px; }
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      padding: 0 2px;
+      margin-bottom: 12px;
     }
     .section-title {
       font-size: 20px;
       font-weight: 700;
-      color: #131316;
+      color: #1a1a1a;
       margin: 0;
     }
     .scroll-wrapper { position: relative; }
     .scroll-container {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       overflow-x: auto;
       scroll-behavior: smooth;
       scrollbar-width: none;
@@ -46,32 +45,32 @@ class MsCollectionCards extends LitElement {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 1px solid #d1d1d1;
       background: #fff;
-      color: #131316;
-      font-size: 16px;
+      color: #424242;
+      font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 10;
       opacity: 0;
-      transition: opacity 0.2s, background 0.15s;
+      transition: opacity 0.2s, background 0.12s;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
-    .scroll-btn:hover { background: #f3f3f3; }
+    .scroll-btn:hover { background: #f5f5f5; }
     .scroll-wrapper:hover .scroll-btn.visible { opacity: 1; }
     .scroll-btn.left { left: -4px; }
     .scroll-btn.right { right: -4px; }
     .card {
       flex-shrink: 0;
-      width: 220px;
-      height: 140px;
+      width: 200px;
+      height: 120px;
       background: #1a1a1a;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
       position: relative;
@@ -80,11 +79,10 @@ class MsCollectionCards extends LitElement {
       justify-content: flex-end;
       text-decoration: none;
       color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: box-shadow 0.2s;
     }
     .card:hover {
-      transform: scale(1.02);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
     .card-bg {
       position: absolute;
@@ -96,11 +94,11 @@ class MsCollectionCards extends LitElement {
     .card-content {
       position: relative;
       z-index: 1;
-      padding: 14px 16px;
+      padding: 12px 14px;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
     }
     .card-name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #fff;
       line-height: 1.3;
@@ -109,16 +107,16 @@ class MsCollectionCards extends LitElement {
       text-overflow: ellipsis;
     }
     .card-subtitle {
-      font-size: 12px;
-      color: rgba(255,255,255,0.8);
-      margin-top: 2px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 1px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     @media (max-width: 600px) {
-      :host { padding: 0 16px; }
-      .card { width: 160px; height: 100px; }
+      :host { padding: 0 12px; }
+      .card { width: 160px; height: 96px; }
     }
   `;
 
@@ -161,7 +159,7 @@ class MsCollectionCards extends LitElement {
           <h2 class="section-title">${this.title}</h2>
         </div>
         <div class="scroll-wrapper">
-          <button class="scroll-btn left ${this._showLeftArrow ? 'visible' : ''}" @click=${() => this._scroll('left')} aria-label="向左滚动">‹</button>
+          <button class="scroll-btn left ${this._showLeftArrow ? 'visible' : ''}" @click=${() => this._scroll('left')} aria-label="向左滚动">&#8249;</button>
           <div class="scroll-container" @scroll=${this._onScroll}>
             ${(this.cards || []).map(card => html`
               <a class="card" href=${card.link_url || '#'} ${card.link_url?.startsWith('http') ? html`` : html`data-nav`}>
@@ -173,7 +171,7 @@ class MsCollectionCards extends LitElement {
               </a>
             `)}
           </div>
-          <button class="scroll-btn right ${this._showRightArrow ? 'visible' : ''}" @click=${() => this._scroll('right')} aria-label="向右滚动">›</button>
+          <button class="scroll-btn right ${this._showRightArrow ? 'visible' : ''}" @click=${() => this._scroll('right')} aria-label="向右滚动">&#8250;</button>
         </div>
       </div>
     `;

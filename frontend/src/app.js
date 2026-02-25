@@ -19,7 +19,7 @@ class MsApp extends LitElement {
     :host {
       display: block;
       min-height: 100vh;
-      background: #ffffff;
+      background: var(--ms-page-bg);
     }
   `;
 
