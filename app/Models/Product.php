@@ -55,4 +55,24 @@ class Product extends Model {
     public function updateSocialCardImage($id, $url) {
         $this->db->update('products', ['social_card_image' => $url], 'id = ?', [$id]);
     }
+
+    public function findByCustomUrl($customUrl) {
+        return $this->db->fetch(
+            "SELECT * FROM products WHERE custom_url = ? AND is_own_product = 1 LIMIT 1",
+            [$customUrl]
+        );
+    }
+
+    public function getRelatedProducts($productId) {
+        // Get related products and check if any are own products
+        $related = $this->db->fetchAll(
+            "SELECT rp.*, p.is_own_product, p.custom_url 
+             FROM related_products rp
+             LEFT JOIN products p ON rp.related_ms_id = p.ms_id
+             WHERE rp.product_id = ? 
+             ORDER BY rp.display_order ASC LIMIT 6",
+            [$productId]
+        );
+        return $related;
+    }
 }

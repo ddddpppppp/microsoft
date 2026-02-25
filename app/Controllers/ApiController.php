@@ -61,8 +61,30 @@ class ApiController extends Controller {
         }
         if (!$product) {
             $this->json(['error' => 'Product not found'], 404);
+            return;
         }
         $this->json($product);
+    }
+
+    public function productByUrl() {
+        $url = $_GET['url'] ?? '';
+        if (empty($url)) {
+            $this->json(['error' => 'URL required'], 400);
+            return;
+        }
+        $productModel = new Product();
+        $product = $productModel->findByCustomUrl($url);
+        if (!$product) {
+            $this->json(['error' => 'Product not found'], 404);
+            return;
+        }
+        $this->json($product);
+    }
+
+    public function productRelated($id) {
+        $productModel = new Product();
+        $related = $productModel->getRelatedProducts($id);
+        $this->json($related);
     }
 
     public function search() {

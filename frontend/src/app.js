@@ -55,7 +55,8 @@ class MsApp extends LitElement {
       this.currentRoute = 'detail';
       this.routeParams = { id: 'xpdlt6q62bfqkz' };
     } else {
-      this.currentRoute = 'home';
+      this.currentRoute = 'custom-product';
+      this.routeParams = { customUrl: path };
     }
   }
 
@@ -86,6 +87,7 @@ class MsApp extends LitElement {
       case 'articles': return html`<articles-page></articles-page>`;
       case 'article-detail': return html`<article-detail-page .slug=${this.routeParams.slug}></article-detail-page>`;
       case 'detail': return html`<detail-page .productId=${this.routeParams.id}></detail-page>`;
+      case 'custom-product': return html`<detail-page .customUrl=${this.routeParams.customUrl}></detail-page>`;
       default: return html`<home-page></home-page>`;
     }
   }

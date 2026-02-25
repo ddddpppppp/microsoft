@@ -30,6 +30,8 @@ $router->group('/api', function($r) {
     $r->get('/games', [\App\Controllers\ApiController::class, 'games']);
     $r->get('/about', [\App\Controllers\ApiController::class, 'about']);
     $r->get('/product/{id}', [\App\Controllers\ApiController::class, 'product']);
+    $r->get('/product/{id}/related', [\App\Controllers\ApiController::class, 'productRelated']);
+    $r->get('/product-by-url', [\App\Controllers\ApiController::class, 'productByUrl']);
     $r->get('/search', [\App\Controllers\ApiController::class, 'search']);
     $r->get('/products-missing-description', [\App\Controllers\ApiController::class, 'productsMissingDescription']);
     $r->post('/product/{id}/description', [\App\Controllers\ApiController::class, 'updateProductDescription']);
@@ -63,5 +65,8 @@ foreach ($spaRoutes as $route) {
 }
 $router->get('/detail/{id}', [\App\Controllers\HomeController::class, 'index']);
 $router->get('/article/{slug}', [\App\Controllers\HomeController::class, 'index']);
+
+// Custom product pages (own products with custom_url)
+$router->get('/{slug}', [\App\Controllers\HomeController::class, 'customProduct']);
 
 $app->run();

@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Setting;
+use App\Models\Product;
 
 class HomeController extends Controller {
     public function index() {
@@ -20,6 +21,23 @@ class HomeController extends Controller {
             'title' => $seo['title'] ?? 'Microsoft Store',
             'keywords' => $seo['keywords'] ?? '',
             'description' => $seo['description'] ?? ''
+        ]);
+    }
+
+    public function customProduct($slug) {
+        $productModel = new Product();
+        $product = $productModel->findByCustomUrl('/' . $slug);
+        
+        if (!$product || !$product['is_own_product']) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Not Found']);
+            return;
+        }
+        
+        $this->view('index', [
+            'title' => $product['custom_title'] ?: $product['title'],
+            'keywords' => $product['custom_keywords'] ?? '',
+            'description' => $product['custom_description'] ?: $product['description']
         ]);
     }
 }

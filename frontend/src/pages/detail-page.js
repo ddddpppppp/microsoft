@@ -4,7 +4,9 @@ import '../components/ms-rating.js';
 class DetailPage extends LitElement {
   static properties = {
     productId: { type: String },
+    customUrl: { type: String },
     data: { type: Object },
+    relatedProducts: { type: Array },
     loading: { type: Boolean }
   };
 
@@ -75,6 +77,11 @@ class DetailPage extends LitElement {
       color: #0067b8;
       margin-bottom: 8px;
     }
+    .product-developer a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .product-developer a:hover { text-decoration: underline; }
     .product-category {
       font-size: 13px;
       color: #616161;
@@ -90,12 +97,16 @@ class DetailPage extends LitElement {
       font-size: 14px;
       color: #616161;
     }
+    .rating-count {
+      font-size: 13px;
+      color: #767676;
+    }
 
     .action-row {
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     .get-btn {
       display: inline-flex;
@@ -114,6 +125,22 @@ class DetailPage extends LitElement {
     }
     .get-btn:hover { background: #005a9e; }
     .get-btn:active { background: #004c87; }
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: 1px solid #0067b8;
+      background: transparent;
+      color: #0067b8;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .store-btn:hover { background: #f0f6fc; }
 
     .price-display {
       font-size: 18px;
@@ -148,13 +175,33 @@ class DetailPage extends LitElement {
       border-radius: 4px;
     }
 
+    .age-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .age-rating-icon {
+      width: 32px;
+      height: 32px;
+    }
+    .age-rating-text {
+      font-size: 13px;
+      color: #616161;
+    }
+
     .detail-body {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 48px;
     }
 
-    .description-section h3 {
+    .main-content { }
+
+    .section {
+      margin-bottom: 32px;
+    }
+    .section h3 {
       font-size: 18px;
       font-weight: 600;
       color: #131316;
@@ -166,6 +213,46 @@ class DetailPage extends LitElement {
       line-height: 1.8;
       white-space: pre-wrap;
       word-break: break-word;
+    }
+
+    .screenshots {
+      margin-bottom: 32px;
+    }
+    .screenshots h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #131316;
+      margin: 0 0 12px;
+    }
+    .screenshots-row {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 8px;
+    }
+    .screenshots-row::-webkit-scrollbar { display: none; }
+    .screenshot-img {
+      height: 220px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f3f3f3;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .screenshot-img:hover { transform: scale(1.02); }
+
+    .whats-new {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .whats-new-text {
+      font-size: 14px;
+      color: #616161;
+      line-height: 1.6;
+      white-space: pre-wrap;
     }
 
     .sidebar { }
@@ -190,48 +277,104 @@ class DetailPage extends LitElement {
     }
     .info-row:last-child { border-bottom: none; }
     .info-label { color: #767676; }
-    .info-value { color: #131316; }
-
-    .screenshots {
-      margin-bottom: 32px;
+    .info-value { color: #131316; text-align: right; max-width: 60%; }
+    .info-link {
+      color: #0078d4;
+      text-decoration: none;
+      font-size: 13px;
     }
-    .screenshots h3 {
-      font-size: 18px;
+    .info-link:hover { text-decoration: underline; }
+
+    .related-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #e5e5e5;
+    }
+    .related-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .related-header h3 {
+      font-size: 20px;
       font-weight: 600;
       color: #131316;
-      margin: 0 0 12px;
+      margin: 0;
     }
-    .screenshots-row {
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .related-card {
       display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 8px;
+      flex-direction: column;
+      padding: 16px;
+      border-radius: 12px;
+      background: #f9f9f9;
+      text-decoration: none;
+      transition: all 0.2s;
     }
-    .screenshots-row::-webkit-scrollbar { display: none; }
-    .screenshot-img {
-      height: 200px;
-      border-radius: 8px;
+    .related-card:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+    .related-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
       object-fit: cover;
-      flex-shrink: 0;
-      background: #f3f3f3;
+      margin-bottom: 12px;
+      background: #e5e5e5;
+    }
+    .related-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #131316;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .related-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #767676;
+      margin-bottom: 4px;
+    }
+    .related-category {
+      font-size: 12px;
+      color: #767676;
+    }
+    .related-price {
+      font-size: 13px;
+      color: #0e7a0d;
+      font-weight: 500;
     }
 
     @media (max-width: 900px) {
       .detail-header { flex-direction: column; align-items: center; text-align: center; }
       .detail-body { grid-template-columns: 1fr; }
       .detail-container { padding: 24px 16px; }
+      .action-row { flex-wrap: wrap; justify-content: center; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
       .product-icon { width: 96px; height: 96px; }
       .product-title { font-size: 22px; }
+      .related-grid { grid-template-columns: 1fr 1fr; }
     }
   `;
 
   constructor() {
     super();
     this.productId = '';
+    this.customUrl = '';
     this.data = null;
+    this.relatedProducts = [];
     this.loading = true;
   }
 
@@ -241,18 +384,28 @@ class DetailPage extends LitElement {
   }
 
   updated(changed) {
-    if (changed.has('productId') && this.productId) {
+    if ((changed.has('productId') && this.productId) || (changed.has('customUrl') && this.customUrl)) {
       this._loadData();
     }
   }
 
   async _loadData() {
-    if (!this.productId) { this.loading = false; return; }
+    if (!this.productId && !this.customUrl) { this.loading = false; return; }
     this.loading = true;
     try {
-      const res = await fetch(`/api/product/${this.productId}`);
+      let url;
+      if (this.customUrl) {
+        url = `/api/product-by-url?url=${encodeURIComponent(this.customUrl)}`;
+      } else {
+        url = `/api/product/${this.productId}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
-        this.data = await res.json();
+        const data = await res.json();
+        this.data = data;
+        if (data.id) {
+          this._loadRelatedProducts(data.id);
+        }
       } else {
         this.data = null;
       }
@@ -263,10 +416,26 @@ class DetailPage extends LitElement {
     this.loading = false;
   }
 
+  async _loadRelatedProducts(productId) {
+    try {
+      const res = await fetch(`/api/product/${productId}/related`);
+      if (res.ok) {
+        this.relatedProducts = await res.json();
+      }
+    } catch (e) {
+      console.error('Failed to load related products:', e);
+    }
+  }
+
   _getDownloadUrl() {
     if (!this.data) return '#';
     if (this.data.custom_download_url) return this.data.custom_download_url;
     if (this.data.original_url) return this.data.original_url;
+    return `https://apps.microsoft.com/detail/${this.data.ms_id}?hl=zh-CN&gl=HK`;
+  }
+
+  _getMsStoreUrl() {
+    if (!this.data) return '#';
     return `https://apps.microsoft.com/detail/${this.data.ms_id}?hl=zh-CN&gl=HK`;
   }
 
@@ -285,6 +454,31 @@ class DetailPage extends LitElement {
       `;
     }
     return html`<span class="price-paid">${p.price}</span>`;
+  }
+
+  _renderRelatedProducts() {
+    if (!this.relatedProducts || this.relatedProducts.length === 0) return '';
+    
+    return html`
+      <div class="related-section">
+        <div class="related-header">
+          <h3>发现更多</h3>
+        </div>
+        <div class="related-grid">
+          ${this.relatedProducts.map(r => html`
+            <a class="related-card" href="https://apps.microsoft.com/detail/${r.related_ms_id}?hl=zh-CN&gl=HK" target="_blank">
+              <img class="related-icon" src=${r.related_icon_url || ''} alt=${r.related_title} loading="lazy" />
+              <div class="related-title">${r.related_title}</div>
+              <div class="related-meta">
+                ${r.related_rating ? html`<span>${r.related_rating}</span>` : ''}
+              </div>
+              <div class="related-category">${r.related_category}</div>
+              <div class="related-price">${r.related_price || '免费下载'}</div>
+            </a>
+          `)}
+        </div>
+      </div>
+    `;
   }
 
   render() {
@@ -313,21 +507,35 @@ class DetailPage extends LitElement {
           <img class="product-icon" src=${icon} alt=${displayTitle} />
           <div class="header-info">
             <h1 class="product-title">${displayTitle}</h1>
-            ${p.developer ? html`<div class="product-developer">${p.developer}</div>` : ''}
+            ${p.developer ? html`
+              <div class="product-developer">
+                <a href="https://apps.microsoft.com/search/publisher?name=${encodeURIComponent(p.developer)}&hl=zh-CN&gl=HK" target="_blank">${p.developer}</a>
+              </div>
+            ` : ''}
             ${p.category ? html`<div class="product-category">${p.category}</div>` : ''}
             ${p.rating ? html`
               <div class="rating-row">
                 <ms-rating .value=${parseFloat(p.rating)}></ms-rating>
                 <span class="rating-value">${p.rating}</span>
+                ${p.rating_count ? html`<span class="rating-count">${p.rating_count} 个评级</span>` : ''}
               </div>
             ` : ''}
             <div class="action-row">
               <a class="get-btn" href=${this._getDownloadUrl()} target="_blank">
                 ${p.price_type === 'free' || !p.price ? '免费获取' : '获取'}
               </a>
+              <a class="store-btn" href=${this._getMsStoreUrl()} target="_blank">
+                在 Microsoft Store 中查看
+              </a>
               <div class="price-display">${this._renderPrice()}</div>
               ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
             </div>
+            ${p.age_rating ? html`
+              <div class="age-rating">
+                ${p.age_rating_icon ? html`<img class="age-rating-icon" src=${p.age_rating_icon} alt=${p.age_rating} />` : ''}
+                <span class="age-rating-text">${p.age_rating}</span>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -341,53 +549,92 @@ class DetailPage extends LitElement {
         ` : ''}
 
         <div class="detail-body">
-          <div class="description-section">
-            <h3>描述</h3>
-            <div class="description-text">${p.custom_description || p.description || '暂无描述信息。'}</div>
+          <div class="main-content">
+            <div class="section">
+              <h3>说明</h3>
+              <div class="description-text">${p.custom_description || p.description || '暂无描述信息。'}</div>
+            </div>
+
+            ${p.whats_new ? html`
+              <div class="section">
+                <h3>此版本中的新增功能</h3>
+                <div class="whats-new">
+                  <div class="whats-new-text">${p.whats_new}</div>
+                </div>
+              </div>
+            ` : ''}
           </div>
 
           <div class="sidebar">
             <div class="info-card">
-              <h4>产品信息</h4>
-              <div class="info-row">
-                <span class="info-label">产品 ID</span>
-                <span class="info-value">${p.ms_id}</span>
-              </div>
+              <h4>其他信息</h4>
+              ${p.developer ? html`
+                <div class="info-row">
+                  <span class="info-label">发布者</span>
+                  <span class="info-value">${p.developer}</span>
+                </div>
+              ` : ''}
+              ${p.last_update ? html`
+                <div class="info-row">
+                  <span class="info-label">上次更新日期</span>
+                  <span class="info-value">${p.last_update}</span>
+                </div>
+              ` : ''}
+              ${p.release_date ? html`
+                <div class="info-row">
+                  <span class="info-label">发布日期</span>
+                  <span class="info-value">${p.release_date}</span>
+                </div>
+              ` : ''}
+              ${p.app_size ? html`
+                <div class="info-row">
+                  <span class="info-label">近似大小</span>
+                  <span class="info-value">${p.app_size}</span>
+                </div>
+              ` : ''}
+              ${p.category ? html`
+                <div class="info-row">
+                  <span class="info-label">类别</span>
+                  <span class="info-value">${p.category}</span>
+                </div>
+              ` : ''}
               <div class="info-row">
                 <span class="info-label">类型</span>
                 <span class="info-value">${p.product_type === 'game' ? '游戏' : '应用'}</span>
               </div>
-              ${p.category ? html`
+              ${p.supported_languages ? html`
                 <div class="info-row">
-                  <span class="info-label">分类</span>
-                  <span class="info-value">${p.category}</span>
-                </div>
-              ` : ''}
-              ${p.developer ? html`
-                <div class="info-row">
-                  <span class="info-label">开发者</span>
-                  <span class="info-value">${p.developer}</span>
-                </div>
-              ` : ''}
-              ${p.rating ? html`
-                <div class="info-row">
-                  <span class="info-label">评分</span>
-                  <span class="info-value">${p.rating} / 5.0</span>
+                  <span class="info-label">支持的语言</span>
+                  <span class="info-value">${p.supported_languages}</span>
                 </div>
               ` : ''}
             </div>
 
             <div class="info-card">
-              <h4>链接</h4>
+              <h4>发行商信息</h4>
+              ${p.publisher_support ? html`
+                <div class="info-row">
+                  <a class="info-link" href=${p.publisher_support} target="_blank">支持</a>
+                </div>
+              ` : ''}
+              ${p.publisher_website ? html`
+                <div class="info-row">
+                  <a class="info-link" href=${p.publisher_website} target="_blank">网站</a>
+                </div>
+              ` : ''}
+              ${p.privacy_policy_url ? html`
+                <div class="info-row">
+                  <a class="info-link" href=${p.privacy_policy_url} target="_blank">隐私政策</a>
+                </div>
+              ` : ''}
               <div class="info-row">
-                <a href="https://apps.microsoft.com/detail/${p.ms_id}?hl=zh-CN&gl=HK" target="_blank"
-                   style="color:#0078d4;text-decoration:none;font-size:13px;">
-                  在 Microsoft Store 中查看 ›
-                </a>
+                <a class="info-link" href=${this._getMsStoreUrl()} target="_blank">在 Microsoft Store 中查看 ›</a>
               </div>
             </div>
           </div>
         </div>
+
+        ${this._renderRelatedProducts()}
       </div>
     `;
   }
