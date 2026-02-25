@@ -56,6 +56,15 @@ $router->group('/admin', function($r) {
     $r->get('/article/edit/{id}', [\App\Controllers\AdminController::class, 'articleEdit']);
     $r->post('/article/save', [\App\Controllers\AdminController::class, 'articleSave']);
     $r->get('/article/delete/{id}', [\App\Controllers\AdminController::class, 'articleDelete']);
+    // AI generation
+    $r->get('/ai-generate', [\App\Controllers\AdminController::class, 'aiGenerate']);
+    $r->get('/ai-task/create', [\App\Controllers\AdminController::class, 'aiTaskCreate']);
+    $r->get('/ai-task/edit/{id}', [\App\Controllers\AdminController::class, 'aiTaskEdit']);
+    $r->post('/ai-task/save', [\App\Controllers\AdminController::class, 'aiTaskSave']);
+    $r->get('/ai-task/delete/{id}', [\App\Controllers\AdminController::class, 'aiTaskDelete']);
+    $r->get('/ai-task/toggle/{id}', [\App\Controllers\AdminController::class, 'aiTaskToggle']);
+    $r->post('/ai-task/run', [\App\Controllers\AdminController::class, 'aiTaskRun']);
+    $r->post('/ai-config/save', [\App\Controllers\AdminController::class, 'aiConfigSave']);
 });
 
 // SPA frontend routes

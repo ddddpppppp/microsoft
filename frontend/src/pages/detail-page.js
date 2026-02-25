@@ -456,6 +456,15 @@ class DetailPage extends LitElement {
     return html`<span class="price-paid">${p.price}</span>`;
   }
 
+  _getRelatedProductUrl(r) {
+    // If it's an own product with custom_url, link to our detail page
+    if (r.is_own_product && r.custom_url) {
+      return r.custom_url;
+    }
+    // Otherwise link to Microsoft Store
+    return `https://apps.microsoft.com/detail/${r.related_ms_id}?hl=zh-CN&gl=HK`;
+  }
+
   _renderRelatedProducts() {
     if (!this.relatedProducts || this.relatedProducts.length === 0) return '';
     
@@ -465,17 +474,21 @@ class DetailPage extends LitElement {
           <h3>发现更多</h3>
         </div>
         <div class="related-grid">
-          ${this.relatedProducts.map(r => html`
-            <a class="related-card" href="https://apps.microsoft.com/detail/${r.related_ms_id}?hl=zh-CN&gl=HK" target="_blank">
-              <img class="related-icon" src=${r.related_icon_url || ''} alt=${r.related_title} loading="lazy" />
-              <div class="related-title">${r.related_title}</div>
-              <div class="related-meta">
-                ${r.related_rating ? html`<span>${r.related_rating}</span>` : ''}
-              </div>
-              <div class="related-category">${r.related_category}</div>
-              <div class="related-price">${r.related_price || '免费下载'}</div>
-            </a>
-          `)}
+          ${this.relatedProducts.map(r => {
+            const href = this._getRelatedProductUrl(r);
+            const isInternal = r.is_own_product && r.custom_url;
+            return html`
+              <a class="related-card" href=${href} ${isInternal ? 'data-nav' : 'target="_blank"'}>
+                <img class="related-icon" src=${r.related_icon_url || ''} alt=${r.related_title} loading="lazy" />
+                <div class="related-title">${r.related_title}</div>
+                <div class="related-meta">
+                  ${r.related_rating ? html`<span>${r.related_rating}</span>` : ''}
+                </div>
+                <div class="related-category">${r.related_category}</div>
+                <div class="related-price">${r.related_price || '免费下载'}</div>
+              </a>
+            `;
+          })}
         </div>
       </div>
     `;

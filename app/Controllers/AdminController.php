@@ -4,9 +4,11 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Core\View;
+use App\Core\AiService;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Article;
+use App\Models\AiTask;
 
 class AdminController extends Controller {
 
@@ -211,5 +213,185 @@ class AdminController extends Controller {
         $articleModel = new Article();
         $articleModel->delete($id);
         $this->redirect('/admin/articles');
+    }
+
+    // ── AI Article Generation ──────────────────────────────
+
+    public function aiGenerate() {
+        $this->requireLogin();
+        $taskModel = new AiTask();
+        $tasks = $taskModel->all('created_at DESC');
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_generate', [
+            'pageTitle' => 'AI 文章生成',
+            'tasks' => $tasks,
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiTaskCreate() {
+        $this->requireLogin();
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_task_edit', [
+            'pageTitle' => '新建 AI 任务',
+            'task' => [
+                'id' => '', 'name' => '', 'ai_provider' => 'deepseek', 'prompt' => '',
+                'category' => '', 'auto_publish' => 0, 'schedule_type' => 'once',
+                'interval_days' => 1, 'daily_time' => '09:00', 'is_active' => 1,
+            ],
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiTaskEdit($id) {
+        $this->requireLogin();
+        $taskModel = new AiTask();
+        $task = $taskModel->find($id);
+        if (!$task) $this->redirect('/admin/ai-generate');
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_task_edit', [
+            'pageTitle' => '编辑 AI 任务',
+            'task' => $task,
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiTaskSave() {
+        $this->requireLogin();
+        $taskModel = new AiTask();
+        $id = $_POST['id'] ?? '';
+        $data = [
+            'name'          => $_POST['name'] ?? '',
+            'ai_provider'   => $_POST['ai_provider'] ?? 'deepseek',
+            'prompt'        => $_POST['prompt'] ?? '',
+            'category'      => $_POST['category'] ?? '',
+            'auto_publish'  => isset($_POST['auto_publish']) ? 1 : 0,
+            'schedule_type' => $_POST['schedule_type'] ?? 'once',
+            'interval_days' => max(1, (int)($_POST['interval_days'] ?? 1)),
+            'daily_time'    => $_POST['daily_time'] ?? '09:00',
+            'is_active'     => isset($_POST['is_active']) ? 1 : 0,
+        ];
+
+        if ($data['schedule_type'] === 'interval') {
+            $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_days'] . ' days'));
+        } elseif ($data['schedule_type'] === 'daily') {
+            $time = $data['daily_time'] ?: '09:00';
+            $next = date('Y-m-d') . ' ' . $time . ':00';
+            if (strtotime($next) <= time()) {
+                $next = date('Y-m-d', strtotime('+1 day')) . ' ' . $time . ':00';
+            }
+            $data['next_run_at'] = $next;
+        }
+
+        if ($id) {
+            $taskModel->update($id, $data);
+            $this->redirect('/admin/ai-task/edit/' . $id . '?saved=1');
+        } else {
+            $newId = $taskModel->create($data);
+            $this->redirect('/admin/ai-task/edit/' . $newId . '?saved=1');
+        }
+    }
+
+    public function aiTaskDelete($id) {
+        $this->requireLogin();
+        $taskModel = new AiTask();
+        $taskModel->delete($id);
+        $this->redirect('/admin/ai-generate');
+    }
+
+    public function aiTaskToggle($id) {
+        $this->requireLogin();
+        $taskModel = new AiTask();
+        $task = $taskModel->find($id);
+        if ($task) {
+            $taskModel->update($id, ['is_active' => $task['is_active'] ? 0 : 1]);
+        }
+        $this->redirect('/admin/ai-generate');
+    }
+
+    public function aiTaskRun() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $taskId = $_POST['task_id'] ?? '';
+        $prompt = $_POST['prompt'] ?? '';
+        $provider = $_POST['provider'] ?? 'deepseek';
+        $category = $_POST['category'] ?? '';
+        $autoPublish = !empty($_POST['auto_publish']);
+
+        if (empty($prompt)) {
+            echo json_encode(['success' => false, 'error' => '提示词不能为空']);
+            exit;
+        }
+
+        $aiService = new AiService();
+        $result = $aiService->generate($provider, $prompt);
+
+        if (!$result['success']) {
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $parsed = $aiService->parseArticle($result['content']);
+        $title = $parsed['title'] ?: '未命名文章';
+        $content = $parsed['content'];
+
+        $slug = 'ai-' . date('YmdHis') . '-' . substr(md5($title), 0, 6);
+
+        $articleModel = new Article();
+        $summary = mb_substr(strip_tags($content), 0, 200);
+        $articleData = [
+            'title'   => $title,
+            'content' => $content,
+            'slug'    => $slug,
+            'status'  => $autoPublish ? 'published' : 'draft',
+            'summary' => $summary,
+            'category' => $category,
+            'author'  => 'AI',
+        ];
+        $articleId = $articleModel->create($articleData);
+
+        if ($taskId) {
+            $taskModel = new AiTask();
+            $taskModel->markRun($taskId);
+        }
+
+        echo json_encode([
+            'success'    => true,
+            'article_id' => $articleId,
+            'title'      => $title,
+            'content'    => $content,
+            'slug'       => $slug,
+            'edit_url'   => '/admin/article/edit/' . $articleId,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function aiConfigSave() {
+        $this->requireLogin();
+        $provider = $_POST['provider'] ?? '';
+        $apiKey = $_POST['api_key'] ?? '';
+        $model = $_POST['model'] ?? '';
+
+        if (empty($provider)) {
+            $this->redirect('/admin/ai-generate?error=1');
+        }
+
+        $configFile = BASE_PATH . '/config/ai.php';
+        $config = require $configFile;
+
+        if (isset($config[$provider])) {
+            if (!empty($apiKey)) {
+                $config[$provider]['api_key'] = $apiKey;
+            }
+            if (!empty($model)) {
+                $config[$provider]['model'] = $model;
+            }
+        }
+
+        $export = "<?php\nreturn " . var_export($config, true) . ";\n";
+        file_put_contents($configFile, $export);
+
+        $this->redirect('/admin/ai-generate?config_saved=1');
     }
 }
