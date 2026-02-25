@@ -32,7 +32,7 @@ class GamesPage extends LitElement {
     .page-header {
       max-width: 1600px;
       margin: 0 auto;
-      padding: 32px 40px 8px;
+      padding: 24px 20px 8px;
     }
     .page-title {
       font-size: 28px;

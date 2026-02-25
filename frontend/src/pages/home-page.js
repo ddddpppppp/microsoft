@@ -29,16 +29,26 @@ class HomePage extends LitElement {
       margin-bottom: 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .section-spacer { height: 24px; }
+    .section-spacer { height: 16px; }
     .two-column {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0 24px;
+      gap: 0;
       max-width: 1600px;
       margin: 0 auto;
     }
+    .two-column ms-collection-row:first-child {
+      padding-right: 4px;
+    }
+    .two-column ms-collection-row:last-child {
+      padding-left: 4px;
+    }
     @media (max-width: 900px) {
       .two-column { grid-template-columns: 1fr; }
+      .two-column ms-collection-row:first-child,
+      .two-column ms-collection-row:last-child {
+        padding: 0 20px;
+      }
     }
   `;
 
@@ -166,7 +176,6 @@ class HomePage extends LitElement {
               .viewAllUrl=${trendingGames.view_all_url || ''}
               .products=${this._prepareProducts(trendingGames)}
               variant="default"
-              style="padding: 0 16px 0 40px;"
             ></ms-collection-row>
           ` : ''}
           ${trendingApps ? html`
@@ -175,7 +184,6 @@ class HomePage extends LitElement {
               .viewAllUrl=${trendingApps.view_all_url || ''}
               .products=${this._prepareProducts(trendingApps)}
               variant="default"
-              style="padding: 0 40px 0 16px;"
             ></ms-collection-row>
           ` : ''}
         </div>

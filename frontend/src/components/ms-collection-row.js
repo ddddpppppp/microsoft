@@ -10,8 +10,7 @@ class MsCollectionRow extends LitElement {
     variant: { type: String },
     sectionType: { type: String },
     _showLeftArrow: { type: Boolean, state: true },
-    _showRightArrow: { type: Boolean, state: true },
-    _hovering: { type: Boolean, state: true }
+    _showRightArrow: { type: Boolean, state: true }
   };
 
   static styles = css`
@@ -19,84 +18,114 @@ class MsCollectionRow extends LitElement {
       display: block;
       max-width: 1600px;
       margin: 0 auto;
-      padding: 0 40px;
+      padding: 0 20px;
       box-sizing: border-box;
     }
+    .section { margin-bottom: 32px; }
+
+    /* Section header */
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      padding: 0 2px;
+      margin-bottom: 12px;
+      padding: 0;
+    }
+    .section-title-area {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0;
+    }
+    .title-chevron {
+      font-size: 18px;
+      color: #1a1a1a;
+      margin-left: 2px;
+      cursor: pointer;
     }
     .section-title-link {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
       text-decoration: none;
       color: inherit;
+      cursor: pointer;
+    }
+    .section-title-link:hover .section-title {
+      text-decoration: underline;
     }
     .header-right {
       display: flex;
       align-items: center;
       gap: 16px;
     }
-    .section-title-link {
-      font-size: 14px;
+    .view-all-link {
+      font-size: 13px;
       font-weight: 600;
       color: #0067b8;
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 2px;
     }
-    .section-title-link:hover { text-decoration: underline; }
-    .section-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #131316;
-      margin: 0;
-    }
-    .title-arrow {
-      font-size: 16px;
-      font-weight: 600;
-      color: #131316;
-    }
+    .view-all-link:hover { text-decoration: underline; }
+
+    /* Nav arrows */
     .nav-arrows {
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
-    .scroll-wrapper { position: relative; }
-    .scroll-container {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      padding: 8px 0 16px;
-    }
-    .scroll-container::-webkit-scrollbar { display: none; }
     .scroll-btn {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 1px solid #d1d1d1;
       background: #fff;
-      color: #131316;
-      font-size: 18px;
+      color: #424242;
+      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s, border-color 0.15s;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      transition: background 0.12s, border-color 0.12s;
+      padding: 0;
     }
     .scroll-btn:hover {
-      background: #f3f3f3;
-      border-color: #b0b0b0;
+      background: #f5f5f5;
+      border-color: #999;
     }
     .scroll-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.3;
       cursor: default;
     }
-    .section { margin-bottom: 40px; }
+    .scroll-btn svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Scroll container */
+    .scroll-wrapper { position: relative; }
+    .scroll-container {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 4px 0 8px;
+    }
+    .scroll-container::-webkit-scrollbar { display: none; }
   `;
 
   constructor() {
@@ -108,7 +137,6 @@ class MsCollectionRow extends LitElement {
     this.sectionType = '';
     this._showLeftArrow = false;
     this._showRightArrow = true;
-    this._hovering = false;
   }
 
   firstUpdated() { this._updateArrows(); }
@@ -145,12 +173,20 @@ class MsCollectionRow extends LitElement {
     return html`
       <div class="section">
         <div class="section-header">
-          <h2 class="section-title">${this.title}</h2>
+          <div class="section-title-area">
+            <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>
+              <h2 class="section-title">${this.title}</h2>
+              <span class="title-chevron">&#8250;</span>
+            </a>
+          </div>
           <div class="header-right">
-            <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>查看全部 <span class="title-arrow">›</span></a>
             <div class="nav-arrows">
-            <button class="scroll-btn" ?disabled=${!this._showLeftArrow} @click=${() => this._scroll('left')} aria-label="向左滚动">‹</button>
-            <button class="scroll-btn" ?disabled=${!this._showRightArrow} @click=${() => this._scroll('right')} aria-label="向右滚动">›</button>
+              <button class="scroll-btn" ?disabled=${!this._showLeftArrow} @click=${() => this._scroll('left')} aria-label="向左滚动">
+                <svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg>
+              </button>
+              <button class="scroll-btn" ?disabled=${!this._showRightArrow} @click=${() => this._scroll('right')} aria-label="向右滚动">
+                <svg viewBox="0 0 16 16"><polyline points="6 3 11 8 6 13"/></svg>
+              </button>
             </div>
           </div>
         </div>

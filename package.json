@@ -1,0 +1,14 @@
+{
+  "name": "ms-store-clone",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npx vite --host",
+    "build": "cd frontend && npx vite build",
+    "preview": "cd frontend && npx vite preview"
+  },
+  "dependencies": {
+    "lit": "^3.3.2",
+    "vite": "^7.3.1"
+  }
+}

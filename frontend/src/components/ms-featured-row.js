@@ -10,10 +10,10 @@ class MsFeaturedRow extends LitElement {
       display: block;
       max-width: 1600px;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 0 20px;
       box-sizing: border-box;
     }
-    .section { margin-bottom: 32px; }
+    .section { margin-bottom: 28px; }
     .banner-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -21,8 +21,8 @@ class MsFeaturedRow extends LitElement {
     }
     .banner-card {
       position: relative;
-      height: 180px;
-      border-radius: 12px;
+      height: 156px;
+      border-radius: 8px;
       overflow: hidden;
       background: #f3f3f3;
       cursor: pointer;
@@ -31,33 +31,30 @@ class MsFeaturedRow extends LitElement {
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: box-shadow 0.2s;
     }
     .banner-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     }
     .banner-bg {
       position: absolute;
       inset: 0;
       background-size: cover;
       background-position: center;
-      transition: transform 0.3s;
     }
-    .banner-card:hover .banner-bg { transform: scale(1.03); }
     .banner-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.05) 100%);
+      background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.02) 100%);
     }
     .banner-content {
       position: relative;
       z-index: 1;
-      padding: 20px 24px;
+      padding: 16px 20px;
     }
     .banner-badge {
       display: inline-block;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: #fff;
       background: #107c10;
@@ -68,44 +65,29 @@ class MsFeaturedRow extends LitElement {
       letter-spacing: 0.3px;
     }
     .banner-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: #fff;
-      margin: 0 0 4px;
-      line-height: 1.3;
+      margin: 0 0 3px;
+      line-height: 1.25;
     }
     .banner-subtitle {
-      font-size: 14px;
-      color: rgba(255,255,255,0.85);
-      margin: 0 0 12px;
-      line-height: 1.4;
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      margin: 0;
+      line-height: 1.35;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .banner-btn {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 16px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      text-decoration: none;
-    }
-    .banner-btn:hover { background: rgba(255,255,255,0.25); }
     @media (max-width: 900px) {
       .banner-row { grid-template-columns: 1fr; }
-      .banner-card { height: 160px; }
+      .banner-card { height: 140px; }
     }
     @media (max-width: 600px) {
-      :host { padding: 0 16px; }
-      .banner-card { height: 140px; }
+      :host { padding: 0 12px; }
+      .banner-card { height: 130px; }
     }
   `;
 
@@ -126,7 +108,6 @@ class MsFeaturedRow extends LitElement {
                 ${banner.badge_text ? html`<span class="banner-badge">${banner.badge_text}</span>` : ''}
                 <h3 class="banner-title">${banner.title}</h3>
                 ${banner.subtitle ? html`<p class="banner-subtitle">${banner.subtitle}</p>` : ''}
-                ${banner.button_text ? html`<span class="banner-btn">${banner.button_text}</span>` : ''}
               </div>
             </a>
           `)}

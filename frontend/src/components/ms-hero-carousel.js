@@ -4,7 +4,7 @@ const DEFAULT_BANNERS = [
   {
     title: 'Microsoft 365',
     subtitle: '管理每日工作的應用程式',
-    button_text: '▶ 获取',
+    button_text: '获取',
     badge_text: '',
     gradient: 'linear-gradient(135deg, #1a1a4e 0%, #2d2d8a 40%, #4a4ac7 100%)',
     link_url: '/detail/microsoft-365'
@@ -21,7 +21,7 @@ const DEFAULT_BANNERS = [
     title: 'Minecraft: Java & Bedrock Edition',
     subtitle: '立即遊戲',
     button_text: '获取',
-    badge_text: 'Game Pass Premium • Ultimate • PC',
+    badge_text: 'Game Pass Premium',
     gradient: 'linear-gradient(135deg, #3d2b1f 0%, #6b4423 40%, #8b6914 100%)',
     link_url: '/detail/minecraft'
   },
@@ -45,8 +45,8 @@ const DEFAULT_BANNERS = [
 
 const DEFAULT_SIDE_CARDS = [
   {
-    title: 'Overwatch® 2',
-    subtitle: '',
+    title: 'Overwatch\u00AE 2',
+    subtitle: '立即透過 Xbox Game Pass 購買或玩遊戲',
     badge_text: 'Game Pass',
     gradient: 'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)',
     link_url: '#'
@@ -69,39 +69,44 @@ class MsHeroCarousel extends LitElement {
   static styles = css`
     :host {
       display: block;
-      padding: 16px 40px 0;
+      padding: 12px 20px 0;
       user-select: none;
     }
     .hero-layout {
       display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 16px;
+      grid-template-columns: 1fr 300px;
+      gap: 12px;
       max-width: 1600px;
       margin: 0 auto;
     }
+
+    /* Main carousel */
+    .carousel-wrapper {}
     .carousel {
       position: relative;
       width: 100%;
-      height: 400px;
-      border-radius: 12px;
+      height: 340px;
+      border-radius: 8px;
       overflow: hidden;
     }
-    .slides { position: relative; width: 100%; height: 100%; }
+    .slides {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
     .slide {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: flex-end;
-      padding: 0 60px 50px;
+      padding: 0 48px 44px;
       opacity: 0;
-      transition: opacity 0.6s ease, transform 0.6s ease;
-      transform: scale(1.02);
+      transition: opacity 0.5s ease;
       pointer-events: none;
       z-index: 0;
     }
     .slide.active {
       opacity: 1;
-      transform: scale(1);
       pointer-events: auto;
       z-index: 1;
     }
@@ -122,62 +127,67 @@ class MsHeroCarousel extends LitElement {
     .slide-content {
       position: relative;
       z-index: 1;
-      max-width: 480px;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .badge {
       display: inline-block;
       font-size: 11px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.8);
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      color: #fff;
+      background: #107c10;
+      padding: 2px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.3px;
       text-transform: uppercase;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
+      width: fit-content;
     }
     .title {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
       color: #fff;
       line-height: 1.2;
       margin: 0;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
     .subtitle {
-      font-size: 14px;
-      color: rgba(255,255,255,0.85);
-      line-height: 1.5;
-      margin: 2px 0 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.4;
+      margin: 2px 0 10px;
     }
     .cta-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       width: fit-content;
-      padding: 8px 24px;
+      padding: 6px 20px;
       border-radius: 4px;
       border: none;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       color: #131316;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s;
     }
     .cta-btn:hover { background: #fff; }
+
+    /* Arrows */
     .arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
       z-index: 10;
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: none;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.4);
       color: #fff;
-      font-size: 18px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -187,41 +197,44 @@ class MsHeroCarousel extends LitElement {
       backdrop-filter: blur(4px);
     }
     .carousel:hover .arrow { opacity: 1; }
-    .arrow:hover { background: rgba(0,0,0,0.55); }
-    .arrow.left { left: 12px; }
-    .arrow.right { right: 12px; }
+    .arrow:hover { background: rgba(0,0,0,0.6); }
+    .arrow.left { left: 10px; }
+    .arrow.right { right: 10px; }
     .arrow svg {
-      width: 14px; height: 14px;
+      width: 12px; height: 12px;
       fill: none; stroke: #fff;
       stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
     }
+
+    /* Dots */
     .dots {
       display: flex;
       justify-content: center;
-      gap: 8px;
-      padding: 12px 0 4px;
+      gap: 6px;
+      padding: 10px 0 2px;
     }
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       border: none;
-      background: #d1d1d1;
+      background: #c8c8c8;
       cursor: pointer;
       padding: 0;
-      transition: background 0.25s, transform 0.2s;
+      transition: background 0.2s, transform 0.2s;
     }
-    .dot:hover { background: #999; transform: scale(1.2); }
-    .dot.active { background: #131316; transform: scale(1.15); }
+    .dot:hover { background: #999; }
+    .dot.active { background: #333; }
 
+    /* Side cards */
     .side-cards {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
     .side-card {
       flex: 1;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
       position: relative;
       display: flex;
@@ -230,12 +243,11 @@ class MsHeroCarousel extends LitElement {
       cursor: pointer;
       text-decoration: none;
       color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: box-shadow 0.2s;
       min-height: 0;
     }
     .side-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     }
     .side-card-bg {
       position: absolute;
@@ -254,13 +266,13 @@ class MsHeroCarousel extends LitElement {
     .side-card-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
       z-index: 1;
     }
     .side-card-content {
       position: relative;
       z-index: 2;
-      padding: 16px 20px;
+      padding: 14px 16px;
     }
     .side-card-badge {
       display: inline-block;
@@ -275,30 +287,31 @@ class MsHeroCarousel extends LitElement {
       letter-spacing: 0.3px;
     }
     .side-card-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #fff;
-      line-height: 1.3;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      line-height: 1.25;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     .side-card-subtitle {
       font-size: 12px;
       color: rgba(255,255,255,0.8);
       margin-top: 2px;
+      line-height: 1.3;
     }
 
     @media (max-width: 1100px) {
       .hero-layout { grid-template-columns: 1fr; }
       .side-cards { flex-direction: row; }
-      .side-card { min-height: 160px; }
+      .side-card { min-height: 150px; }
     }
     @media (max-width: 700px) {
       :host { padding: 8px 12px 0; }
-      .carousel { height: 280px; }
-      .slide { padding: 0 32px 36px; }
-      .title { font-size: 22px; }
+      .carousel { height: 240px; }
+      .slide { padding: 0 24px 32px; }
+      .title { font-size: 20px; }
       .side-cards { flex-direction: column; }
-      .side-card { min-height: 120px; }
+      .side-card { min-height: 110px; }
     }
   `;
 
@@ -413,7 +426,7 @@ class MsHeroCarousel extends LitElement {
     const cards = this._cards;
     return html`
       <div class="hero-layout">
-        <div>
+        <div class="carousel-wrapper">
           <div class="carousel"
             @mouseenter=${() => this._stopAutoplay()}
             @mouseleave=${() => this._startAutoplay()}>

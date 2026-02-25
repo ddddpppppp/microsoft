@@ -9,7 +9,7 @@ class MsRating extends LitElement {
     :host {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
     .stars {
       display: inline-flex;
@@ -20,8 +20,8 @@ class MsRating extends LitElement {
     .stars-empty,
     .stars-filled {
       display: inline-flex;
-      font-size: 12px;
-      letter-spacing: 1px;
+      font-size: 11px;
+      letter-spacing: 0.5px;
     }
     .stars-empty { color: #d1d1d1; }
     .stars-filled {
@@ -33,9 +33,9 @@ class MsRating extends LitElement {
       color: #FFB900;
     }
     .value {
-      font-size: 12px;
+      font-size: 11px;
       color: #616161;
-      margin-left: 2px;
+      margin-left: 1px;
       line-height: 1;
     }
   `;

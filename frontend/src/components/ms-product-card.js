@@ -9,14 +9,14 @@ class MsProductCard extends LitElement {
   static styles = css`
     :host {
       display: block;
-      width: 160px;
+      width: 148px;
       flex-shrink: 0;
     }
     .card {
       cursor: pointer;
       padding: 8px;
-      border-radius: 8px;
-      transition: background 0.15s ease;
+      border-radius: 6px;
+      transition: background 0.12s ease;
       background: transparent;
     }
     .card:hover {
@@ -24,21 +24,22 @@ class MsProductCard extends LitElement {
     }
     .icon-wrapper {
       position: relative;
-      width: 81px;
-      height: 81px;
+      width: 68px;
+      height: 68px;
       margin-bottom: 8px;
     }
     .icon {
-      width: 81px;
-      height: 81px;
-      border-radius: 8px;
+      width: 68px;
+      height: 68px;
+      border-radius: 6px;
       object-fit: cover;
       background: #f0f0f0;
+      display: block;
     }
     .gamepass-badge {
       position: absolute;
-      top: -4px;
-      left: -4px;
+      top: -3px;
+      left: -3px;
       background: #107c10;
       color: #fff;
       font-size: 8px;
@@ -51,9 +52,9 @@ class MsProductCard extends LitElement {
       white-space: nowrap;
     }
     .title {
-      font-size: 14px;
-      color: #131316;
-      line-height: 1.35;
+      font-size: 13px;
+      color: #1a1a1a;
+      line-height: 1.3;
       margin-bottom: 4px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -61,12 +62,13 @@ class MsProductCard extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       word-break: break-word;
+      font-weight: 400;
     }
-    .rating-row { margin-bottom: 4px; }
+    .rating-row { margin-bottom: 3px; }
     .category {
       font-size: 12px;
       color: #616161;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -74,36 +76,36 @@ class MsProductCard extends LitElement {
     .price-area {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
     }
     .price-free {
-      font-size: 13px;
+      font-size: 12px;
       color: #0e7a0d;
       font-weight: 600;
     }
     .price-value {
-      font-size: 13px;
-      color: #131316;
+      font-size: 12px;
+      color: #1a1a1a;
       font-weight: 600;
     }
     .price-original {
-      font-size: 12px;
+      font-size: 11px;
       color: #767676;
       text-decoration: line-through;
     }
     .price-discounted {
-      font-size: 13px;
-      color: #131316;
+      font-size: 12px;
+      color: #1a1a1a;
       font-weight: 600;
     }
     .discount-badge {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: #fff;
       background: #c42b1c;
-      padding: 2px 5px;
-      border-radius: 3px;
+      padding: 1px 4px;
+      border-radius: 2px;
       line-height: 1.2;
     }
     .owned-badge {
