@@ -12,7 +12,7 @@ class GamesPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 40px; background: #fff; }
+    :host { display: block; padding-bottom: 40px; background: transparent; }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -32,7 +32,7 @@ class GamesPage extends LitElement {
     .page-header {
       max-width: 1600px;
       margin: 0 auto;
-      padding: 24px 20px 8px;
+      padding: 24px 38px 8px;
     }
     .page-title {
       font-size: 28px;
@@ -45,7 +45,7 @@ class GamesPage extends LitElement {
       color: #616161;
       margin-top: 8px;
     }
-    .section-spacer { height: 24px; }
+    .section-spacer { height: 48px; }
   `;
 
   constructor() {

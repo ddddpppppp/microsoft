@@ -12,7 +12,7 @@ class AppsPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 40px; background: #fff; }
+    :host { display: block; padding-bottom: 40px; background: transparent; }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -32,7 +32,7 @@ class AppsPage extends LitElement {
     .page-header {
       max-width: 1600px;
       margin: 0 auto;
-      padding: 24px 20px 8px;
+      padding: 24px 38px 8px;
     }
     .page-title {
       font-size: 28px;
@@ -45,7 +45,7 @@ class AppsPage extends LitElement {
       color: #616161;
       margin-top: 8px;
     }
-    .section-spacer { height: 24px; }
+    .section-spacer { height: 48px; }
   `;
 
   constructor() {
@@ -113,12 +113,14 @@ class AppsPage extends LitElement {
         ></ms-collection-grid>
       `;
     }
+    const isSocial = col.name === '社交網路應用程式' || (col.slug || '').toLowerCase().includes('social');
+    const variant = isSocial ? 'social' : (col.section_type === 'hero_cards' ? 'hero' : 'default');
     return html`
       <ms-collection-row
         .title=${col.name}
         .viewAllUrl=${col.view_all_url || ''}
         .products=${products}
-        variant=${col.section_type === 'hero_cards' ? 'hero' : 'default'}
+        variant=${variant}
       ></ms-collection-row>
     `;
   }

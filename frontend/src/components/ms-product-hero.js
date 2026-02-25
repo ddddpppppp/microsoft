@@ -1,66 +1,126 @@
 import { LitElement, html, css } from 'lit';
 import './ms-rating.js';
 
+/**
+ * Wide card for sections like 創意應用程式 / 幻化成真: left = large icon area with background,
+ * right = title, rating+category, description. Matches Microsoft Store reference layout.
+ */
 class MsProductHero extends LitElement {
   static properties = {
     product: { type: Object }
   };
 
   static styles = css`
-    :host { display: block; width: 280px; flex-shrink: 0; }
-    .card {
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-      padding: 14px;
-      cursor: pointer;
-      transition: background 0.12s ease, box-shadow 0.12s ease;
-      height: 100%;
-      box-sizing: border-box;
-    }
-    .card:hover {
-      background: #fafafa;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    }
-    .header {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 6px;
-      object-fit: cover;
+    :host {
+      display: block;
+      min-width: 320px;
+      width: 320px;
       flex-shrink: 0;
+    }
+    /* 与商店 wide-details 一致：product product-wide-details */
+    a.product.product-wide-details {
+      display: flex;
+      flex-direction: row;
+      text-decoration: none;
+      color: inherit;
+      background: #fff;
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: box-shadow 0.2s ease;
+      overflow: hidden;
+      min-height: 140px;
+    }
+    a.product.product-wide-details:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* 左：image-wrap = blur + product-image-wrap (与商店一致) */
+    .image-wrap {
+      width: 120px;
+      min-width: 120px;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+    .image-wrap .blur {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .image-wrap .gradual-blur {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(20px);
+      opacity: 0.5;
+    }
+    .image-wrap .gradual-blur.fallback {
+      filter: none;
+      opacity: 1;
       background: #f0f0f0;
     }
-    .header-info { flex: 1; min-width: 0; }
-    .title {
+    .product-image-wrap {
+      position: relative;
+      z-index: 1;
+    }
+    .product-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      object-fit: cover;
+      display: block;
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* 右：details (与商店 .details.no-review 一致) */
+    .details {
+      flex: 1;
+      min-width: 0;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .details-title { margin: 0; }
+    .text-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .details .title {
       font-size: 14px;
       font-weight: 600;
       color: #1a1a1a;
-      line-height: 1.25;
-      margin-bottom: 3px;
+      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
-      word-break: break-word;
+      margin: 0;
     }
-    .rating-row { margin-bottom: 3px; }
-    .category {
-      display: inline-block;
-      font-size: 11px;
+    .subtitle {
+      font-size: 12px;
       color: #616161;
-      background: #ebebeb;
-      padding: 1px 6px;
-      border-radius: 3px;
-      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
-    .description {
+    .details .desc {
       font-size: 12px;
       color: #616161;
       line-height: 1.5;
@@ -69,14 +129,13 @@ class MsProductHero extends LitElement {
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
-      word-break: break-word;
-      margin-bottom: 10px;
+      flex: 1;
+      min-height: 0;
+      margin: 0;
     }
-    .price-area {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
+    .price-row {
+      margin-top: auto;
+      padding-top: 4px;
     }
     .price-free { font-size: 12px; color: #0e7a0d; font-weight: 600; }
     .price-value { font-size: 12px; color: #1a1a1a; font-weight: 600; }
@@ -86,12 +145,6 @@ class MsProductHero extends LitElement {
       font-size: 9px; font-weight: 700; color: #fff;
       background: #c42b1c; padding: 1px 4px; border-radius: 2px; line-height: 1.2;
     }
-    .gamepass-badge {
-      font-size: 8px; font-weight: 700; color: #fff;
-      background: #107c10; padding: 2px 5px; border-radius: 3px;
-      text-transform: uppercase; letter-spacing: 0.3px;
-      margin-left: auto; flex-shrink: 0; white-space: nowrap;
-    }
   `;
 
   constructor() {
@@ -99,21 +152,19 @@ class MsProductHero extends LitElement {
     this.product = {};
   }
 
-  _handleClick() {
-    const p = this.product;
-    if (!p) return;
-    if (p.is_own_product && p.custom_url) {
-      window.location.href = p.custom_url;
-    } else if (p.original_url) {
-      window.location.href = p.original_url;
-    }
-  }
-
   _getIconSrc() {
     const p = this.product;
-    if (p.local_icon) return p.local_icon;
-    if (p.icon_url) return p.icon_url;
-    return '';
+    if (!p) return '';
+    return p.local_icon || p.icon_url || '';
+  }
+
+  _getHref() {
+    const p = this.product;
+    if (!p) return '#';
+    if (p.is_own_product && p.custom_url) return p.custom_url;
+    if (p.original_url) return p.original_url;
+    if (p.product_id || p.ms_id || p.id) return '/detail/' + (p.product_id || p.ms_id || p.id);
+    return '#';
   }
 
   _renderPrice() {
@@ -123,7 +174,7 @@ class MsProductHero extends LitElement {
       return html`<span class="price-free">免费下载</span>`;
     }
     if (p.price_type === 'owned') {
-      return html`<span style="font-size:12px;color:#0067b8;">已拥有</span>`;
+      return html`<span class="price-value" style="color:#0067b8;">已拥有</span>`;
     }
     if (p.discount_percent && p.original_price) {
       const discounted = p.price || p.original_price;
@@ -139,26 +190,46 @@ class MsProductHero extends LitElement {
     return html`<span class="price-free">免费下载</span>`;
   }
 
+  _onClick(e) {
+    const href = this._getHref();
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      window.msApp?.navigate(href);
+    }
+  }
+
   render() {
     const p = this.product || {};
+    const iconSrc = this._getIconSrc();
+    const href = this._getHref();
+    const useNav = href.startsWith('/');
+
     return html`
-      <div class="card" @click=${this._handleClick}>
-        <div class="header">
-          <img class="icon" src=${this._getIconSrc()} alt=${p.title || ''} loading="lazy" />
-          <div class="header-info">
-            <div class="title">${p.title || ''}</div>
-            <div class="rating-row">
-              <ms-rating .value=${p.rating || 0}></ms-rating>
+      <a class="product product-wide-details" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
+        <div class="container">
+          <div class="image-wrap">
+            <div class="blur">
+              ${iconSrc
+                ? html`<div class="gradual-blur" style="background-image:url('${iconSrc}')"></div>`
+                : html`<div class="gradual-blur fallback"></div>`}
+            </div>
+            <div class="product-image-wrap">
+              ${iconSrc ? html`<img class="product-image" width="80" height="80" src=${iconSrc} alt="" loading="lazy" />` : ''}
             </div>
           </div>
-          ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
+          <div class="details no-review">
+            <div class="details-title">
+              <p class="title text-ellipsis" title=${p.title || ''}>${p.title || ''}</p>
+            </div>
+            <div class="subtitle">
+              <ms-rating .value=${p.rating || 0}></ms-rating>
+              ${p.category ? html`<span class="categories"><span class="text-ellipsis">${p.category}</span></span>` : ''}
+            </div>
+            ${p.description ? html`<div class="desc">${p.description}</div>` : ''}
+            <div class="price-row">${this._renderPrice()}</div>
+          </div>
         </div>
-        ${p.category ? html`<span class="category">${p.category}</span>` : ''}
-        ${p.description ? html`<div class="description">${p.description}</div>` : ''}
-        <div class="price-area">
-          ${this._renderPrice()}
-        </div>
-      </div>
+      </a>
     `;
   }
 }

@@ -12,9 +12,6 @@ class MsCollectionCards extends LitElement {
   static styles = css`
     :host {
       display: block;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 0 20px;
       box-sizing: border-box;
     }
     .section { margin-bottom: 32px; }
@@ -26,7 +23,8 @@ class MsCollectionCards extends LitElement {
     }
     .section-title {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 600;
+      font-family: var(--header-font);
       color: #1a1a1a;
       margin: 0;
     }
@@ -45,8 +43,8 @@ class MsCollectionCards extends LitElement {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 1px solid #d1d1d1;
       background: #fff;
@@ -67,9 +65,8 @@ class MsCollectionCards extends LitElement {
     .scroll-btn.right { right: -4px; }
     .card {
       flex-shrink: 0;
-      width: 200px;
-      height: 120px;
-      background: #1a1a1a;
+      width: 240px;
+      height: 140px;
       border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
@@ -91,6 +88,17 @@ class MsCollectionCards extends LitElement {
       background-position: center;
       opacity: 0.85;
     }
+    .card-gradient {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .card-gradient-0 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .card-gradient-1 { background: linear-gradient(135deg, #2d1b4e 0%, #1a0a2e 50%, #0d0221 100%); }
+    .card-gradient-2 { background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%); }
+    .card-gradient-3 { background: linear-gradient(135deg, #5c4d7d 0%, #3d2c5e 50%, #2d1b4e 100%); }
+    .card-gradient-4 { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%); }
+    .card-gradient-5 { background: linear-gradient(135deg, #3d0a0a 0%, #6b2d2d 50%, #8b3a3a 100%); }
     .card-content {
       position: relative;
       z-index: 1;
@@ -100,6 +108,7 @@ class MsCollectionCards extends LitElement {
     .card-name {
       font-size: 13px;
       font-weight: 600;
+      font-family: var(--header-font);
       color: #fff;
       line-height: 1.3;
       white-space: nowrap;
@@ -116,7 +125,7 @@ class MsCollectionCards extends LitElement {
     }
     @media (max-width: 600px) {
       :host { padding: 0 12px; }
-      .card { width: 160px; height: 96px; }
+      .card { width: 200px; height: 116px; }
     }
   `;
 
@@ -152,6 +161,10 @@ class MsCollectionCards extends LitElement {
 
   _onScroll() { this._updateArrows(); }
 
+  _getGradientClass(index) {
+    return `card-gradient-${index % 6}`;
+  }
+
   render() {
     return html`
       <div class="section">
@@ -161,9 +174,10 @@ class MsCollectionCards extends LitElement {
         <div class="scroll-wrapper">
           <button class="scroll-btn left ${this._showLeftArrow ? 'visible' : ''}" @click=${() => this._scroll('left')} aria-label="向左滚动">&#8249;</button>
           <div class="scroll-container" @scroll=${this._onScroll}>
-            ${(this.cards || []).map(card => html`
-              <a class="card" href=${card.link_url || '#'} ${card.link_url?.startsWith('http') ? html`` : html`data-nav`}>
+            ${(this.cards || []).map((card, i) => html`
+              <a class="card" href=${card.link_url || '#'} ?data-nav=${!(card.link_url || '').startsWith('http')}>
                 ${card.image_url ? html`<div class="card-bg" style="background-image: url('${card.image_url}')"></div>` : ''}
+                <div class="card-gradient ${this._getGradientClass(i)}"></div>
                 <div class="card-content">
                   <div class="card-name">${card.name}</div>
                   ${card.subtitle ? html`<div class="card-subtitle">${card.subtitle}</div>` : ''}

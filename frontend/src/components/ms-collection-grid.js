@@ -4,22 +4,14 @@ class MsCollectionGrid extends LitElement {
   static properties = {
     title: { type: String },
     viewAllUrl: { type: String },
-    products: { type: Array }
+    products: { type: Array },
+    _showLeftArrow: { type: Boolean, state: true },
+    _showRightArrow: { type: Boolean, state: true }
   };
 
   static styles = css`
     :host {
       display: block;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 0 20px;
-      box-sizing: border-box;
-    }
-    /* 与官网一致：白底卡片、圆角、格间缝隙明显 */
-    .grid-section-wrap {
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
       box-sizing: border-box;
     }
     .section { margin-bottom: 32px; }
@@ -47,7 +39,8 @@ class MsCollectionGrid extends LitElement {
     }
     .section-title {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 600;
+      font-family: var(--header-font);
       color: #1a1a1a;
       margin: 0;
     }
@@ -67,47 +60,104 @@ class MsCollectionGrid extends LitElement {
     }
     .view-all-link:hover { text-decoration: underline; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px 20px;
-    }
-    .grid-item {
+    .scroll-wrapper { position: relative; }
+    .scroll-container {
       display: flex;
-      align-items: flex-start;
       gap: 12px;
-      padding: 10px 12px;
-      border-radius: 6px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 4px 0 8px;
+    }
+    .scroll-container::-webkit-scrollbar { display: none; }
+    .scroll-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #d1d1d1;
+      background: #fff;
+      color: #424242;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s, background 0.12s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .scroll-btn:hover { background: #f5f5f5; }
+    .scroll-wrapper:hover .scroll-btn.visible { opacity: 1; }
+    .scroll-btn.left { left: -4px; }
+    .scroll-btn.right { right: -4px; }
+
+    .card {
+      flex-shrink: 0;
+      min-width: 160px;
+      width: 160px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      background: rgba(255,255,255,0.7);
+      padding: 16px;
       cursor: pointer;
       text-decoration: none;
       color: inherit;
-      transition: background 0.12s;
-      min-height: 64px;
+      transition: box-shadow 0.2s, transform 0.2s;
     }
-    .grid-item:hover { background: rgba(0, 0, 0, 0.04); }
-    .item-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 6px;
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .card-top {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      margin: -16px -16px 12px -16px;
+      padding: 24px 16px;
+      border-radius: 8px 8px 0 0;
+      overflow: hidden;
+    }
+    .card-icon-bg {
+      position: absolute;
+      inset: -20px;
+      background-size: 120%;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: blur(24px);
+      opacity: 0.6;
+    }
+    .card-icon {
+      width: 84px;
+      height: 84px;
+      border-radius: 12px;
       object-fit: cover;
-      flex-shrink: 0;
-      background: #f0f0f0;
+      position: relative;
+      z-index: 1;
     }
-    .item-info {
-      flex: 1;
-      min-width: 0;
+    .card-bottom {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 4px;
+      min-width: 0;
     }
-    .item-title {
+    .card-title {
       font-size: 13px;
-      color: #1a1a1a;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.3;
       font-weight: 400;
+      color: #1a1a1a;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .item-meta {
       display: flex;
@@ -140,16 +190,12 @@ class MsCollectionGrid extends LitElement {
     }
     .badge-gamepass { background: #107c10; color: #fff; }
     .badge-discount { background: #c42b1c; color: #fff; }
-    .item-subtitle {
-      font-size: 11px;
-      color: #767676;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+    @media (max-width: 600px) {
+      :host { padding: 0 12px; }
+      .card { min-width: 148px; width: 148px; }
+      .card-title { font-size: 16px; }
     }
-    @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } :host { padding: 0 12px; } }
   `;
 
   constructor() {
@@ -157,7 +203,42 @@ class MsCollectionGrid extends LitElement {
     this.title = '';
     this.viewAllUrl = '';
     this.products = [];
+    this._showLeftArrow = false;
+    this._showRightArrow = true;
   }
+
+  firstUpdated() {
+    this._updateArrows();
+    const el = this._getScrollContainer();
+    if (el) el.addEventListener('scroll', this._onScrollBound = () => this._updateArrows());
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    const el = this._getScrollContainer();
+    if (el && this._onScrollBound) el.removeEventListener('scroll', this._onScrollBound);
+  }
+
+  _getScrollContainer() {
+    return this.renderRoot?.querySelector('.scroll-container');
+  }
+
+  _updateArrows() {
+    const el = this._getScrollContainer();
+    if (!el) return;
+    this._showLeftArrow = el.scrollLeft > 10;
+    this._showRightArrow = el.scrollLeft < el.scrollWidth - el.clientWidth - 10;
+  }
+
+  _scroll(direction) {
+    const el = this._getScrollContainer();
+    if (!el) return;
+    const amount = el.clientWidth * 0.75;
+    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
+    setTimeout(() => this._updateArrows(), 350);
+  }
+
+  _onScroll() { this._updateArrows(); }
 
   _renderStars(rating = 0) {
     const full = Math.floor(rating);
@@ -193,7 +274,8 @@ class MsCollectionGrid extends LitElement {
     return badges;
   }
 
-  _onItemClick(product) {
+  _onItemClick(product, e) {
+    e.preventDefault();
     if (product.product_id) {
       window.msApp?.navigate('/detail/' + product.product_id);
     }
@@ -203,37 +285,46 @@ class MsCollectionGrid extends LitElement {
     const items = (this.products || []).slice(0, 12);
     return html`
       <div class="section">
-        <div class="grid-section-wrap">
-          <div class="section-header">
-            <div class="section-title-area">
-              <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>
-                <h2 class="section-title">${this.title}</h2>
-                <span class="title-chevron">&#8250;</span>
-              </a>
-            </div>
-            <a class="view-all-link" href=${this.viewAllUrl || '#'} data-nav>查看全部 &#8250;</a>
-          </div>
-          <div class="grid">
-          ${items.map((product) => html`
-            <a class="grid-item" href=${product.product_id ? '/detail/' + product.product_id : '#'} data-nav
-              @click=${(e) => { e.preventDefault(); this._onItemClick(product); }}>
-              <img class="item-icon" src=${product.icon_url || product.image_url || ''} alt=${product.title || product.name || ''} loading="lazy" />
-              <div class="item-info">
-                <span class="item-title">${product.title || product.name}</span>
-                ${product.developer ? html`<span class="item-subtitle">${product.developer}</span>` : ''}
-                <div class="item-meta">
-                  ${product.rating ? html`
-                    <span class="item-rating">
-                      <span class="stars">${this._renderStars(product.rating)}</span>
-                      ${product.rating_count ? html`<span class="rating-count">${product.rating_count}</span>` : ''}
-                    </span>
-                  ` : ''}
-                  ${this._renderBadges(product)}
-                </div>
-                <div class="item-price">${this._renderPrice(product)}</div>
-              </div>
+        <div class="section-header">
+          <div class="section-title-area">
+            <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>
+              <h2 class="section-title">${this.title}</h2>
+              <span class="title-chevron">&#8250;</span>
             </a>
-          `)}
+          </div>
+          <a class="view-all-link" href=${this.viewAllUrl || '#'} data-nav>查看全部 &#8250;</a>
+        </div>
+        <div class="scroll-wrapper">
+          <button class="scroll-btn left ${this._showLeftArrow ? 'visible' : ''}" @click=${() => this._scroll('left')} aria-label="向左滚动">&#8249;</button>
+          <div class="scroll-container" @scroll=${this._onScroll}>
+            ${items.map((product) => {
+              const iconUrl = product.icon_url || product.image_url || '';
+              return html`
+              <a class="card" href=${product.product_id ? '/detail/' + product.product_id : '#'} data-nav
+                @click=${(e) => this._onItemClick(product, e)}>
+                <div class="card-top">
+                  ${iconUrl ? html`
+                    <div class="card-icon-bg" style="background-image: url('${iconUrl}')"></div>
+                  ` : ''}
+                  <img class="card-icon" src=${iconUrl || ''} alt=${product.title || product.name || ''} loading="lazy" />
+                </div>
+                <div class="card-bottom">
+                  <span class="card-title">${product.title || product.name}</span>
+                  <div class="item-meta">
+                    ${product.rating ? html`
+                      <span class="item-rating">
+                        <span class="stars">${this._renderStars(product.rating)}</span>
+                        ${product.rating_count ? html`<span class="rating-count">${product.rating_count}</span>` : ''}
+                      </span>
+                    ` : ''}
+                    ${this._renderBadges(product)}
+                  </div>
+                  <div class="item-price">${this._renderPrice(product)}</div>
+                </div>
+              </a>
+            `})}
+          </div>
+          <button class="scroll-btn right ${this._showRightArrow ? 'visible' : ''}" @click=${() => this._scroll('right')} aria-label="向右滚动">&#8250;</button>
         </div>
       </div>
     `;

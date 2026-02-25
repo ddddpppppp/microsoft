@@ -31,4 +31,28 @@ class Product extends Model {
             [$like, $like, $limit]
         );
     }
+
+    /**
+     * Products that appear in hero_cards collections and have empty description but have original_url.
+     */
+    public function getMissingDescriptionInHeroCards() {
+        return $this->db->fetchAll(
+            "SELECT DISTINCT p.id, p.title, p.original_url, p.ms_id
+             FROM products p
+             INNER JOIN collection_products cp ON cp.product_id = p.id
+             INNER JOIN collections c ON c.id = cp.collection_id
+             WHERE c.section_type = 'hero_cards'
+               AND (p.description IS NULL OR TRIM(p.description) = '')
+               AND p.original_url IS NOT NULL AND TRIM(p.original_url) != ''
+             ORDER BY p.id"
+        );
+    }
+
+    public function updateDescription($id, $description) {
+        $this->db->update('products', ['description' => $description], 'id = ?', [$id]);
+    }
+
+    public function updateSocialCardImage($id, $url) {
+        $this->db->update('products', ['social_card_image' => $url], 'id = ?', [$id]);
+    }
 }

@@ -31,6 +31,9 @@ $router->group('/api', function($r) {
     $r->get('/about', [\App\Controllers\ApiController::class, 'about']);
     $r->get('/product/{id}', [\App\Controllers\ApiController::class, 'product']);
     $r->get('/search', [\App\Controllers\ApiController::class, 'search']);
+    $r->get('/products-missing-description', [\App\Controllers\ApiController::class, 'productsMissingDescription']);
+    $r->post('/product/{id}/description', [\App\Controllers\ApiController::class, 'updateProductDescription']);
+    $r->post('/product/{id}/social-card-image', [\App\Controllers\ApiController::class, 'updateProductSocialCardImage']);
 });
 
 // Admin routes

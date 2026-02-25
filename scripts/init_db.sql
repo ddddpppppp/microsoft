@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS products (
     has_gamepass TINYINT(1) DEFAULT 0,
     developer VARCHAR(200) DEFAULT '',
     screenshots TEXT,
+    social_card_image VARCHAR(500) DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_ms_id (ms_id),

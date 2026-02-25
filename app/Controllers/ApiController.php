@@ -73,4 +73,39 @@ class ApiController extends Controller {
         $results = $productModel->search($keyword);
         $this->json(['results' => $results]);
     }
+
+    /** List products in hero_cards with empty description and non-empty original_url (for crawling). */
+    public function productsMissingDescription() {
+        $productModel = new Product();
+        $list = $productModel->getMissingDescriptionInHeroCards();
+        $this->json($list);
+    }
+
+    /** Update one product description (e.g. after crawl). POST body: {"description": "..."} */
+    public function updateProductDescription($id) {
+        $id = (int) $id;
+        if ($id <= 0) {
+            $this->json(['error' => 'Invalid id'], 400);
+            return;
+        }
+        $body = json_decode(file_get_contents('php://input'), true) ?: [];
+        $description = isset($body['description']) ? (string) $body['description'] : '';
+        $productModel = new Product();
+        $productModel->updateDescription($id, $description);
+        $this->json(['ok' => true, 'id' => $id]);
+    }
+
+    /** Update one product social card image. POST body: {"social_card_image": "https://..."} */
+    public function updateProductSocialCardImage($id) {
+        $id = (int) $id;
+        if ($id <= 0) {
+            $this->json(['error' => 'Invalid id'], 400);
+            return;
+        }
+        $body = json_decode(file_get_contents('php://input'), true) ?: [];
+        $url = isset($body['social_card_image']) ? (string) $body['social_card_image'] : '';
+        $productModel = new Product();
+        $productModel->updateSocialCardImage($id, $url);
+        $this->json(['ok' => true, 'id' => $id]);
+    }
 }

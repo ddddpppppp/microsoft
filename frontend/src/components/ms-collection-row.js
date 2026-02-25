@@ -1,6 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import './ms-product-card.js';
 import './ms-product-hero.js';
+import './ms-product-tall-card.js';
+import './ms-product-social-card.js';
 import './ms-rating.js';
 
 class MsCollectionRow extends LitElement {
@@ -17,9 +19,6 @@ class MsCollectionRow extends LitElement {
   static styles = css`
     :host {
       display: block;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 0 20px;
       box-sizing: border-box;
     }
     .section { margin-bottom: 32px; }
@@ -39,26 +38,36 @@ class MsCollectionRow extends LitElement {
     }
     .section-title {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 600;
+      font-family: var(--header-font);
       color: #1a1a1a;
       margin: 0;
+      transform: translate3d(-12px, 0, 0);
+      transition: transform 0.2s ease;
+    }
+    .section-title-link.collection-title:hover .section-title {
+      transform: translate3d(0, 0, 0);
     }
     .title-chevron {
-      font-size: 18px;
+      font-size: 12px;
       color: #1a1a1a;
       margin-left: 2px;
       cursor: pointer;
     }
     .section-title-link {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 2px;
       text-decoration: none;
       color: inherit;
       cursor: pointer;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: 8px;
+      transition: background-color 0.2s ease;
     }
-    .section-title-link:hover .section-title {
-      text-decoration: underline;
+    .section-title-link.collection-title:hover {
+      background-color: #e8ebeb;
     }
     .header-right {
       display: flex;
@@ -119,15 +128,30 @@ class MsCollectionRow extends LitElement {
     .scroll-wrapper { position: relative; }
     .scroll-container {
       display: flex;
-      gap: 4px;
+      gap: 12px;
       overflow-x: auto;
       scroll-behavior: smooth;
       scrollbar-width: none;
       -ms-overflow-style: none;
-      padding: 4px 0 8px;
+      padding: 8px;
+      margin: -8px;
     }
     .scroll-container::-webkit-scrollbar { display: none; }
 
+    /* Card wrapper for twoColGrid variant (.component styling) */
+    .two-col-card {
+      border: 1px solid hsl(240 5.9% 90%);
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 36px;
+      box-sizing: border-box;
+    }
+    .two-col-divider {
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      opacity: 0.7;
+      width: 92%;
+      margin: 6px auto 16px;
+    }
     /* 双列网格：与官网一致，每栏 2 列 x 3 行，item 横向（图标左 + 信息右） */
     .two-col-grid {
       display: grid;
@@ -231,7 +255,17 @@ class MsCollectionRow extends LitElement {
     this._showRightArrow = true;
   }
 
-  firstUpdated() { this._updateArrows(); }
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    if (changedProperties.has('variant')) {
+      this.classList.toggle('variant-two-col', this.variant === 'twoColGrid');
+    }
+  }
+
+  firstUpdated() {
+    this.classList.toggle('variant-two-col', this.variant === 'twoColGrid');
+    this._updateArrows();
+  }
 
   _getScrollContainer() {
     return this.renderRoot.querySelector('.scroll-container');
@@ -257,6 +291,12 @@ class MsCollectionRow extends LitElement {
   _renderCard(product) {
     if (this.variant === 'hero') {
       return html`<ms-product-hero .product=${product}></ms-product-hero>`;
+    }
+    if (this.variant === 'tall') {
+      return html`<ms-product-tall-card .product=${product}></ms-product-tall-card>`;
+    }
+    if (this.variant === 'social') {
+      return html`<ms-product-social-card .product=${product}></ms-product-social-card>`;
     }
     return html`<ms-product-card .product=${product}></ms-product-card>`;
   }
@@ -305,39 +345,54 @@ class MsCollectionRow extends LitElement {
     `;
   }
 
+  _renderHeader(useTwoColGrid) {
+    return html`
+      <div class="section-header">
+        <div class="section-title-area">
+          <a class="section-title-link collection-title" href=${this.viewAllUrl || '#'} data-nav>
+            <h2 class="section-title">${this.title}</h2>
+            <span class="title-chevron">&#8250;</span>
+          </a>
+        </div>
+        <div class="header-right">
+          <div class="nav-arrows">
+            <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showLeftArrow} @click=${() => this._scroll('left')} aria-label="向左滚动">
+              <svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg>
+            </button>
+            <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showRightArrow} @click=${() => this._scroll('right')} aria-label="向右滚动">
+              <svg viewBox="0 0 16 16"><polyline points="6 3 11 8 6 13"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     const useTwoColGrid = this.variant === 'twoColGrid';
     const list = this.products || [];
     const gridProducts = useTwoColGrid ? list.slice(0, 6) : list;
-    return html`
-      <div class="section">
-        <div class="section-header">
-          <div class="section-title-area">
-            <a class="section-title-link" href=${this.viewAllUrl || '#'} data-nav>
-              <h2 class="section-title">${this.title}</h2>
-              <span class="title-chevron">&#8250;</span>
-            </a>
-          </div>
-          <div class="header-right">
-            <div class="nav-arrows">
-              <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showLeftArrow} @click=${() => this._scroll('left')} aria-label="向左滚动">
-                <svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg>
-              </button>
-              <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showRightArrow} @click=${() => this._scroll('right')} aria-label="向右滚动">
-                <svg viewBox="0 0 16 16"><polyline points="6 3 11 8 6 13"/></svg>
-              </button>
-            </div>
+
+    if (useTwoColGrid) {
+      return html`
+        <div class="section">
+          <div class="two-col-card">
+            ${this._renderHeader(true)}
+            <div class="two-col-divider"></div>
+            <div class="two-col-grid">${gridProducts.map(p => this._renderRowItem(p))}</div>
           </div>
         </div>
-        ${useTwoColGrid
-          ? html`<div class="two-col-grid">${gridProducts.map(p => this._renderRowItem(p))}</div>`
-          : html`
-            <div class="scroll-wrapper">
-              <div class="scroll-container" @scroll=${this._onScroll}>
-                ${list.map(p => this._renderCard(p))}
-              </div>
-            </div>
-          `}
+      `;
+    }
+
+    return html`
+      <div class="section">
+        ${this._renderHeader(false)}
+        <div class="scroll-wrapper">
+          <div class="scroll-container" @scroll=${this._onScroll}>
+            ${list.map(p => this._renderCard(p))}
+          </div>
+        </div>
       </div>
     `;
   }

@@ -28,36 +28,37 @@ class HomePage extends LitElement {
       margin-bottom: 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .section-spacer { height: 16px; }
-    /* 外层只做间距，不设白底，让中间缝隙露出灰底 */
+    .section-spacer { height: 48px; }
     .two-column-wrap {
       max-width: 1600px;
       margin: 0 auto;
-      /*padding: 36px;*/
+      padding: 0 38px;
       background: transparent;
       box-sizing: border-box;
     }
-    /* 两栏中间留缝，缝隙处为 body 灰底 */
     .two-column {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0 24px;
+      gap: 12px;
     }
     .two-column ms-collection-row {
       width: 100%;
       min-width: 0;
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
+      box-sizing: border-box;
+    }
+    .product-collections-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      max-width: 1600px;
+      margin: 48px auto 0;
+      padding: 0 38px;
       box-sizing: border-box;
     }
     @media (max-width: 900px) {
-      .two-column-wrap { padding: 24px 20px; }
+      .two-column-wrap { padding: 0 20px; }
       .two-column { grid-template-columns: 1fr; gap: 0; }
-      .two-column ms-collection-row:first-child,
-      .two-column ms-collection-row:last-child {
-        padding: 0;
-      }
+      .product-collections-wrap { margin: 48px 20px 0; padding: 0 20px; }
     }
   `;
 
@@ -90,8 +91,31 @@ class HomePage extends LitElement {
     }));
   }
 
+  _isTallGameSection(col) {
+    const name = (col.name || '').trim();
+    const slug = (col.slug || '').toLowerCase();
+    return (
+      name === '最畅销的游戏' ||
+      name === '全新值得注目的電腦遊戲' ||
+      slug === 'top-grossing' ||
+      slug === 'new-pc-games' ||
+      slug.includes('topgrossing') ||
+      slug.includes('new-pc')
+    );
+  }
+
   _renderCollection(col) {
     const products = this._prepareProducts(col);
+    if (col.section_type === 'grid' && this._isTallGameSection(col)) {
+      return html`
+        <ms-collection-row
+          .title=${col.name}
+          .viewAllUrl=${col.view_all_url || ''}
+          .products=${products}
+          variant="tall"
+        ></ms-collection-row>
+      `;
+    }
     switch (col.section_type) {
       case 'horizontal_scroll':
         return html`
@@ -110,15 +134,17 @@ class HomePage extends LitElement {
             .products=${products}
           ></ms-collection-grid>
         `;
-      case 'hero_cards':
+      case 'hero_cards': {
+        const isSocial = col.name === '社交網路應用程式' || (col.slug || '').toLowerCase().includes('social');
         return html`
           <ms-collection-row
             .title=${col.name}
             .viewAllUrl=${col.view_all_url || ''}
             .products=${products}
-            variant="hero"
+            variant=${isSocial ? 'social' : 'hero'}
           ></ms-collection-row>
         `;
+      }
       case 'collection_cards':
         return '';
       default:
@@ -206,11 +232,12 @@ class HomePage extends LitElement {
         </div>
       ` : ''}
 
-      ${remainingCollections.map(col => this._renderCollection(col))}
-
-      ${collectionCards.length > 0 ? html`
-        <ms-collection-cards title="Collections" .cards=${collectionCards}></ms-collection-cards>
-      ` : ''}
+      <div class="product-collections-wrap">
+        ${remainingCollections.map(col => this._renderCollection(col))}
+        ${collectionCards.length > 0 ? html`
+          <ms-collection-cards title="Collections" .cards=${collectionCards}></ms-collection-cards>
+        ` : ''}
+      </div>
     `;
   }
 }
