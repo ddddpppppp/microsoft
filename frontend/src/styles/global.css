@@ -1,0 +1,36 @@
+:root {
+  --ms-bg: #ffffff;
+  --ms-bg-secondary: #f3f3f3;
+  --ms-bg-hover: #e8e8e8;
+  --ms-text: #131316;
+  --ms-text-secondary: #616161;
+  --ms-text-muted: #767676;
+  --ms-accent: #0067b8;
+  --ms-accent-hover: #005a9e;
+  --ms-border: #e5e5e5;
+  --ms-card-radius: 8px;
+  --ms-header-height: 84px;
+  --ms-content-max-width: 1600px;
+  --ms-section-padding: 0 40px;
+  --ms-price-free: #0e7a0d;
+  --ms-star-filled: #FFB900;
+  --ms-star-empty: #d1d1d1;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--ms-bg);
+  color: var(--ms-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}

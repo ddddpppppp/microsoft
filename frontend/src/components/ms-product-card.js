@@ -1,0 +1,181 @@
+import { LitElement, html, css } from 'lit';
+import './ms-rating.js';
+
+class MsProductCard extends LitElement {
+  static properties = {
+    product: { type: Object }
+  };
+
+  static styles = css`
+    :host {
+      display: block;
+      width: 160px;
+      flex-shrink: 0;
+    }
+    .card {
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+      background: transparent;
+    }
+    .card:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .icon-wrapper {
+      position: relative;
+      width: 81px;
+      height: 81px;
+      margin-bottom: 8px;
+    }
+    .icon {
+      width: 81px;
+      height: 81px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
+    .gamepass-badge {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      background: #107c10;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 3px;
+      line-height: 1.2;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .title {
+      font-size: 14px;
+      color: #131316;
+      line-height: 1.35;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+    }
+    .rating-row { margin-bottom: 4px; }
+    .category {
+      font-size: 12px;
+      color: #616161;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .price-area {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .price-free {
+      font-size: 13px;
+      color: #0e7a0d;
+      font-weight: 600;
+    }
+    .price-value {
+      font-size: 13px;
+      color: #131316;
+      font-weight: 600;
+    }
+    .price-original {
+      font-size: 12px;
+      color: #767676;
+      text-decoration: line-through;
+    }
+    .price-discounted {
+      font-size: 13px;
+      color: #131316;
+      font-weight: 600;
+    }
+    .discount-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      background: #c42b1c;
+      padding: 2px 5px;
+      border-radius: 3px;
+      line-height: 1.2;
+    }
+    .owned-badge {
+      font-size: 12px;
+      color: #0067b8;
+      font-weight: 500;
+    }
+  `;
+
+  constructor() {
+    super();
+    this.product = {};
+  }
+
+  _handleClick() {
+    const p = this.product;
+    if (!p) return;
+    if (p.is_own_product && p.custom_url) {
+      window.location.href = p.custom_url;
+    } else if (p.original_url) {
+      window.location.href = p.original_url;
+    }
+  }
+
+  _getIconSrc() {
+    const p = this.product;
+    if (p.local_icon) return p.local_icon;
+    if (p.icon_url) return p.icon_url;
+    return '';
+  }
+
+  _renderPrice() {
+    const p = this.product;
+    if (!p) return '';
+    if (p.price_type === 'free' || p.price === '免费' || p.price === 'Free' || p.price === '免费下载') {
+      return html`<span class="price-free">免费下载</span>`;
+    }
+    if (p.price_type === 'owned') {
+      return html`<span class="owned-badge">已拥有</span>`;
+    }
+    if (p.discount_percent && p.original_price) {
+      const discounted = p.price || p.original_price;
+      return html`
+        <span class="price-original">${p.original_price}</span>
+        <span class="price-discounted">${discounted}</span>
+        <span class="discount-badge">-${p.discount_percent}%</span>
+      `;
+    }
+    if (p.price) {
+      return html`<span class="price-value">${p.price}</span>`;
+    }
+    return html`<span class="price-free">免费下载</span>`;
+  }
+
+  render() {
+    const p = this.product || {};
+    return html`
+      <div class="card" @click=${this._handleClick}>
+        <div class="icon-wrapper">
+          <img class="icon" src=${this._getIconSrc()} alt=${p.title || ''} loading="lazy" />
+          ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
+        </div>
+        <div class="title">${p.title || ''}</div>
+        <div class="rating-row">
+          <ms-rating .value=${p.rating || 0}></ms-rating>
+        </div>
+        <div class="category">${p.category || ''}</div>
+        <div class="price-area">
+          ${this._renderPrice()}
+        </div>
+      </div>
+    `;
+  }
+}
+customElements.define('ms-product-card', MsProductCard);
