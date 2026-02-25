@@ -116,7 +116,7 @@ class AdminController extends Controller {
     public function settings() {
         $this->requireLogin();
         $settingModel = new Setting();
-        $pages = ['home', 'apps', 'games', 'about'];
+        $pages = ['home', 'apps', 'games', 'about', 'articles'];
         $settings = [];
         foreach ($pages as $p) {
             $settings[$p] = $settingModel->getByPage($p) ?: ['title' => '', 'keywords' => '', 'description' => ''];
@@ -130,7 +130,7 @@ class AdminController extends Controller {
     public function settingsSave() {
         $this->requireLogin();
         $settingModel = new Setting();
-        $pages = ['home', 'apps', 'games', 'about'];
+        $pages = ['home', 'apps', 'games', 'about', 'articles'];
         foreach ($pages as $p) {
             $settingModel->updateByPage($p, [
                 'title' => $_POST["title_$p"] ?? '',
@@ -157,7 +157,11 @@ class AdminController extends Controller {
         $this->requireLogin();
         echo View::renderWithLayout('admin/layout', 'admin/article_edit', [
             'pageTitle' => '新建资讯',
-            'article' => ['id' => '', 'title' => '', 'content' => '', 'slug' => '', 'status' => 'draft']
+            'article' => [
+                'id' => '', 'title' => '', 'content' => '', 'slug' => '', 'status' => 'draft',
+                'cover_image' => '', 'summary' => '', 'category' => '', 'is_recommended' => 0,
+                'author' => '', 'keywords' => '', 'meta_description' => ''
+            ]
         ]);
     }
 
@@ -176,11 +180,22 @@ class AdminController extends Controller {
         $this->requireLogin();
         $articleModel = new Article();
         $id = $_POST['id'] ?? '';
+        $summary = $_POST['summary'] ?? '';
+        if (empty($summary) && !empty($_POST['content'])) {
+            $summary = mb_substr(strip_tags($_POST['content']), 0, 200);
+        }
         $data = [
             'title' => $_POST['title'] ?? '',
             'content' => $_POST['content'] ?? '',
             'slug' => $_POST['slug'] ?? '',
             'status' => $_POST['status'] ?? 'draft',
+            'cover_image' => $_POST['cover_image'] ?? '',
+            'summary' => $summary,
+            'category' => $_POST['category'] ?? '',
+            'is_recommended' => isset($_POST['is_recommended']) ? 1 : 0,
+            'author' => $_POST['author'] ?? '',
+            'keywords' => $_POST['keywords'] ?? '',
+            'meta_description' => $_POST['meta_description'] ?? '',
         ];
         if ($id) {
             $articleModel->update($id, $data);

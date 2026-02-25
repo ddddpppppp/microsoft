@@ -8,9 +8,10 @@ class MsFooter extends LitElement {
       margin-top: 48px;
     }
     .footer-content {
-      max-width: 1600px;
+      max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
-      padding: 36px 20px 16px;
+      padding: 36px 38px 16px;
+      box-sizing: border-box;
     }
     .footer-columns {
       display: grid;

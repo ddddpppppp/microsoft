@@ -8,6 +8,8 @@ import './pages/apps-page.js';
 import './pages/games-page.js';
 import './pages/about-page.js';
 import './pages/detail-page.js';
+import './pages/articles-page.js';
+import './pages/article-detail-page.js';
 
 class MsApp extends LitElement {
   static properties = {
@@ -41,6 +43,11 @@ class MsApp extends LitElement {
       this.currentRoute = 'games';
     } else if (path === '/about') {
       this.currentRoute = 'about';
+    } else if (path === '/articles') {
+      this.currentRoute = 'articles';
+    } else if (path.startsWith('/article/')) {
+      this.currentRoute = 'article-detail';
+      this.routeParams = { slug: path.split('/article/')[1] };
     } else if (path.startsWith('/detail/')) {
       this.currentRoute = 'detail';
       this.routeParams = { id: path.split('/detail/')[1] };
@@ -76,6 +83,8 @@ class MsApp extends LitElement {
       case 'apps': return html`<apps-page></apps-page>`;
       case 'games': return html`<games-page></games-page>`;
       case 'about': return html`<about-page></about-page>`;
+      case 'articles': return html`<articles-page></articles-page>`;
+      case 'article-detail': return html`<article-detail-page .slug=${this.routeParams.slug}></article-detail-page>`;
       case 'detail': return html`<detail-page .productId=${this.routeParams.id}></detail-page>`;
       default: return html`<home-page></home-page>`;
     }

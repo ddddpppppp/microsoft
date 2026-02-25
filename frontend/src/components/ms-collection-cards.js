@@ -65,8 +65,8 @@ class MsCollectionCards extends LitElement {
     .scroll-btn.right { right: -4px; }
     .card {
       flex-shrink: 0;
-      width: 240px;
-      height: 140px;
+      width: 340px;
+      height: 240px;
       border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
@@ -86,7 +86,7 @@ class MsCollectionCards extends LitElement {
       inset: 0;
       background-size: cover;
       background-position: center;
-      opacity: 0.85;
+      z-index: 1;
     }
     .card-gradient {
       position: absolute;
@@ -101,7 +101,7 @@ class MsCollectionCards extends LitElement {
     .card-gradient-5 { background: linear-gradient(135deg, #3d0a0a 0%, #6b2d2d 50%, #8b3a3a 100%); }
     .card-content {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       padding: 12px 14px;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
     }

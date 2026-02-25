@@ -30,7 +30,7 @@ class HomePage extends LitElement {
     @keyframes spin { to { transform: rotate(360deg); } }
     .section-spacer { height: 48px; }
     .two-column-wrap {
-      max-width: 1600px;
+      max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
       padding: 0 38px;
       background: transparent;
@@ -50,7 +50,7 @@ class HomePage extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 48px;
-      max-width: 1600px;
+      max-width: var(--ms-content-max-width, 1600px);
       margin: 48px auto 0;
       padding: 0 38px;
       box-sizing: border-box;
@@ -176,9 +176,9 @@ class HomePage extends LitElement {
     );
     return cardCollections.map(c => ({
       name: c.name,
-      subtitle: c.hero_image || '',
+      subtitle: '',
       link_url: c.view_all_url || '#',
-      image_url: ''
+      image_url: c.hero_image || ''
     }));
   }
 

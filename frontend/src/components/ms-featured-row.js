@@ -8,9 +8,9 @@ class MsFeaturedRow extends LitElement {
   static styles = css`
     :host {
       display: block;
-      max-width: 1600px;
+      max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 38px;
       box-sizing: border-box;
     }
     .section { margin-bottom: 28px; }

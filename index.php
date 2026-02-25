@@ -34,6 +34,8 @@ $router->group('/api', function($r) {
     $r->get('/products-missing-description', [\App\Controllers\ApiController::class, 'productsMissingDescription']);
     $r->post('/product/{id}/description', [\App\Controllers\ApiController::class, 'updateProductDescription']);
     $r->post('/product/{id}/social-card-image', [\App\Controllers\ApiController::class, 'updateProductSocialCardImage']);
+    $r->get('/articles', [\App\Controllers\ApiController::class, 'articles']);
+    $r->get('/article/{slug}', [\App\Controllers\ApiController::class, 'articleDetail']);
 });
 
 // Admin routes
@@ -55,10 +57,11 @@ $router->group('/admin', function($r) {
 });
 
 // SPA frontend routes
-$spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/desk.html'];
+$spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/articles', '/desk.html'];
 foreach ($spaRoutes as $route) {
     $router->get($route, [\App\Controllers\HomeController::class, 'index']);
 }
 $router->get('/detail/{id}', [\App\Controllers\HomeController::class, 'index']);
+$router->get('/article/{slug}', [\App\Controllers\HomeController::class, 'index']);
 
 $app->run();

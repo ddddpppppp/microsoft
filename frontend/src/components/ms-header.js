@@ -237,6 +237,9 @@ class MsHeader extends LitElement {
   }
 
   _isActive(route) {
+    if (route === 'articles' && (this.currentRoute === 'articles' || this.currentRoute === 'article-detail')) {
+      return 'active';
+    }
     return this.currentRoute === route ? 'active' : '';
   }
 
@@ -257,6 +260,7 @@ class MsHeader extends LitElement {
             <a href="/" data-nav class=${this._isActive('home')}>主页</a>
             <a href="/apps" data-nav class=${this._isActive('apps')}>应用</a>
             <a href="/games" data-nav class=${this._isActive('games')}>游戏</a>
+            <a href="/articles" data-nav class=${this._isActive('articles')}>资讯</a>
             <a href="/about" data-nav class=${this._isActive('about')}>关于</a>
           </div>
 

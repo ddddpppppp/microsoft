@@ -11,6 +11,7 @@ class HomeController extends Controller {
         if ($uri === '/apps') $pageKey = 'apps';
         elseif ($uri === '/games') $pageKey = 'games';
         elseif ($uri === '/about') $pageKey = 'about';
+        elseif ($uri === '/articles' || strpos($uri, '/article/') === 0) $pageKey = 'articles';
         
         $setting = new Setting();
         $seo = $setting->getByPage($pageKey);

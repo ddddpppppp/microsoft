@@ -42,11 +42,6 @@ class MsCollectionRow extends LitElement {
       font-family: var(--header-font);
       color: #1a1a1a;
       margin: 0;
-      transform: translate3d(-12px, 0, 0);
-      transition: transform 0.2s ease;
-    }
-    .section-title-link.collection-title:hover .section-title {
-      transform: translate3d(0, 0, 0);
     }
     .title-chevron {
       font-size: 12px;

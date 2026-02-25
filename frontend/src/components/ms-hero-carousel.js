@@ -69,7 +69,7 @@ class MsHeroCarousel extends LitElement {
   static styles = css`
     :host {
       display: block;
-      padding: 12px 20px 0;
+      padding: 12px 0 0;
       user-select: none;
     }
     .hero-layout {
@@ -79,6 +79,8 @@ class MsHeroCarousel extends LitElement {
       gap: 12px 12px;
       max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
+      padding: 0 38px;
+      box-sizing: border-box;
     }
     .carousel-wrapper {
       grid-column: 1;

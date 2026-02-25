@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Collection;
 use App\Models\Banner;
 use App\Models\Setting;
+use App\Models\Article;
 
 class ApiController extends Controller {
     public function home() {
@@ -107,5 +108,57 @@ class ApiController extends Controller {
         $productModel = new Product();
         $productModel->updateSocialCardImage($id, $url);
         $this->json(['ok' => true, 'id' => $id]);
+    }
+
+    public function articles() {
+        $articleModel = new Article();
+        $settingModel = new Setting();
+        $page = (int)($_GET['page'] ?? 1);
+        $category = $_GET['category'] ?? '';
+
+        $result = $articleModel->paginatePublished($page, 12, $category);
+        $items = array_map(function($a) {
+            unset($a['content']);
+            return $a;
+        }, $result['items']);
+
+        $data = [
+            'seo' => $settingModel->getByPage('articles'),
+            'articles' => $items,
+            'pagination' => [
+                'page' => $result['page'],
+                'total_pages' => $result['total_pages'],
+                'total' => $result['total']
+            ],
+            'categories' => $articleModel->getCategories(),
+            'recommended' => array_map(function($a) {
+                unset($a['content']);
+                return $a;
+            }, $articleModel->getRecommended(6))
+        ];
+        $this->json($data);
+    }
+
+    public function articleDetail($slug) {
+        $articleModel = new Article();
+        $article = $articleModel->findBySlug($slug);
+        if (!$article || $article['status'] !== 'published') {
+            $this->json(['error' => 'Article not found'], 404);
+            return;
+        }
+        $articleModel->incrementViews($article['id']);
+        $article['views'] = ($article['views'] ?? 0) + 1;
+
+        $related = $articleModel->getRelated($article['id'], $article['category'] ?? '', 4);
+        $related = array_map(function($a) { unset($a['content']); return $a; }, $related);
+
+        $popular = $articleModel->getPopular(5);
+        $popular = array_map(function($a) { unset($a['content']); return $a; }, $popular);
+
+        $this->json([
+            'article' => $article,
+            'related' => $related,
+            'popular' => $popular
+        ]);
     }
 }

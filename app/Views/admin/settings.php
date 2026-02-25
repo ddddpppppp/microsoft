@@ -3,7 +3,7 @@
 <?php endif; ?>
 <form method="POST" action="/admin/settings/save">
     <?php
-    $pageLabels = ['home' => '首页', 'apps' => '应用页', 'games' => '游戏页', 'about' => '关于页'];
+    $pageLabels = ['home' => '首页', 'apps' => '应用页', 'games' => '游戏页', 'about' => '关于页', 'articles' => '资讯页'];
     foreach ($pageLabels as $key => $label):
         $s = $settings[$key] ?? [];
     ?>
