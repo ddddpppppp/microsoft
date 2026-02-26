@@ -26,7 +26,8 @@
             <a href="/admin/products" class="nav-link"><i class="bi bi-box-seam"></i> 产品管理</a>
             <a href="/admin/settings" class="nav-link"><i class="bi bi-gear"></i> SEO 设置</a>
             <a href="/admin/articles" class="nav-link"><i class="bi bi-newspaper"></i> 资讯管理</a>
-            <a href="/admin/ai-generate" class="nav-link"><i class="bi bi-robot"></i> AI 文章生成</a>
+            <a href="/admin/ai-article" class="nav-link"><i class="bi bi-robot"></i> AI 文章生成</a>
+            <a href="/admin/ai-review" class="nav-link"><i class="bi bi-chat-square-quote"></i> AI 评价生成</a>
             <a href="/" class="nav-link" target="_blank"><i class="bi bi-globe"></i> 访问前台</a>
             <a href="/admin/logout" class="nav-link"><i class="bi bi-box-arrow-right"></i> 退出登录</a>
         </nav>

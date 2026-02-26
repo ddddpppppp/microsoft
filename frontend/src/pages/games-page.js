@@ -3,6 +3,7 @@ import '../components/ms-hero-carousel.js';
 import '../components/ms-featured-row.js';
 import '../components/ms-collection-row.js';
 import '../components/ms-collection-grid.js';
+import '../components/ms-collection-cards.js';
 
 class GamesPage extends LitElement {
   static properties = {
@@ -12,7 +13,7 @@ class GamesPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 40px; background: transparent; }
+    :host { display: block; padding-bottom: 48px; background: transparent; }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -29,23 +30,19 @@ class GamesPage extends LitElement {
       margin-bottom: 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .page-header {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 24px 38px 8px;
-    }
-    .page-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #131316;
-      margin: 0;
-    }
-    .page-subtitle {
-      font-size: 14px;
-      color: #616161;
-      margin-top: 8px;
-    }
     .section-spacer { height: 48px; }
+    .product-collections-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      max-width: var(--ms-content-max-width, 1600px);
+      margin: 48px auto 0;
+      padding: 0 38px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 900px) {
+      .product-collections-wrap { margin: 48px 20px 0; padding: 0 20px; }
+    }
   `;
 
   constructor() {
@@ -82,6 +79,17 @@ class GamesPage extends LitElement {
     }));
   }
 
+  _buildHeroSideCards(featuredBanners) {
+    if (!featuredBanners?.length) return [];
+    if (featuredBanners.length >= 3) {
+      return [
+        featuredBanners[0],
+        { type: 'split', left: featuredBanners[1], right: featuredBanners[2] }
+      ];
+    }
+    return featuredBanners.slice(0, 2);
+  }
+
   _getGameCollections() {
     const allCollections = [
       ...(this.data?.collections || []),
@@ -93,8 +101,9 @@ class GamesPage extends LitElement {
     for (const col of allCollections) {
       if (seen.has(col.id)) continue;
       seen.add(col.id);
+      if (col.section_type === 'collection_cards') continue;
       const gameProducts = (col.products || []).filter(p => p.product_type === 'game');
-      if (gameProducts.length > 0 && col.section_type !== 'collection_cards') {
+      if (gameProducts.length > 0) {
         gameCollections.push({ ...col, products: gameProducts });
       }
     }
@@ -102,8 +111,70 @@ class GamesPage extends LitElement {
     return gameCollections.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
   }
 
+  _getCollectionCards() {
+    const allCollections = [
+      ...(this.data?.collections || []),
+      ...(this.homeData?.collections || [])
+    ];
+
+    const gameRelatedSlugs = new Set([
+      'xbox-play-anywhere', 'racing-games', 'kids-games',
+      'free-games'
+    ]);
+
+    const cards = allCollections
+      .filter(c => c.section_type === 'collection_cards' && c.slug !== 'collections' && gameRelatedSlugs.has(c.slug))
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+      .map(c => ({
+        name: c.name,
+        subtitle: '',
+        link_url: c.view_all_url || '#',
+        image_url: c.hero_image || ''
+      }));
+
+    if (cards.length === 0) {
+      return allCollections
+        .filter(c => c.section_type === 'collection_cards' && c.slug !== 'collections' && c.display_order > 10)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+        .map(c => ({
+          name: c.name,
+          subtitle: '',
+          link_url: c.view_all_url || '#',
+          image_url: c.hero_image || ''
+        }));
+    }
+    return cards;
+  }
+
+  _isTallGameSection(col) {
+    const name = (col.name || '').trim();
+    const slug = (col.slug || '').toLowerCase();
+    return (
+      name === '最畅销的游戏' ||
+      name === '全新值得注目的電腦遊戲' ||
+      slug === 'top-grossing' ||
+      slug === 'new-pc-games' ||
+      slug.includes('topgrossing') ||
+      slug.includes('top-grossing') ||
+      slug.includes('new-notable') ||
+      slug.includes('new-pc')
+    );
+  }
+
   _renderCollection(col) {
     const products = this._prepareProducts(col);
+
+    if (col.section_type === 'grid' && this._isTallGameSection(col)) {
+      return html`
+        <ms-collection-row
+          .title=${col.name}
+          .viewAllUrl=${col.view_all_url || ''}
+          .products=${products}
+          variant="tall"
+        ></ms-collection-row>
+      `;
+    }
+
     if (col.section_type === 'grid') {
       return html`
         <ms-collection-grid
@@ -113,6 +184,7 @@ class GamesPage extends LitElement {
         ></ms-collection-grid>
       `;
     }
+
     return html`
       <ms-collection-row
         .title=${col.name}
@@ -130,26 +202,22 @@ class GamesPage extends LitElement {
 
     const heroBanners = this.data?.heroBanners || this.homeData?.heroBanners || [];
     const featuredBanners = this.data?.featuredBanners || this.homeData?.featuredBanners || [];
-    const sideCards = featuredBanners.slice(0, 2);
-    const bottomFeatured = featuredBanners.slice(2, 5);
+    const sideCards = this._buildHeroSideCards(featuredBanners);
     const collections = this._getGameCollections();
+    const collectionCards = this._getCollectionCards();
 
     return html`
-      <div class="page-header">
-        <h1 class="page-title">游戏</h1>
-        <p class="page-subtitle">发现适用于 Windows 的精选游戏</p>
-      </div>
-
       ${heroBanners.length > 0 ? html`
         <ms-hero-carousel .banners=${heroBanners} .sideCards=${sideCards}></ms-hero-carousel>
         <div class="section-spacer"></div>
       ` : ''}
 
-      ${bottomFeatured.length > 0 ? html`
-        <ms-featured-row .banners=${bottomFeatured}></ms-featured-row>
-      ` : ''}
-
-      ${collections.map(col => this._renderCollection(col))}
+      <div class="product-collections-wrap">
+        ${collections.map(col => this._renderCollection(col))}
+        ${collectionCards.length > 0 ? html`
+          <ms-collection-cards title="Collections" .cards=${collectionCards}></ms-collection-cards>
+        ` : ''}
+      </div>
     `;
   }
 }

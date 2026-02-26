@@ -31,6 +31,7 @@ $router->group('/api', function($r) {
     $r->get('/about', [\App\Controllers\ApiController::class, 'about']);
     $r->get('/product/{id}', [\App\Controllers\ApiController::class, 'product']);
     $r->get('/product/{id}/related', [\App\Controllers\ApiController::class, 'productRelated']);
+    $r->get('/product/{id}/reviews', [\App\Controllers\ApiController::class, 'productReviews']);
     $r->get('/product-by-url', [\App\Controllers\ApiController::class, 'productByUrl']);
     $r->get('/search', [\App\Controllers\ApiController::class, 'search']);
     $r->get('/products-missing-description', [\App\Controllers\ApiController::class, 'productsMissingDescription']);
@@ -56,15 +57,23 @@ $router->group('/admin', function($r) {
     $r->get('/article/edit/{id}', [\App\Controllers\AdminController::class, 'articleEdit']);
     $r->post('/article/save', [\App\Controllers\AdminController::class, 'articleSave']);
     $r->get('/article/delete/{id}', [\App\Controllers\AdminController::class, 'articleDelete']);
-    // AI generation
-    $r->get('/ai-generate', [\App\Controllers\AdminController::class, 'aiGenerate']);
-    $r->get('/ai-task/create', [\App\Controllers\AdminController::class, 'aiTaskCreate']);
-    $r->get('/ai-task/edit/{id}', [\App\Controllers\AdminController::class, 'aiTaskEdit']);
-    $r->post('/ai-task/save', [\App\Controllers\AdminController::class, 'aiTaskSave']);
-    $r->get('/ai-task/delete/{id}', [\App\Controllers\AdminController::class, 'aiTaskDelete']);
-    $r->get('/ai-task/toggle/{id}', [\App\Controllers\AdminController::class, 'aiTaskToggle']);
-    $r->post('/ai-task/run', [\App\Controllers\AdminController::class, 'aiTaskRun']);
-    $r->post('/ai-config/save', [\App\Controllers\AdminController::class, 'aiConfigSave']);
+    // AI article generation
+    $r->get('/ai-article', [\App\Controllers\AdminController::class, 'aiGenerate']);
+    $r->get('/ai-article-task/create', [\App\Controllers\AdminController::class, 'aiTaskCreate']);
+    $r->get('/ai-article-task/edit/{id}', [\App\Controllers\AdminController::class, 'aiTaskEdit']);
+    $r->post('/ai-article-task/save', [\App\Controllers\AdminController::class, 'aiTaskSave']);
+    $r->get('/ai-article-task/delete/{id}', [\App\Controllers\AdminController::class, 'aiTaskDelete']);
+    $r->get('/ai-article-task/toggle/{id}', [\App\Controllers\AdminController::class, 'aiTaskToggle']);
+    $r->post('/ai-article-task/run', [\App\Controllers\AdminController::class, 'aiTaskRun']);
+    $r->post('/ai-article-config/save', [\App\Controllers\AdminController::class, 'aiConfigSave']);
+    // AI review generation
+    $r->get('/ai-review', [\App\Controllers\AdminController::class, 'aiReview']);
+    $r->get('/ai-review-task/create', [\App\Controllers\AdminController::class, 'aiReviewTaskCreate']);
+    $r->get('/ai-review-task/edit/{id}', [\App\Controllers\AdminController::class, 'aiReviewTaskEdit']);
+    $r->post('/ai-review-task/save', [\App\Controllers\AdminController::class, 'aiReviewTaskSave']);
+    $r->get('/ai-review-task/delete/{id}', [\App\Controllers\AdminController::class, 'aiReviewTaskDelete']);
+    $r->get('/ai-review-task/toggle/{id}', [\App\Controllers\AdminController::class, 'aiReviewTaskToggle']);
+    $r->post('/ai-review-task/run', [\App\Controllers\AdminController::class, 'aiReviewTaskRun']);
 });
 
 // SPA frontend routes

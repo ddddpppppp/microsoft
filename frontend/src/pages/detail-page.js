@@ -7,7 +7,10 @@ class DetailPage extends LitElement {
     customUrl: { type: String },
     data: { type: Object },
     relatedProducts: { type: Array },
-    loading: { type: Boolean }
+    loading: { type: Boolean },
+    descriptionExpanded: { type: Boolean },
+    reviewData: { type: Object },
+    reviewsExpanded: { type: Boolean }
   };
 
   static styles = css`
@@ -207,16 +210,62 @@ class DetailPage extends LitElement {
       color: #131316;
       margin: 0 0 12px;
     }
+    .description-wrapper {
+      position: relative;
+    }
     .description-text {
       font-size: 14px;
       color: #616161;
       line-height: 1.8;
       white-space: pre-wrap;
       word-break: break-word;
+      max-height: 120px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .description-text.expanded {
+      max-height: none;
+    }
+    .description-text:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(transparent, #fff);
+      pointer-events: none;
+    }
+    .description-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 0;
+      border: none;
+      background: none;
+      color: #0067b8;
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .description-toggle:hover {
+      color: #005a9e;
+      text-decoration: underline;
+    }
+    .description-toggle svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      transition: transform 0.2s;
+    }
+    .description-toggle.expanded svg {
+      transform: rotate(180deg);
     }
 
     .screenshots {
       margin-bottom: 32px;
+      position: relative;
     }
     .screenshots h3 {
       font-size: 18px;
@@ -224,24 +273,77 @@ class DetailPage extends LitElement {
       color: #131316;
       margin: 0 0 12px;
     }
+    .screenshots-container {
+      position: relative;
+    }
     .screenshots-row {
       display: flex;
       gap: 12px;
       overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      padding-bottom: 8px;
+      padding: 8px 0;
     }
-    .screenshots-row::-webkit-scrollbar { display: none; }
+    .screenshots-row::-webkit-scrollbar {
+      display: none;
+    }
     .screenshot-img {
       height: 220px;
+      min-width: 300px;
+      width: auto;
       border-radius: 8px;
-      object-fit: cover;
+      object-fit: contain;
       flex-shrink: 0;
       background: #f3f3f3;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .screenshot-img:hover { transform: scale(1.02); }
+    .screenshot-img:hover { 
+      transform: scale(1.02); 
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .screenshots-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.2s;
+    }
+    .screenshots-nav:hover {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .screenshots-nav:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    .screenshots-nav.prev {
+      left: -20px;
+    }
+    .screenshots-nav.next {
+      right: -20px;
+    }
+    .screenshots-nav svg {
+      width: 20px;
+      height: 20px;
+      fill: #333;
+    }
+    .screenshots-nav.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
 
     .whats-new {
       background: #f9f9f9;
@@ -253,6 +355,182 @@ class DetailPage extends LitElement {
       color: #616161;
       line-height: 1.6;
       white-space: pre-wrap;
+    }
+
+    /* Reviews section */
+    .reviews-section {
+      margin-top: 32px;
+      border-top: 1px solid #e5e5e5;
+      padding-top: 24px;
+    }
+    .reviews-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #131316;
+      margin: 0 0 20px;
+    }
+    .reviews-summary {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 24px;
+      align-items: flex-start;
+    }
+    .reviews-score {
+      text-align: center;
+      min-width: 100px;
+    }
+    .reviews-score .big-number {
+      font-size: 48px;
+      font-weight: 700;
+      color: #131316;
+      line-height: 1;
+    }
+    .reviews-score .total-count {
+      font-size: 13px;
+      color: #767676;
+      margin-top: 4px;
+    }
+    .reviews-bars {
+      flex: 1;
+      max-width: 300px;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: #767676;
+    }
+    .bar-label {
+      width: 20px;
+      text-align: right;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .bar-label svg {
+      width: 12px;
+      height: 12px;
+      fill: #e67700;
+    }
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: #e67700;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .reviews-list-wrapper {
+      position: relative;
+    }
+    .reviews-list {
+      max-height: 400px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .reviews-list.expanded {
+      max-height: none;
+    }
+    .reviews-list:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, #fff);
+      pointer-events: none;
+    }
+    .review-item {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 16px 0;
+    }
+    .review-item:last-child {
+      border-bottom: none;
+    }
+    .review-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .review-rating {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e67700;
+    }
+    .review-rating svg {
+      width: 14px;
+      height: 14px;
+      fill: #e67700;
+      vertical-align: -2px;
+    }
+    .review-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #131316;
+    }
+    .review-content {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.6;
+      margin: 6px 0;
+    }
+    .review-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: #999;
+    }
+    .review-author {
+      color: #767676;
+    }
+    .review-helpful {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .review-helpful span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .review-helpful svg {
+      width: 14px;
+      height: 14px;
+      fill: #999;
+    }
+    .reviews-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+      padding: 0;
+      border: none;
+      background: none;
+      color: #0067b8;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .reviews-toggle:hover {
+      text-decoration: underline;
+    }
+    .reviews-toggle svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      transition: transform 0.2s;
+    }
+    .reviews-toggle.expanded svg {
+      transform: rotate(180deg);
     }
 
     .sidebar { }
@@ -376,6 +654,9 @@ class DetailPage extends LitElement {
     this.data = null;
     this.relatedProducts = [];
     this.loading = true;
+    this.descriptionExpanded = false;
+    this.reviewData = null;
+    this.reviewsExpanded = false;
   }
 
   connectedCallback() {
@@ -387,6 +668,36 @@ class DetailPage extends LitElement {
     if ((changed.has('productId') && this.productId) || (changed.has('customUrl') && this.customUrl)) {
       this._loadData();
     }
+  }
+
+  _scrollScreenshots(direction) {
+    const row = this.shadowRoot.querySelector('.screenshots-row');
+    if (!row) return;
+    const scrollAmount = 320;
+    row.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+  }
+
+  _toggleDescription() {
+    this.descriptionExpanded = !this.descriptionExpanded;
+  }
+
+  _onScreenshotsScroll() {
+    const row = this.shadowRoot.querySelector('.screenshots-row');
+    if (!row) return;
+    const prevBtn = this.shadowRoot.querySelector('.screenshots-nav.prev');
+    const nextBtn = this.shadowRoot.querySelector('.screenshots-nav.next');
+    if (prevBtn) {
+      prevBtn.classList.toggle('hidden', row.scrollLeft <= 0);
+    }
+    if (nextBtn) {
+      const maxScroll = row.scrollWidth - row.clientWidth;
+      nextBtn.classList.toggle('hidden', row.scrollLeft >= maxScroll - 5);
+    }
+  }
+
+  firstUpdated() {
+    super.firstUpdated && super.firstUpdated();
+    setTimeout(() => this._onScreenshotsScroll(), 100);
   }
 
   async _loadData() {
@@ -405,6 +716,7 @@ class DetailPage extends LitElement {
         this.data = data;
         if (data.id) {
           this._loadRelatedProducts(data.id);
+          this._loadReviews(data.id);
         }
       } else {
         this.data = null;
@@ -425,6 +737,21 @@ class DetailPage extends LitElement {
     } catch (e) {
       console.error('Failed to load related products:', e);
     }
+  }
+
+  async _loadReviews(productId) {
+    try {
+      const res = await fetch(`/api/product/${productId}/reviews`);
+      if (res.ok) {
+        this.reviewData = await res.json();
+      }
+    } catch (e) {
+      console.error('Failed to load reviews:', e);
+    }
+  }
+
+  _toggleReviews() {
+    this.reviewsExpanded = !this.reviewsExpanded;
   }
 
   _getDownloadUrl() {
@@ -463,6 +790,67 @@ class DetailPage extends LitElement {
     }
     // Otherwise link to Microsoft Store
     return `https://apps.microsoft.com/detail/${r.related_ms_id}?hl=zh-CN&gl=HK`;
+  }
+
+  _renderReviews() {
+    if (!this.reviewData || !this.reviewData.reviews || this.reviewData.reviews.length === 0) return '';
+
+    const { reviews, avg_rating, total_count, distribution } = this.reviewData;
+    const maxDist = Math.max(...Object.values(distribution), 1);
+    const starSvg = html`<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+
+    return html`
+      <div class="reviews-section">
+        <div class="reviews-header">
+          <h3>评分和评价</h3>
+        </div>
+        <div class="reviews-summary">
+          <div class="reviews-score">
+            <div class="big-number">${avg_rating}</div>
+            <div class="total-count">${total_count} 个评级</div>
+          </div>
+          <div class="reviews-bars">
+            ${[5,4,3,2,1].map(star => {
+              const cnt = distribution[star] || 0;
+              const pct = (cnt / maxDist) * 100;
+              return html`
+                <div class="bar-row">
+                  <div class="bar-label">${star}${starSvg}</div>
+                  <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+                </div>
+              `;
+            })}
+          </div>
+        </div>
+        <div class="reviews-list-wrapper">
+          <div class="reviews-list ${this.reviewsExpanded ? 'expanded' : ''}">
+            ${reviews.map(r => html`
+              <div class="review-item">
+                <div class="review-top">
+                  <span class="review-rating">${r.rating} ${starSvg}</span>
+                  <span class="review-title">${r.title}</span>
+                </div>
+                <div class="review-content">${r.content}</div>
+                <div class="review-meta">
+                  <span class="review-author">${r.author_name}</span>
+                  <span>${r.created_at ? r.created_at.split(' ')[0] : ''}</span>
+                  <span class="review-helpful">
+                    <span><svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg> ${r.helpful_count || 0}</span>
+                    <span><svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg> ${r.unhelpful_count || 0}</span>
+                  </span>
+                </div>
+              </div>
+            `)}
+          </div>
+          ${reviews.length > 2 ? html`
+            <button class="reviews-toggle ${this.reviewsExpanded ? 'expanded' : ''}" @click=${this._toggleReviews}>
+              ${this.reviewsExpanded ? '收起' : '阅读更多信息'}
+              <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
   }
 
   _renderRelatedProducts() {
@@ -555,8 +943,16 @@ class DetailPage extends LitElement {
         ${screenshots.length > 0 ? html`
           <div class="screenshots">
             <h3>屏幕截图</h3>
-            <div class="screenshots-row">
-              ${screenshots.map(s => html`<img class="screenshot-img" src=${s} alt="截图" loading="lazy" />`)}
+            <div class="screenshots-container">
+              <button class="screenshots-nav prev" @click=${this._scrollScreenshots.bind(this, -1)}>
+                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+              </button>
+              <div class="screenshots-row" @scroll=${this._onScreenshotsScroll}>
+                ${screenshots.map(s => html`<img class="screenshot-img" src=${s} alt="截图" loading="lazy" />`)}
+              </div>
+              <button class="screenshots-nav next" @click=${this._scrollScreenshots.bind(this, 1)}>
+                <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+              </button>
             </div>
           </div>
         ` : ''}
@@ -565,7 +961,13 @@ class DetailPage extends LitElement {
           <div class="main-content">
             <div class="section">
               <h3>说明</h3>
-              <div class="description-text">${p.custom_description || p.description || '暂无描述信息。'}</div>
+              <div class="description-wrapper">
+                <div class="description-text ${this.descriptionExpanded ? 'expanded' : ''}">${p.custom_description || p.description || '暂无描述信息。'}</div>
+                <button class="description-toggle ${this.descriptionExpanded ? 'expanded' : ''}" @click=${this._toggleDescription}>
+                  ${this.descriptionExpanded ? '收起' : '展开更多'}
+                  <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                </button>
+              </div>
             </div>
 
             ${p.whats_new ? html`
@@ -646,6 +1048,8 @@ class DetailPage extends LitElement {
             </div>
           </div>
         </div>
+
+        ${this._renderReviews()}
 
         ${this._renderRelatedProducts()}
       </div>

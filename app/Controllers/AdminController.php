@@ -8,7 +8,9 @@ use App\Core\AiService;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Article;
-use App\Models\AiTask;
+use App\Models\AiArticleTask;
+use App\Models\AiReviewTask;
+use App\Models\ProductReview;
 
 class AdminController extends Controller {
 
@@ -219,10 +221,10 @@ class AdminController extends Controller {
 
     public function aiGenerate() {
         $this->requireLogin();
-        $taskModel = new AiTask();
+        $taskModel = new AiArticleTask();
         $tasks = $taskModel->all('created_at DESC');
         $aiConfig = require BASE_PATH . '/config/ai.php';
-        echo View::renderWithLayout('admin/layout', 'admin/ai_generate', [
+        echo View::renderWithLayout('admin/layout', 'admin/ai_article_generate', [
             'pageTitle' => 'AI 文章生成',
             'tasks' => $tasks,
             'aiConfig' => $aiConfig,
@@ -232,7 +234,7 @@ class AdminController extends Controller {
     public function aiTaskCreate() {
         $this->requireLogin();
         $aiConfig = require BASE_PATH . '/config/ai.php';
-        echo View::renderWithLayout('admin/layout', 'admin/ai_task_edit', [
+        echo View::renderWithLayout('admin/layout', 'admin/ai_article_task_edit', [
             'pageTitle' => '新建 AI 任务',
             'task' => [
                 'id' => '', 'name' => '', 'ai_provider' => 'deepseek', 'prompt' => '',
@@ -245,11 +247,11 @@ class AdminController extends Controller {
 
     public function aiTaskEdit($id) {
         $this->requireLogin();
-        $taskModel = new AiTask();
+        $taskModel = new AiArticleTask();
         $task = $taskModel->find($id);
-        if (!$task) $this->redirect('/admin/ai-generate');
+        if (!$task) $this->redirect('/admin/ai-article');
         $aiConfig = require BASE_PATH . '/config/ai.php';
-        echo View::renderWithLayout('admin/layout', 'admin/ai_task_edit', [
+        echo View::renderWithLayout('admin/layout', 'admin/ai_article_task_edit', [
             'pageTitle' => '编辑 AI 任务',
             'task' => $task,
             'aiConfig' => $aiConfig,
@@ -258,7 +260,7 @@ class AdminController extends Controller {
 
     public function aiTaskSave() {
         $this->requireLogin();
-        $taskModel = new AiTask();
+        $taskModel = new AiArticleTask();
         $id = $_POST['id'] ?? '';
         $data = [
             'name'          => $_POST['name'] ?? '',
@@ -285,28 +287,28 @@ class AdminController extends Controller {
 
         if ($id) {
             $taskModel->update($id, $data);
-            $this->redirect('/admin/ai-task/edit/' . $id . '?saved=1');
+            $this->redirect('/admin/ai-article-task/edit/' . $id . '?saved=1');
         } else {
             $newId = $taskModel->create($data);
-            $this->redirect('/admin/ai-task/edit/' . $newId . '?saved=1');
+            $this->redirect('/admin/ai-article-task/edit/' . $newId . '?saved=1');
         }
     }
 
     public function aiTaskDelete($id) {
         $this->requireLogin();
-        $taskModel = new AiTask();
+        $taskModel = new AiArticleTask();
         $taskModel->delete($id);
-        $this->redirect('/admin/ai-generate');
+        $this->redirect('/admin/ai-article');
     }
 
     public function aiTaskToggle($id) {
         $this->requireLogin();
-        $taskModel = new AiTask();
+        $taskModel = new AiArticleTask();
         $task = $taskModel->find($id);
         if ($task) {
             $taskModel->update($id, ['is_active' => $task['is_active'] ? 0 : 1]);
         }
-        $this->redirect('/admin/ai-generate');
+        $this->redirect('/admin/ai-article');
     }
 
     public function aiTaskRun() {
@@ -325,7 +327,7 @@ class AdminController extends Controller {
         }
 
         $aiService = new AiService();
-        $result = $aiService->generate($provider, $prompt);
+        $result = $aiService->generateArticle($provider, $prompt);
 
         if (!$result['success']) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -352,7 +354,7 @@ class AdminController extends Controller {
         $articleId = $articleModel->create($articleData);
 
         if ($taskId) {
-            $taskModel = new AiTask();
+            $taskModel = new AiArticleTask();
             $taskModel->markRun($taskId);
         }
 
@@ -367,6 +369,173 @@ class AdminController extends Controller {
         exit;
     }
 
+    // ── AI Review Generation ──────────────────────────────
+
+    public function aiReview() {
+        $this->requireLogin();
+        $taskModel = new AiReviewTask();
+        $tasks = $taskModel->getAllWithProduct();
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_review_generate', [
+            'pageTitle' => 'AI 评价生成',
+            'tasks' => $tasks,
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiReviewTaskCreate() {
+        $this->requireLogin();
+        $productModel = new Product();
+        $products = $productModel->all('title ASC');
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_review_task_edit', [
+            'pageTitle' => '新建评价任务',
+            'task' => [
+                'id' => '', 'name' => '', 'product_id' => '', 'ai_provider' => 'deepseek',
+                'prompt' => '', 'num_reviews' => 3, 'auto_publish' => 1,
+                'schedule_type' => 'once', 'interval_days' => 1, 'daily_time' => '09:00', 'is_active' => 1,
+            ],
+            'products' => $products,
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiReviewTaskEdit($id) {
+        $this->requireLogin();
+        $taskModel = new AiReviewTask();
+        $task = $taskModel->find($id);
+        if (!$task) $this->redirect('/admin/ai-review');
+        $productModel = new Product();
+        $products = $productModel->all('title ASC');
+        $aiConfig = require BASE_PATH . '/config/ai.php';
+        echo View::renderWithLayout('admin/layout', 'admin/ai_review_task_edit', [
+            'pageTitle' => '编辑评价任务',
+            'task' => $task,
+            'products' => $products,
+            'aiConfig' => $aiConfig,
+        ]);
+    }
+
+    public function aiReviewTaskSave() {
+        $this->requireLogin();
+        $taskModel = new AiReviewTask();
+        $id = $_POST['id'] ?? '';
+        $data = [
+            'name'          => $_POST['name'] ?? '',
+            'product_id'    => (int)($_POST['product_id'] ?? 0),
+            'ai_provider'   => $_POST['ai_provider'] ?? 'deepseek',
+            'prompt'        => $_POST['prompt'] ?? '',
+            'num_reviews'   => max(1, (int)($_POST['num_reviews'] ?? 3)),
+            'auto_publish'  => isset($_POST['auto_publish']) ? 1 : 0,
+            'schedule_type' => $_POST['schedule_type'] ?? 'once',
+            'interval_days' => max(1, (int)($_POST['interval_days'] ?? 1)),
+            'daily_time'    => $_POST['daily_time'] ?? '09:00',
+            'is_active'     => isset($_POST['is_active']) ? 1 : 0,
+        ];
+
+        if ($data['schedule_type'] === 'interval') {
+            $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_days'] . ' days'));
+        } elseif ($data['schedule_type'] === 'daily') {
+            $time = $data['daily_time'] ?: '09:00';
+            $next = date('Y-m-d') . ' ' . $time . ':00';
+            if (strtotime($next) <= time()) {
+                $next = date('Y-m-d', strtotime('+1 day')) . ' ' . $time . ':00';
+            }
+            $data['next_run_at'] = $next;
+        }
+
+        if ($id) {
+            $taskModel->update($id, $data);
+            $this->redirect('/admin/ai-review-task/edit/' . $id . '?saved=1');
+        } else {
+            $newId = $taskModel->create($data);
+            $this->redirect('/admin/ai-review-task/edit/' . $newId . '?saved=1');
+        }
+    }
+
+    public function aiReviewTaskDelete($id) {
+        $this->requireLogin();
+        $taskModel = new AiReviewTask();
+        $taskModel->delete($id);
+        $this->redirect('/admin/ai-review');
+    }
+
+    public function aiReviewTaskToggle($id) {
+        $this->requireLogin();
+        $taskModel = new AiReviewTask();
+        $task = $taskModel->find($id);
+        if ($task) {
+            $taskModel->update($id, ['is_active' => $task['is_active'] ? 0 : 1]);
+        }
+        $this->redirect('/admin/ai-review');
+    }
+
+    public function aiReviewTaskRun() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $taskId = $_POST['task_id'] ?? '';
+        $productId = (int)($_POST['product_id'] ?? 0);
+        $prompt = $_POST['prompt'] ?? '';
+        $provider = $_POST['provider'] ?? 'deepseek';
+        $numReviews = max(1, (int)($_POST['num_reviews'] ?? 3));
+        $autoPublish = !empty($_POST['auto_publish']);
+
+        if (empty($productId)) {
+            echo json_encode(['success' => false, 'error' => '请选择产品']);
+            exit;
+        }
+
+        $productModel = new Product();
+        $product = $productModel->find($productId);
+        if (!$product) {
+            echo json_encode(['success' => false, 'error' => '产品不存在']);
+            exit;
+        }
+
+        $aiService = new AiService();
+        $options = [];
+        if (!empty($prompt)) {
+            $options['custom_prompt'] = $prompt;
+        }
+
+        $result = $aiService->generateProductReviews($provider, $product['title'], $numReviews, $options);
+
+        if (!$result['success']) {
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $reviewModel = new ProductReview();
+        $created = 0;
+        foreach ($result['reviews'] as $r) {
+            $reviewModel->create([
+                'product_id'  => $productId,
+                'author_name' => $r['author_name'] ?? '匿名用户',
+                'rating'      => max(1, min(5, (float)($r['rating'] ?? 5))),
+                'title'       => $r['title'] ?? '',
+                'content'     => $r['content'] ?? '',
+                'pros'        => $r['pros'] ?? '',
+                'cons'        => $r['cons'] ?? '',
+                'summary'     => $r['summary'] ?? '',
+                'status'      => $autoPublish ? 'published' : 'draft',
+            ]);
+            $created++;
+        }
+
+        if ($taskId) {
+            $taskModel = new AiReviewTask();
+            $taskModel->markRun($taskId);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'count'   => $created,
+            'reviews' => $result['reviews'],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     public function aiConfigSave() {
         $this->requireLogin();
         $provider = $_POST['provider'] ?? '';
@@ -374,7 +543,7 @@ class AdminController extends Controller {
         $model = $_POST['model'] ?? '';
 
         if (empty($provider)) {
-            $this->redirect('/admin/ai-generate?error=1');
+            $this->redirect('/admin/ai-article?error=1');
         }
 
         $configFile = BASE_PATH . '/config/ai.php';
@@ -392,6 +561,6 @@ class AdminController extends Controller {
         $export = "<?php\nreturn " . var_export($config, true) . ";\n";
         file_put_contents($configFile, $export);
 
-        $this->redirect('/admin/ai-generate?config_saved=1');
+        $this->redirect('/admin/ai-article?config_saved=1');
     }
 }

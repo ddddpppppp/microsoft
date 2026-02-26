@@ -22,12 +22,14 @@ spl_autoload_register(function ($class) {
 });
 
 use App\Core\AiService;
-use App\Models\AiTask;
+use App\Models\AiArticleTask;
 use App\Models\Article;
+use App\Models\AiReviewTask;
+use App\Models\ProductReview;
 
 echo "[" . date('Y-m-d H:i:s') . "] AI Cron started\n";
 
-$taskModel = new AiTask();
+$taskModel = new AiArticleTask();
 $dueTasks = $taskModel->getDueTasks();
 
 if (empty($dueTasks)) {
@@ -43,7 +45,7 @@ $articleModel = new Article();
 foreach ($dueTasks as $task) {
     echo "[" . date('Y-m-d H:i:s') . "] Processing task #{$task['id']}: {$task['name']}\n";
 
-    $result = $aiService->generate($task['ai_provider'], $task['prompt']);
+    $result = $aiService->generateArticle($task['ai_provider'], $task['prompt']);
 
     if (!$result['success']) {
         echo "[" . date('Y-m-d H:i:s') . "] ERROR: {$result['error']}\n";
@@ -71,6 +73,57 @@ foreach ($dueTasks as $task) {
     echo "[" . date('Y-m-d H:i:s') . "] OK - Article #{$articleId} '{$title}' created\n";
 
     sleep(2);
+}
+
+// ── Review Tasks ─────────────────────────────────────
+echo "[" . date('Y-m-d H:i:s') . "] Checking review tasks...\n";
+
+$reviewTaskModel = new AiReviewTask();
+$dueReviewTasks = $reviewTaskModel->getDueTasks();
+
+if (!empty($dueReviewTasks)) {
+    echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueReviewTasks) . " due review task(s)\n";
+    $reviewModel = new ProductReview();
+
+    foreach ($dueReviewTasks as $task) {
+        echo "[" . date('Y-m-d H:i:s') . "] Processing review task #{$task['id']}: {$task['name']}\n";
+
+        $productName = $task['product_title'] ?? 'Unknown Product';
+        $options = [];
+        if (!empty($task['prompt'])) {
+            $options['custom_prompt'] = $task['prompt'];
+        }
+
+        $result = $aiService->generateProductReviews($task['ai_provider'], $productName, (int)$task['num_reviews'], $options);
+
+        if (!$result['success']) {
+            echo "[" . date('Y-m-d H:i:s') . "] ERROR: {$result['error']}\n";
+            continue;
+        }
+
+        $created = 0;
+        foreach ($result['reviews'] as $r) {
+            $reviewModel->create([
+                'product_id'  => $task['product_id'],
+                'author_name' => $r['author_name'] ?? '匿名用户',
+                'rating'      => max(1, min(5, (float)($r['rating'] ?? 5))),
+                'title'       => $r['title'] ?? '',
+                'content'     => $r['content'] ?? '',
+                'pros'        => $r['pros'] ?? '',
+                'cons'        => $r['cons'] ?? '',
+                'summary'     => $r['summary'] ?? '',
+                'status'      => $task['auto_publish'] ? 'published' : 'draft',
+            ]);
+            $created++;
+        }
+
+        $reviewTaskModel->markRun($task['id']);
+        echo "[" . date('Y-m-d H:i:s') . "] OK - {$created} reviews created for '{$productName}'\n";
+
+        sleep(2);
+    }
+} else {
+    echo "[" . date('Y-m-d H:i:s') . "] No due review tasks found.\n";
 }
 
 echo "[" . date('Y-m-d H:i:s') . "] AI Cron finished\n";

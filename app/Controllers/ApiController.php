@@ -7,6 +7,7 @@ use App\Models\Collection;
 use App\Models\Banner;
 use App\Models\Setting;
 use App\Models\Article;
+use App\Models\ProductReview;
 
 class ApiController extends Controller {
     public function home() {
@@ -85,6 +86,28 @@ class ApiController extends Controller {
         $productModel = new Product();
         $related = $productModel->getRelatedProducts($id);
         $this->json($related);
+    }
+
+    public function productReviews($id) {
+        $productModel = new Product();
+        $product = $productModel->find($id);
+        if (!$product) {
+            $this->json(['error' => 'Product not found'], 404);
+            return;
+        }
+
+        $reviewModel = new ProductReview();
+        $reviews = $reviewModel->getByProduct($id, 15);
+        $avgRating = $reviewModel->getAvgRating($id);
+        $totalCount = $reviewModel->getCountByProduct($id);
+        $distribution = $reviewModel->getRatingDistribution($id);
+
+        $this->json([
+            'reviews' => $reviews,
+            'avg_rating' => $avgRating,
+            'total_count' => $totalCount,
+            'distribution' => $distribution,
+        ]);
     }
 
     public function search() {
