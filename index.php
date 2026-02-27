@@ -3,6 +3,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
 define('BASE_PATH', __DIR__);
+// 确保 session 目录可写
+$sessionPath = BASE_PATH . '/storage/sessions';
+if (!is_dir($sessionPath)) {
+    mkdir($sessionPath, 0777, true);
+}
+ini_set('session.save_path', $sessionPath);
+session_start();
 
 spl_autoload_register(function ($class) {
     $prefix = 'App\\';
@@ -46,6 +53,7 @@ $router->group('/admin', function($r) {
     $r->get('', [\App\Controllers\AdminController::class, 'index']);
     $r->get('/login', [\App\Controllers\AdminController::class, 'loginForm']);
     $r->post('/login', [\App\Controllers\AdminController::class, 'login']);
+    $r->get('/captcha/refresh', [\App\Controllers\AdminController::class, 'captchaRefresh']);
     $r->get('/logout', [\App\Controllers\AdminController::class, 'logout']);
     $r->get('/products', [\App\Controllers\AdminController::class, 'products']);
     $r->get('/product/edit/{id}', [\App\Controllers\AdminController::class, 'productEdit']);

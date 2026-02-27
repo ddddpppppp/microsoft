@@ -4,13 +4,15 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Core\View;
-use App\Core\AiService;
+use App\Services\AiService;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Article;
 use App\Models\AiArticleTask;
 use App\Models\AiReviewTask;
 use App\Models\ProductReview;
+use App\Services\LoginAttemptService;
+use App\Services\CaptchaService;
 
 class AdminController extends Controller {
 
@@ -39,24 +41,96 @@ class AdminController extends Controller {
         if (!empty($_SESSION['admin_id'])) {
             $this->redirect('/admin');
         }
-        echo View::render('admin/login', ['error' => '']);
+        
+        $loginAttempt = new LoginAttemptService();
+        $ip = $loginAttempt->getClientIp();
+        $isBlocked = $loginAttempt->isBlocked($ip);
+        $remainingTime = $isBlocked ? $loginAttempt->getRemainingLockoutTime($ip) : 0;
+        $remainingAttempts = $loginAttempt->getRemainingAttempts($ip);
+        
+        $captcha = new CaptchaService();
+        $captchaImage = $captcha->render();
+        
+        echo View::render('admin/login', [
+            'error' => '',
+            'captchaImage' => $captchaImage,
+            'isBlocked' => $isBlocked,
+            'remainingTime' => $remainingTime,
+            'remainingAttempts' => $remainingAttempts
+        ]);
     }
 
     public function login() {
         session_start();
+        
+        $loginAttempt = new LoginAttemptService();
+        $ip = $loginAttempt->getClientIp();
+        
+        if ($loginAttempt->isBlocked($ip)) {
+            $remainingTime = $loginAttempt->getRemainingLockoutTime($ip);
+            $minutes = ceil($remainingTime / 60);
+            $captcha = new CaptchaService();
+            echo View::render('admin/login', [
+                'error' => "IP已被封锁，请在 {$minutes} 分钟后重试",
+                'captchaImage' => $captcha->render(),
+                'isBlocked' => true,
+                'remainingTime' => $remainingTime,
+                'remainingAttempts' => 0
+            ]);
+            return;
+        }
+        
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
+        $captchaInput = $_POST['captcha'] ?? '';
+        
+        $captcha = new CaptchaService();
+        
+        if (!$captcha->verify($captchaInput)) {
+            echo View::render('admin/login', [
+                'error' => '验证码错误',
+                'captchaImage' => $captcha->render(),
+                'isBlocked' => false,
+                'remainingTime' => 0,
+                'remainingAttempts' => $loginAttempt->getRemainingAttempts($ip)
+            ]);
+            return;
+        }
         
         $db = Database::getInstance();
         $user = $db->fetch("SELECT * FROM admin_users WHERE username = ?", [$username]);
         
         if ($user && password_verify($password, $user['password_hash'])) {
+            $loginAttempt->recordAttempt($ip, true);
             $_SESSION['admin_id'] = $user['id'];
             $_SESSION['admin_name'] = $user['username'];
             $this->redirect('/admin');
+            return;
         }
         
-        echo View::render('admin/login', ['error' => '用户名或密码错误']);
+        $loginAttempt->recordAttempt($ip, false);
+        $remainingAttempts = $loginAttempt->getRemainingAttempts($ip);
+        
+        $errorMsg = '用户名或密码错误';
+        if ($remainingAttempts <= 3 && $remainingAttempts > 0) {
+            $errorMsg .= "，还剩 {$remainingAttempts} 次尝试机会";
+        }
+        
+        echo View::render('admin/login', [
+            'error' => $errorMsg,
+            'captchaImage' => $captcha->render(),
+            'isBlocked' => $loginAttempt->isBlocked($ip),
+            'remainingTime' => 0,
+            'remainingAttempts' => $remainingAttempts
+        ]);
+    }
+    
+    public function captchaRefresh() {
+        session_start();
+        header('Content-Type: application/json');
+        $captcha = new CaptchaService();
+        echo json_encode(['image' => $captcha->render()]);
+        exit;
     }
 
     public function logout() {
