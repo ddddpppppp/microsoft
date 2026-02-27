@@ -58,14 +58,16 @@ foreach ($dueTasks as $task) {
     $slug = 'ai-' . date('YmdHis') . '-' . substr(md5($title . $task['id']), 0, 6);
     $summary = mb_substr(strip_tags($content), 0, 200);
 
+    $coverImage = 'https://picsum.photos/seed/' . urlencode($slug) . '/800/450';
     $articleId = $articleModel->create([
-        'title'    => $title,
-        'content'  => $content,
-        'slug'     => $slug,
-        'status'   => $task['auto_publish'] ? 'published' : 'draft',
-        'summary'  => $summary,
-        'category' => $task['category'],
-        'author'   => 'AI',
+        'title'        => $title,
+        'content'      => $content,
+        'slug'         => $slug,
+        'status'       => $task['auto_publish'] ? 'published' : 'draft',
+        'summary'      => $summary,
+        'category'     => $task['category'],
+        'author'       => '小编',
+        'cover_image'  => $coverImage,
     ]);
 
     $taskModel->markRun($task['id']);

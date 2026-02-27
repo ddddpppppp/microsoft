@@ -25,22 +25,28 @@ class ApiController extends Controller {
     }
 
     public function apps() {
+        $bannerModel = new Banner();
         $collectionModel = new Collection();
         $settingModel = new Setting();
 
         $data = [
             'seo' => $settingModel->getByPage('apps'),
+            'heroBanners' => $bannerModel->getHeroBanners('apps'),
+            'featuredBanners' => $bannerModel->getFeaturedBanners('apps'),
             'collections' => $collectionModel->getPageData('apps')
         ];
         $this->json($data);
     }
 
     public function games() {
+        $bannerModel = new Banner();
         $collectionModel = new Collection();
         $settingModel = new Setting();
 
         $data = [
             'seo' => $settingModel->getByPage('games'),
+            'heroBanners' => $bannerModel->getHeroBanners('games'),
+            'featuredBanners' => $bannerModel->getFeaturedBanners('games'),
             'collections' => $collectionModel->getPageData('games')
         ];
         $this->json($data);

@@ -4,6 +4,7 @@ import './ms-product-hero.js';
 import './ms-product-tall-card.js';
 import './ms-product-social-card.js';
 import './ms-rating.js';
+import './ms-lazy-img.js';
 
 class MsCollectionRow extends LitElement {
   static properties = {
@@ -325,7 +326,7 @@ class MsCollectionRow extends LitElement {
     return html`
       <a class="product-row" href=${href} ${useNav ? 'data-nav' : ''}>
         <div class="product-row-icon-wrap">
-          <img class="product-row-icon" src=${icon} alt=${p.title || ''} loading="lazy" />
+          <ms-lazy-img src=${icon} alt=${p.title || ''} width="80px" height="80px" radius="8px"></ms-lazy-img>
           ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
         </div>
         <div class="product-row-info">

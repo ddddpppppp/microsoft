@@ -6,9 +6,9 @@ return [
         'model'    => 'deepseek-chat',
     ],
     'gemini' => [
-        'api_key'  => '',
+        'api_key'  => 'AIzaSyAUa6GOFUR2P3Evf32L4hFhFWGY1-72Muk',
         'base_url' => 'https://generativelanguage.googleapis.com/v1beta',
-        'model'    => 'gemini-2.0-flash',
+        'model'    => 'gemini-flash-latest',
     ],
     'openai' => [
         'api_key'  => '',

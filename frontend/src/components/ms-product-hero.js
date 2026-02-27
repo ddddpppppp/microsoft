@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import './ms-rating.js';
+import './ms-lazy-img.js';
 
 /**
  * Wide card for sections like 創意應用程式 / 幻化成真: left = large icon area with background,
@@ -214,7 +215,7 @@ class MsProductHero extends LitElement {
                 : html`<div class="gradual-blur fallback"></div>`}
             </div>
             <div class="product-image-wrap">
-              ${iconSrc ? html`<img class="product-image" width="80" height="80" src=${iconSrc} alt="" loading="lazy" />` : ''}
+              ${iconSrc ? html`<ms-lazy-img class="product-image" src=${iconSrc} alt="" width="80px" height="80px" radius="12px"></ms-lazy-img>` : ''}
             </div>
           </div>
           <div class="details no-review">

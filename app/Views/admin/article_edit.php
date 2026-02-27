@@ -17,7 +17,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">内容</label>
-                        <textarea name="content" id="editor" class="form-control" rows="15"><?= htmlspecialchars($article['content'] ?? '') ?></textarea>
+                        <input type="hidden" name="content" id="content-input">
+                        <div id="editor" class="border rounded" style="min-height:400px;background:#fff;"><?= isset($article['content']) ? $article['content'] : '' ?></div>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -77,16 +78,31 @@
         </form>
     </div>
 </div>
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
 <script>
-tinymce.init({
-    selector: '#editor',
-    height: 500,
-    language: 'zh_CN',
-    plugins: 'lists link image table code fullscreen media',
-    toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image media | table | code fullscreen',
-    menubar: false,
-    branding: false,
-    promotion: false
-});
+(function() {
+    var editorEl = document.getElementById('editor');
+    var contentInput = document.getElementById('content-input');
+    var initialHtml = editorEl.innerHTML.trim();
+    editorEl.innerHTML = '';
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        placeholder: '输入文章内容…',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['blockquote'],
+                ['clean']
+            ]
+        }
+    });
+    if (initialHtml) quill.root.innerHTML = initialHtml;
+    document.querySelector('form').addEventListener('submit', function() {
+        contentInput.value = quill.root.innerHTML;
+    });
+})();
 </script>

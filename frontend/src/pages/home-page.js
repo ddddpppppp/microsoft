@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { cachedFetch } from '../utils/api-cache.js';
 import '../components/ms-hero-carousel.js';
 import '../components/ms-collection-row.js';
 import '../components/ms-collection-grid.js';
@@ -74,9 +75,9 @@ class HomePage extends LitElement {
   }
 
   async _loadData() {
+    if (this.data) { this.loading = false; return; }
     try {
-      const res = await fetch('/api/home');
-      this.data = await res.json();
+      this.data = await cachedFetch('/api/home');
     } catch (e) {
       console.error('Failed to load home data:', e);
     }

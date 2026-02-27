@@ -90,10 +90,11 @@ class AiService {
         unset($options['custom_prompt']);
 
         if (empty($prompt)) {
-            $prompt = "请为产品「{$productName}」生成 {$count} 条用户评价。";
+            $prompt = "请为产品「{$productName}」生成用户评价。";
         }
 
-        $prompt .= "\n\n请严格按照以下JSON格式输出：\n"
+        $prompt .= "\n\n请**恰好生成 {$count} 条**用户评价，不要多也不要少。\n\n"
+            . "请严格按照以下JSON格式输出：\n"
             . "{\n"
             . "  \"reviews\": [\n"
             . "    {\n"
@@ -107,18 +108,20 @@ class AiService {
             . "    }\n"
             . "  ]\n"
             . "}\n\n"
-            . "注意：rating 范围是 1.0-5.0，author_name 用中文网名，评分分布要自然合理。";
+            . "注意：rating 范围是 1.0-5.0，author_name 用中文网名，评分分布要自然合理。reviews 数组必须包含恰好 {$count} 条。";
 
         $result = $this->generate($provider, $prompt, $options);
         if (!$result['success']) return $result;
 
         $content = $this->stripCodeFences($result['content']);
         $data = json_decode($content, true);
-        if (!$data || !isset($data['reviews'])) {
+        if (!$data || !isset($data['reviews']) || !is_array($data['reviews'])) {
             return ['success' => false, 'error' => 'AI 返回的JSON格式无法解析', 'raw' => $result['content']];
         }
 
-        return ['success' => true, 'reviews' => $data['reviews']];
+        // 强制只取前 count 条，保证「生成条数」生效
+        $reviews = array_slice($data['reviews'], 0, $count);
+        return ['success' => true, 'reviews' => $reviews];
     }
 
     // ── Provider implementations ───────────────────────────
@@ -160,8 +163,8 @@ class AiService {
     }
 
     private function callGemini(array $cfg, string $apiKey, string $prompt, array $params): array {
-        $model = $cfg['model'] ?? 'gemini-2.0-flash';
-        $url = rtrim($cfg['base_url'], '/') . '/models/' . $model . ':generateContent?key=' . $apiKey;
+        $model = $cfg['model'] ?? 'gemini-flash-latest';
+        $url = rtrim($cfg['base_url'], '/') . '/models/' . $model . ':generateContent';
         $body = [
             'contents' => [[
                 'parts' => [['text' => $params['system_prompt'] . "\n\n" . $prompt]],
@@ -175,7 +178,10 @@ class AiService {
             $body['generationConfig']['responseMimeType'] = 'application/json';
         }
 
-        $result = $this->httpPost($url, $body, ['Content-Type: application/json']);
+        $result = $this->httpPost($url, $body, [
+            'Content-Type: application/json',
+            'X-goog-api-key: ' . $apiKey,
+        ]);
         if (!$result['success']) return $result;
 
         $data = json_decode($result['body'], true);

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import './ms-lazy-img.js';
 
 class MsCollectionCards extends LitElement {
   static properties = {
@@ -176,7 +177,7 @@ class MsCollectionCards extends LitElement {
           <div class="scroll-container" @scroll=${this._onScroll}>
             ${(this.cards || []).map((card, i) => html`
               <a class="card" href=${card.link_url || '#'} ?data-nav=${!(card.link_url || '').startsWith('http')}>
-                ${card.image_url ? html`<div class="card-bg" style="background-image: url('${card.image_url}')"></div>` : ''}
+                ${card.image_url ? html`<ms-lazy-img class="card-bg" src=${card.image_url} alt="" width="100%" height="100%" radius="0" style="position:absolute;inset:0;z-index:1;"></ms-lazy-img>` : ''}
                 <div class="card-gradient ${this._getGradientClass(i)}"></div>
                 <div class="card-content">
                   <div class="card-name">${card.name}</div>

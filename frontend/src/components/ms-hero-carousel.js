@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import './ms-lazy-img.js';
 
 const DEFAULT_BANNERS = [
   {
@@ -448,7 +449,7 @@ class MsHeroCarousel extends LitElement {
       <div class="slide ${isActive ? 'active' : ''}" @click=${() => this._onBannerClick(banner)}>
         <div class="slide-bg">
           ${hasImage
-            ? html`<img src=${imageSrc} alt="" loading="lazy" />`
+            ? html`<ms-lazy-img eager src=${imageSrc} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>`
             : html`<div class="gradient-fill" style="background: ${banner.gradient || 'linear-gradient(135deg, #1b2838, #2a475e)'}"></div>`}
         </div>
         <div class="slide-content">
@@ -473,7 +474,7 @@ class MsHeroCarousel extends LitElement {
       <a class="side-card" href=${card.link_url || '#'} ${card.link_url?.startsWith('/') ? html`data-nav` : html``}>
         <div class="side-card-bg">
           ${hasImage
-            ? html`<img src=${imageSrc} alt="" loading="lazy" />`
+            ? html`<ms-lazy-img eager src=${imageSrc} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>`
             : html`<div class="gradient-fill" style="background: ${card.gradient || 'linear-gradient(135deg, #2d3436, #636e72)'}"></div>`}
         </div>
         <div class="side-card-overlay"></div>
@@ -495,7 +496,7 @@ class MsHeroCarousel extends LitElement {
         <a class="side-card-half" href=${href} ${href.startsWith('/') ? html`data-nav` : html``}>
           <div class="side-card-bg">
             ${hasImage
-              ? html`<img src=${imageSrc} alt="" loading="lazy" />`
+              ? html`<ms-lazy-img eager src=${imageSrc} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>`
               : html`<div class="gradient-fill" style="background: ${half.gradient || 'linear-gradient(135deg, #2d3436, #636e72)'}"></div>`}
           </div>
           <div class="side-card-overlay"></div>

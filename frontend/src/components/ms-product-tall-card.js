@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import './ms-rating.js';
+import './ms-lazy-img.js';
 
 /**
  * Tall card for game sections: large cover image, bottom overlay with title/rating/price,
@@ -209,7 +210,7 @@ class MsProductTallCard extends LitElement {
     return html`
       <a class="card" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
         <div class="cover-wrap">
-          ${coverSrc ? html`<img class="cover-img" src=${coverSrc} alt="" loading="lazy" />` : ''}
+          ${coverSrc ? html`<ms-lazy-img class="cover-img" src=${coverSrc} alt="" width="100%" height="100%" radius="0" style="position:absolute;inset:0;"></ms-lazy-img>` : ''}
           <div class="badges">
             <div class="badge-left">
               ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}

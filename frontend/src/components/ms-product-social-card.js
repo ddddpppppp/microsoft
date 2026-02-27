@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import './ms-lazy-img.js';
 
 /**
  * 社交網路應用程式 卡片：上为扒拉入库的背景图（social_card_image），下为白底弧线区仅小图标+标题，与参考图布局一致。
@@ -140,10 +141,10 @@ class MsProductSocialCard extends LitElement {
     return html`
       <a class="card" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
         <div class="screenshot-wrap">
-          ${bgImg ? html`<img src=${bgImg} alt="" loading="lazy" />` : ''}
+          ${bgImg ? html`<ms-lazy-img src=${bgImg} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>` : ''}
         </div>
         <div class="info">
-          ${icon ? html`<img class="logo" src=${icon} alt="" loading="lazy" />` : ''}
+          ${icon ? html`<ms-lazy-img class="logo" src=${icon} alt="" width="40px" height="40px" radius="10px"></ms-lazy-img>` : ''}
           <div class="title-wrap">
             <h3 class="title">${p.title || ''}</h3>
           </div>

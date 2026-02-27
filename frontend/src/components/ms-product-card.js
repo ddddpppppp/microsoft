@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import './ms-rating.js';
+import './ms-lazy-img.js';
 
 class MsProductCard extends LitElement {
   static properties = {
@@ -28,12 +29,7 @@ class MsProductCard extends LitElement {
       height: 68px;
       margin-bottom: 8px;
     }
-    .icon {
-      width: 68px;
-      height: 68px;
-      border-radius: 6px;
-      object-fit: cover;
-      background: #f0f0f0;
+    ms-lazy-img {
       display: block;
     }
     .gamepass-badge {
@@ -165,7 +161,7 @@ class MsProductCard extends LitElement {
     return html`
       <div class="card" @click=${this._handleClick}>
         <div class="icon-wrapper">
-          <img class="icon" src=${this._getIconSrc()} alt=${p.title || ''} loading="lazy" />
+          <ms-lazy-img src=${this._getIconSrc()} alt=${p.title || ''} width="68px" height="68px" radius="6px"></ms-lazy-img>
           ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
         </div>
         <div class="title">${p.title || ''}</div>

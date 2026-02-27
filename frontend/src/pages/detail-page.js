@@ -824,10 +824,12 @@ class DetailPage extends LitElement {
         </div>
         <div class="reviews-list-wrapper">
           <div class="reviews-list ${this.reviewsExpanded ? 'expanded' : ''}">
-            ${reviews.map(r => html`
+            ${reviews.map(r => {
+              const starCount = Math.min(5, Math.max(0, Math.round(Number(r.rating) || 0)));
+              return html`
               <div class="review-item">
                 <div class="review-top">
-                  <span class="review-rating">${r.rating} ${starSvg}</span>
+                  <span class="review-rating">${r.rating} ${Array.from({ length: starCount }, () => starSvg)}</span>
                   <span class="review-title">${r.title}</span>
                 </div>
                 <div class="review-content">${r.content}</div>
@@ -840,7 +842,8 @@ class DetailPage extends LitElement {
                   </span>
                 </div>
               </div>
-            `)}
+            `;
+            })}
           </div>
           ${reviews.length > 2 ? html`
             <button class="reviews-toggle ${this.reviewsExpanded ? 'expanded' : ''}" @click=${this._toggleReviews}>

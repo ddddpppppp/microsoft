@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import './ms-lazy-img.js';
 
 class MsCollectionGrid extends LitElement {
   static properties = {
@@ -306,7 +307,7 @@ class MsCollectionGrid extends LitElement {
                   ${iconUrl ? html`
                     <div class="card-icon-bg" style="background-image: url('${iconUrl}')"></div>
                   ` : ''}
-                  <img class="card-icon" src=${iconUrl || ''} alt=${product.title || product.name || ''} loading="lazy" />
+                  <ms-lazy-img class="card-icon" src=${iconUrl || ''} alt=${product.title || product.name || ''} width="84px" height="84px" radius="12px" style="position:relative;z-index:1;"></ms-lazy-img>
                 </div>
                 <div class="card-bottom">
                   <span class="card-title">${product.title || product.name}</span>
