@@ -754,9 +754,21 @@ class DetailPage extends LitElement {
     this.reviewsExpanded = !this.reviewsExpanded;
   }
 
+  _onDownloadClick(e) {
+    if (!this.data) return;
+    const id = this.data.ms_id || this.data.id;
+    const url = `/api/product/${id}/download-click`;
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url);
+    } else {
+      fetch(url, { method: 'POST', keepalive: true }).catch(() => {});
+    }
+  }
+
   _getDownloadUrl() {
     if (!this.data) return '#';
     if (this.data.custom_download_url) return this.data.custom_download_url;
+    if (this.data.ms_id) return `https://get.microsoft.com/installer/download/${this.data.ms_id}?hl=zh-cn&gl=hk`;
     if (this.data.original_url) return this.data.original_url;
     return `https://apps.microsoft.com/detail/${this.data.ms_id}?hl=zh-CN&gl=HK`;
   }
@@ -926,7 +938,7 @@ class DetailPage extends LitElement {
               </div>
             ` : ''}
             <div class="action-row">
-              <a class="get-btn" href=${this._getDownloadUrl()} target="_blank" rel="nofollow noopener">
+              <a class="get-btn" href=${this._getDownloadUrl()} target="_blank" rel="nofollow noopener" @click=${this._onDownloadClick}>
                 ${p.price_type === 'free' || !p.price ? '免费获取' : '获取'}
               </a>
               <a class="store-btn" href=${this._getMsStoreUrl()} target="_blank" rel="nofollow noopener">

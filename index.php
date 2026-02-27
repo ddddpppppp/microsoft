@@ -44,6 +44,7 @@ $router->group('/api', function($r) {
     $r->get('/products-missing-description', [\App\Controllers\ApiController::class, 'productsMissingDescription']);
     $r->post('/product/{id}/description', [\App\Controllers\ApiController::class, 'updateProductDescription']);
     $r->post('/product/{id}/social-card-image', [\App\Controllers\ApiController::class, 'updateProductSocialCardImage']);
+    $r->post('/product/{id}/download-click', [\App\Controllers\ApiController::class, 'productDownloadClick']);
     $r->get('/articles', [\App\Controllers\ApiController::class, 'articles']);
     $r->get('/article/{slug}', [\App\Controllers\ApiController::class, 'articleDetail']);
 });

@@ -8,6 +8,7 @@ use App\Models\Banner;
 use App\Models\Setting;
 use App\Models\Article;
 use App\Models\ProductReview;
+use App\Models\ProductStats;
 
 class ApiController extends Controller {
     public function home() {
@@ -70,7 +71,24 @@ class ApiController extends Controller {
             $this->json(['error' => 'Product not found'], 404);
             return;
         }
+        $statsModel = new ProductStats();
+        $statsModel->incrementView($product['id']);
         $this->json($product);
+    }
+
+    public function productDownloadClick($id) {
+        $productModel = new Product();
+        $product = $productModel->findByMsId($id);
+        if (!$product) {
+            $product = $productModel->find($id);
+        }
+        if (!$product) {
+            $this->json(['error' => 'Product not found'], 404);
+            return;
+        }
+        $statsModel = new ProductStats();
+        $statsModel->incrementDownloadClick($product['id']);
+        $this->json(['ok' => true]);
     }
 
     public function productByUrl() {
@@ -85,6 +103,8 @@ class ApiController extends Controller {
             $this->json(['error' => 'Product not found'], 404);
             return;
         }
+        $statsModel = new ProductStats();
+        $statsModel->incrementView($product['id']);
         $this->json($product);
     }
 

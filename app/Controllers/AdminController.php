@@ -11,6 +11,7 @@ use App\Models\Article;
 use App\Models\AiArticleTask;
 use App\Models\AiReviewTask;
 use App\Models\ProductReview;
+use App\Models\ProductStats;
 use App\Services\LoginAttemptService;
 use App\Services\CaptchaService;
 
@@ -25,14 +26,21 @@ class AdminController extends Controller {
 
     public function index() {
         $this->requireLogin();
-        $productModel = new Product();
-        $articleModel = new Article();
-        $productCount = $productModel->count();
-        $articleCount = $articleModel->count();
+        $statsModel = new ProductStats();
+
+        $totalStats = $statsModel->getTotalStats();
+        $todayStats = $statsModel->getTodayStats();
+        $dailyTrend = $statsModel->getDailyTrend(30);
+        $ranking = $statsModel->getProductRanking(10);
+
         echo View::renderWithLayout('admin/layout', 'admin/dashboard', [
             'pageTitle' => '仪表盘',
-            'productCount' => $productCount,
-            'articleCount' => $articleCount
+            'totalViews' => $totalStats['total_views'] ?? 0,
+            'totalDownloads' => $totalStats['total_downloads'] ?? 0,
+            'todayViews' => $todayStats['today_views'] ?? 0,
+            'todayDownloads' => $todayStats['today_downloads'] ?? 0,
+            'dailyTrend' => json_encode($dailyTrend),
+            'ranking' => $ranking,
         ]);
     }
 
