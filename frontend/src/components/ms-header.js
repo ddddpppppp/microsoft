@@ -58,6 +58,15 @@ class MsHeader extends LitElement {
       position: relative;
       gap: 0;
     }
+    .nav-tabs-indicator {
+      position: absolute;
+      bottom: -8px;
+      height: 2px;
+      background: var(--theme-primary-element-color, #005FB8);
+      border-radius: 1px;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
     .nav-tabs a {
       position: relative;
       padding: 4px 20px;
@@ -76,16 +85,6 @@ class MsHeader extends LitElement {
     }
     .nav-tabs a.active {
       color: hsl(210 100% 22%);
-    }
-    .nav-tabs a.active::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 20px;
-      right: 20px;
-      height: 2px;
-      background: var(--theme-primary-element-color, #005FB8);
-      border-radius: 1px;
     }
 
     .search-area {
@@ -243,6 +242,33 @@ class MsHeader extends LitElement {
     return this.currentRoute === route ? 'active' : '';
   }
 
+  firstUpdated() {
+    this._updateIndicator();
+  }
+
+  updated(changed) {
+    if (changed.has('currentRoute')) {
+      this._updateIndicator();
+    }
+  }
+
+  _updateIndicator() {
+    requestAnimationFrame(() => {
+      const tabs = this.shadowRoot?.querySelector('.nav-tabs');
+      const active = tabs?.querySelector('a.active');
+      const indicator = tabs?.querySelector('.nav-tabs-indicator');
+      if (!tabs || !active || !indicator) return;
+
+      const tabsRect = tabs.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const paddingLeft = 20;
+      const paddingRight = 20;
+
+      indicator.style.left = `${activeRect.left - tabsRect.left + paddingLeft}px`;
+      indicator.style.width = `${activeRect.width - paddingLeft - paddingRight}px`;
+    });
+  }
+
   render() {
     return html`
       <header>
@@ -262,6 +288,7 @@ class MsHeader extends LitElement {
             <a href="/games" data-nav class=${this._isActive('games')}>游戏</a>
             <a href="/articles" data-nav class=${this._isActive('articles')}>资讯</a>
             <a href="/about" data-nav class=${this._isActive('about')}>关于</a>
+            <div class="nav-tabs-indicator"></div>
           </div>
 
           <div class="right-elements">

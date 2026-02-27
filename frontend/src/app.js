@@ -31,11 +31,6 @@ class MsApp extends LitElement {
     }
     .page-slot.active {
       display: block;
-      animation: pageFadeIn 0.25s ease-out;
-    }
-    @keyframes pageFadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
     }
   `;
 
@@ -80,16 +75,20 @@ class MsApp extends LitElement {
   }
 
   navigate(path) {
+    const prevRoute = this.currentRoute;
     window.history.pushState({}, '', path);
     this._handleRoute();
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (this.currentRoute !== prevRoute) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   connectedCallback() {
     super.connectedCallback();
     window.msApp = this;
     document.addEventListener('click', (e) => {
-      const link = e.target.closest('a[data-nav]');
+      const path = e.composedPath();
+      const link = path.find(el => el instanceof HTMLAnchorElement && el.hasAttribute('data-nav'));
       if (link) {
         e.preventDefault();
         this.navigate(link.getAttribute('href'));
