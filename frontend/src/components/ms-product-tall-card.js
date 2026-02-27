@@ -208,7 +208,8 @@ class MsProductTallCard extends LitElement {
     const rating = parseFloat(p.rating) || 0;
 
     return html`
-      <a class="card" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
+      <a class="card" href=${href} ?data-nav=${useNav} @click=${this._onClick}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <div class="cover-wrap">
           ${coverSrc ? html`<ms-lazy-img class="cover-img" src=${coverSrc} alt="" width="100%" height="100%" radius="0" style="position:absolute;inset:0;"></ms-lazy-img>` : ''}
           <div class="badges">

@@ -271,16 +271,16 @@ class MsHeader extends LitElement {
               </svg>
               <input type="text" class="search-box" placeholder="搜索应用、游戏等" />
             </div>
-            <a href="https://apps.microsoft.com/apppack" target="_blank" class="multi-app-btn" rel="noopener">
+            <a href="https://apps.microsoft.com/apppack" target="_blank" class="multi-app-btn" rel="nofollow noopener">
               <svg viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1 1h6v6H1V1zm1 1v4h4V2H2zm7-1h6v6H9V1zm1 1v4h4V2h-4zM1 9h6v6H1V9zm1 1v4h4v-4H2zm7-1h6v6H9V9zm1 1v4h4v-4h-4z"/>
               </svg>
               <span class="label">多应用安装</span>
             </a>
-            <a href="https://login.live.com/" target="_blank" class="sign-in-btn" rel="noopener">
+            <a href="https://login.live.com/" target="_blank" class="sign-in-btn" rel="nofollow noopener">
               <span class="sign-text">登录</span>
             </a>
-            <a href="https://login.live.com/" target="_blank" class="user-btn" title="登录" aria-label="登录" rel="noopener">
+            <a href="https://login.live.com/" target="_blank" class="user-btn" title="登录" aria-label="登录" rel="nofollow noopener">
               <svg viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 2a4 4 0 110 8 4 4 0 010-8zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM4.25 16.5a5.75 5.75 0 0111.5 0 .75.75 0 01-1.5 0 4.25 4.25 0 00-8.5 0 .75.75 0 01-1.5 0z"/>
               </svg>

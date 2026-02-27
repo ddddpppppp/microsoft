@@ -83,48 +83,48 @@ class MsFooter extends LitElement {
           <div class="footer-columns">
             <div class="footer-col">
               <h3>新增功能</h3>
-              <a href="https://blogs.windows.com/windowsexperience/2022/09/20/more-content-and-new-developer-opportunities-in-the-microsoft-store/" target="_blank" rel="noopener">Microsoft Store 中的更多内容</a>
+              <a href="https://blogs.windows.com/windowsexperience/2022/09/20/more-content-and-new-developer-opportunities-in-the-microsoft-store/" target="_blank" rel="nofollow noopener">Microsoft Store 中的更多内容</a>
               <a href="/apps" data-nav>应用</a>
               <a href="/games" data-nav>游戏</a>
-              <a href="https://apps.microsoft.com/apppack" target="_blank" rel="noopener">多应用安装</a>
-              <a href="https://blogs.windows.com/" target="_blank" rel="noopener">Windows 体验博客</a>
+              <a href="https://apps.microsoft.com/apppack" target="_blank" rel="nofollow noopener">多应用安装</a>
+              <a href="https://blogs.windows.com/" target="_blank" rel="nofollow noopener">Windows 体验博客</a>
             </div>
             <div class="footer-col">
               <h3>Microsoft Store</h3>
-              <a href="https://account.microsoft.com/" target="_blank" rel="noopener">Microsoft 帐户</a>
-              <a href="https://go.microsoft.com/fwlink/?linkid=2139749" target="_blank" rel="noopener">Microsoft Store 支持</a>
-              <a href="https://go.microsoft.com/fwlink/p/?LinkID=824764&clcid=0x409" target="_blank" rel="noopener">返回</a>
-              <a href="https://www.microsoft.com/store/b/payment-financing-options?icid=footer_financing_vcc" target="_blank" rel="noopener">灵活的付款方式</a>
-              <a href="https://learn.microsoft.com/windows/apps/publish/store-policies-and-code-of-conduct" target="_blank" rel="noopener">策略和行为准则</a>
-              <a href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank" rel="noopener">获取 Microsoft Store 应用</a>
+              <a href="https://account.microsoft.com/" target="_blank" rel="nofollow noopener">Microsoft 帐户</a>
+              <a href="https://go.microsoft.com/fwlink/?linkid=2139749" target="_blank" rel="nofollow noopener">Microsoft Store 支持</a>
+              <a href="https://go.microsoft.com/fwlink/p/?LinkID=824764&clcid=0x409" target="_blank" rel="nofollow noopener">返回</a>
+              <a href="https://www.microsoft.com/store/b/payment-financing-options?icid=footer_financing_vcc" target="_blank" rel="nofollow noopener">灵活的付款方式</a>
+              <a href="https://learn.microsoft.com/windows/apps/publish/store-policies-and-code-of-conduct" target="_blank" rel="nofollow noopener">策略和行为准则</a>
+              <a href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank" rel="nofollow noopener">获取 Microsoft Store 应用</a>
             </div>
             <div class="footer-col">
               <h3>适用于开发人员</h3>
-              <a href="https://developer.microsoft.com/microsoft-store" target="_blank" rel="noopener">发布应用</a>
-              <a href="https://apps.microsoft.com/store/app-badge/" target="_blank" rel="noopener">生成应用徽章</a>
-              <a href="https://www.pwabuilder.com/" target="_blank" rel="noopener">PWABuilder</a>
+              <a href="https://developer.microsoft.com/microsoft-store" target="_blank" rel="nofollow noopener">发布应用</a>
+              <a href="https://apps.microsoft.com/store/app-badge/" target="_blank" rel="nofollow noopener">生成应用徽章</a>
+              <a href="https://www.pwabuilder.com/" target="_blank" rel="nofollow noopener">PWABuilder</a>
             </div>
             <div class="footer-col">
               <h3>Windows</h3>
-              <a href="https://careers.microsoft.com/" target="_blank" rel="noopener">职业</a>
-              <a href="https://www.microsoft.com/about" target="_blank" rel="noopener">关于 Microsoft</a>
-              <a href="https://news.microsoft.com/" target="_blank" rel="noopener">公司新闻</a>
-              <a href="https://www.microsoft.com/investor/default.aspx" target="_blank" rel="noopener">投资者</a>
-              <a href="https://www.microsoft.com/diversity/" target="_blank" rel="noopener">多样性和包容性</a>
-              <a href="https://www.microsoft.com/accessibility" target="_blank" rel="noopener">辅助功能</a>
-              <a href="https://www.microsoft.com/sustainability/" target="_blank" rel="noopener">可持续性</a>
+              <a href="https://careers.microsoft.com/" target="_blank" rel="nofollow noopener">职业</a>
+              <a href="https://www.microsoft.com/about" target="_blank" rel="nofollow noopener">关于 Microsoft</a>
+              <a href="https://news.microsoft.com/" target="_blank" rel="nofollow noopener">公司新闻</a>
+              <a href="https://www.microsoft.com/investor/default.aspx" target="_blank" rel="nofollow noopener">投资者</a>
+              <a href="https://www.microsoft.com/diversity/" target="_blank" rel="nofollow noopener">多样性和包容性</a>
+              <a href="https://www.microsoft.com/accessibility" target="_blank" rel="nofollow noopener">辅助功能</a>
+              <a href="https://www.microsoft.com/sustainability/" target="_blank" rel="nofollow noopener">可持续性</a>
             </div>
           </div>
           <div class="footer-bottom">
             <button class="locale-btn">中文（中国）</button>
-            <a href="https://aka.ms/yourcaliforniaprivacychoices" target="_blank" rel="noopener">你的隐私选择</a>
-            <a href="https://support.microsoft.com/contactus" target="_blank" rel="noopener">联系 Microsoft</a>
-            <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">隐私</a>
-            <a href="https://www.microsoft.com/legal/terms-of-use" target="_blank" rel="noopener">使用条款</a>
-            <a href="https://www.microsoft.com/legal/intellectualproperty/trademarks" target="_blank" rel="noopener">商标</a>
-            <a href="https://www.microsoft.com/legal/compliance/devices-safety-and-eco" target="_blank" rel="noopener">安全与生态</a>
-            <a href="https://www.microsoft.com/legal/compliance/recycling" target="_blank" rel="noopener">回收</a>
-            <a href="https://choice.microsoft.com/" target="_blank" rel="noopener">关于我们的广告</a>
+            <a href="https://aka.ms/yourcaliforniaprivacychoices" target="_blank" rel="nofollow noopener">你的隐私选择</a>
+            <a href="https://support.microsoft.com/contactus" target="_blank" rel="nofollow noopener">联系 Microsoft</a>
+            <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="nofollow noopener">隐私</a>
+            <a href="https://www.microsoft.com/legal/terms-of-use" target="_blank" rel="nofollow noopener">使用条款</a>
+            <a href="https://www.microsoft.com/legal/intellectualproperty/trademarks" target="_blank" rel="nofollow noopener">商标</a>
+            <a href="https://www.microsoft.com/legal/compliance/devices-safety-and-eco" target="_blank" rel="nofollow noopener">安全与生态</a>
+            <a href="https://www.microsoft.com/legal/compliance/recycling" target="_blank" rel="nofollow noopener">回收</a>
+            <a href="https://choice.microsoft.com/" target="_blank" rel="nofollow noopener">关于我们的广告</a>
             <span>&copy; Microsoft 2024</span>
           </div>
         </div>

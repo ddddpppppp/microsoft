@@ -176,7 +176,8 @@ class MsCollectionCards extends LitElement {
           <button class="scroll-btn left ${this._showLeftArrow ? 'visible' : ''}" @click=${() => this._scroll('left')} aria-label="向左滚动">&#8249;</button>
           <div class="scroll-container" @scroll=${this._onScroll}>
             ${(this.cards || []).map((card, i) => html`
-              <a class="card" href=${card.link_url || '#'} ?data-nav=${!(card.link_url || '').startsWith('http')}>
+              <a class="card" href=${card.link_url || '#'} ?data-nav=${!(card.link_url || '').startsWith('http')}
+                rel=${(card.link_url || '').startsWith('http') ? 'nofollow noopener' : ''} ?target=${(card.link_url || '').startsWith('http') ? '_blank' : ''}>
                 ${card.image_url ? html`<ms-lazy-img class="card-bg" src=${card.image_url} alt="" width="100%" height="100%" radius="0" style="position:absolute;inset:0;z-index:1;"></ms-lazy-img>` : ''}
                 <div class="card-gradient ${this._getGradientClass(i)}"></div>
                 <div class="card-content">

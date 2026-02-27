@@ -471,7 +471,8 @@ class MsHeroCarousel extends LitElement {
     const hasImage = card.image_url || card.local_image;
     const imageSrc = card.local_image || card.image_url;
     return html`
-      <a class="side-card" href=${card.link_url || '#'} ${card.link_url?.startsWith('/') ? html`data-nav` : html``}>
+      <a class="side-card" href=${card.link_url || '#'} ?data-nav=${card.link_url?.startsWith('/')}
+        rel=${card.link_url?.startsWith('/') ? '' : 'nofollow noopener'} ?target=${!card.link_url?.startsWith('/') ? '_blank' : ''}>
         <div class="side-card-bg">
           ${hasImage
             ? html`<ms-lazy-img eager src=${imageSrc} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>`
@@ -493,7 +494,8 @@ class MsHeroCarousel extends LitElement {
       const imageSrc = half.local_image || half.image_url;
       const href = half.link_url || '#';
       return html`
-        <a class="side-card-half" href=${href} ${href.startsWith('/') ? html`data-nav` : html``}>
+        <a class="side-card-half" href=${href} ?data-nav=${href.startsWith('/')}
+          rel=${href.startsWith('/') ? '' : 'nofollow noopener'} ?target=${!href.startsWith('/') ? '_blank' : ''}>
           <div class="side-card-bg">
             ${hasImage
               ? html`<ms-lazy-img eager src=${imageSrc} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>`

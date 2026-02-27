@@ -139,7 +139,8 @@ class MsProductSocialCard extends LitElement {
     const useNav = href.startsWith('/');
 
     return html`
-      <a class="card" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
+      <a class="card" href=${href} ?data-nav=${useNav} @click=${this._onClick}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <div class="screenshot-wrap">
           ${bgImg ? html`<ms-lazy-img src=${bgImg} alt="" width="100%" height="100%" radius="0"></ms-lazy-img>` : ''}
         </div>

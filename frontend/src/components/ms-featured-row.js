@@ -101,7 +101,8 @@ class MsFeaturedRow extends LitElement {
       <div class="section">
         <div class="banner-row">
           ${(this.banners || []).map(banner => html`
-            <a class="banner-card" href=${banner.link_url || '#'} ${banner.link_url?.startsWith('http') ? html`` : html`data-nav`}>
+            <a class="banner-card" href=${banner.link_url || '#'} ?data-nav=${!banner.link_url?.startsWith('http')}
+              rel=${banner.link_url?.startsWith('http') ? 'nofollow noopener' : ''} ?target=${banner.link_url?.startsWith('http') ? '_blank' : ''}>
               ${(banner.image_url || banner.local_image) ? html`<div class="banner-bg" style="background-image: url('${banner.local_image || banner.image_url}')"></div>` : ''}
               <div class="banner-overlay"></div>
               <div class="banner-content">

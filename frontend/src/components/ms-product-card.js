@@ -116,13 +116,19 @@ class MsProductCard extends LitElement {
     this.product = {};
   }
 
-  _handleClick() {
+  _getHref() {
     const p = this.product;
-    if (!p) return;
-    if (p.is_own_product && p.custom_url) {
-      window.location.href = p.custom_url;
-    } else if (p.original_url) {
-      window.location.href = p.original_url;
+    if (!p) return '#';
+    if (p.is_own_product && p.custom_url) return p.custom_url;
+    if (p.original_url) return p.original_url;
+    return '#';
+  }
+
+  _onClick(e) {
+    const href = this._getHref();
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      window.msApp?.navigate(href);
     }
   }
 
@@ -159,7 +165,10 @@ class MsProductCard extends LitElement {
   render() {
     const p = this.product || {};
     return html`
-      <div class="card" @click=${this._handleClick}>
+      <a class="card" href=${this._getHref()} @click=${this._onClick}
+        rel=${this._getHref().startsWith('/') ? '' : 'nofollow noopener'}
+        target=${this._getHref().startsWith('/') ? '' : '_blank'}
+        style="text-decoration:none;color:inherit;display:block;">
         <div class="icon-wrapper">
           <ms-lazy-img src=${this._getIconSrc()} alt=${p.title || ''} width="68px" height="68px" radius="6px"></ms-lazy-img>
           ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
@@ -172,7 +181,7 @@ class MsProductCard extends LitElement {
         <div class="price-area">
           ${this._renderPrice()}
         </div>
-      </div>
+      </a>
     `;
   }
 }

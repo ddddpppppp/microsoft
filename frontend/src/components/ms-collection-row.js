@@ -324,7 +324,8 @@ class MsCollectionRow extends LitElement {
     const href = p.is_own_product && p.custom_url ? p.custom_url : (p.original_url || '#');
     const useNav = href.startsWith('/');
     return html`
-      <a class="product-row" href=${href} ${useNav ? 'data-nav' : ''}>
+      <a class="product-row" href=${href} ?data-nav=${useNav}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <div class="product-row-icon-wrap">
           <ms-lazy-img src=${icon} alt=${p.title || ''} width="80px" height="80px" radius="8px"></ms-lazy-img>
           ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}

@@ -452,7 +452,8 @@ class GamesPage extends LitElement {
     const priceText = isFree ? '免费下载' : (p.price || '');
     
     return html`
-      <a class="topgames-item" href=${href} ${useNav ? 'data-nav' : ''}>
+      <a class="topgames-item" href=${href} ?data-nav=${useNav}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <ms-lazy-img class="topgames-item-icon" src=${icon} alt=${p.title || ''} width="64px" height="64px" radius="8px"></ms-lazy-img>
         <div class="topgames-item-info">
           <div class="topgames-item-name">${p.title || ''}</div>
@@ -489,7 +490,7 @@ class GamesPage extends LitElement {
           </div>
           <div class="slot-right">
             <div class="gamepass-banner">
-              <a href="https://www.xbox.com/xbox-game-pass" target="_blank" rel="noopener">
+              <a href="https://www.xbox.com/xbox-game-pass" target="_blank" rel="nofollow noopener">
                 <div class="gamepass-text">
                   <div class="promo-badge">
                     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>

@@ -869,7 +869,8 @@ class DetailPage extends LitElement {
             const href = this._getRelatedProductUrl(r);
             const isInternal = r.is_own_product && r.custom_url;
             return html`
-              <a class="related-card" href=${href} ${isInternal ? 'data-nav' : 'target="_blank"'}>
+              <a class="related-card" href=${href} ?data-nav=${isInternal}
+                ?target=${!isInternal ? '_blank' : ''} rel=${isInternal ? '' : 'nofollow noopener'}>
                 <img class="related-icon" src=${r.related_icon_url || ''} alt=${r.related_title} loading="lazy" />
                 <div class="related-title">${r.related_title}</div>
                 <div class="related-meta">
@@ -913,7 +914,7 @@ class DetailPage extends LitElement {
             <h1 class="product-title">${displayTitle}</h1>
             ${p.developer ? html`
               <div class="product-developer">
-                <a href="https://apps.microsoft.com/search/publisher?name=${encodeURIComponent(p.developer)}&hl=zh-CN&gl=HK" target="_blank">${p.developer}</a>
+                <a href="https://apps.microsoft.com/search/publisher?name=${encodeURIComponent(p.developer)}&hl=zh-CN&gl=HK" target="_blank" rel="nofollow noopener">${p.developer}</a>
               </div>
             ` : ''}
             ${p.category ? html`<div class="product-category">${p.category}</div>` : ''}
@@ -925,10 +926,10 @@ class DetailPage extends LitElement {
               </div>
             ` : ''}
             <div class="action-row">
-              <a class="get-btn" href=${this._getDownloadUrl()} target="_blank">
+              <a class="get-btn" href=${this._getDownloadUrl()} target="_blank" rel="nofollow noopener">
                 ${p.price_type === 'free' || !p.price ? '免费获取' : '获取'}
               </a>
-              <a class="store-btn" href=${this._getMsStoreUrl()} target="_blank">
+              <a class="store-btn" href=${this._getMsStoreUrl()} target="_blank" rel="nofollow noopener">
                 在 Microsoft Store 中查看
               </a>
               <div class="price-display">${this._renderPrice()}</div>
@@ -1032,21 +1033,21 @@ class DetailPage extends LitElement {
               <h4>发行商信息</h4>
               ${p.publisher_support ? html`
                 <div class="info-row">
-                  <a class="info-link" href=${p.publisher_support} target="_blank">支持</a>
+                  <a class="info-link" href=${p.publisher_support} target="_blank" rel="nofollow noopener">支持</a>
                 </div>
               ` : ''}
               ${p.publisher_website ? html`
                 <div class="info-row">
-                  <a class="info-link" href=${p.publisher_website} target="_blank">网站</a>
+                  <a class="info-link" href=${p.publisher_website} target="_blank" rel="nofollow noopener">网站</a>
                 </div>
               ` : ''}
               ${p.privacy_policy_url ? html`
                 <div class="info-row">
-                  <a class="info-link" href=${p.privacy_policy_url} target="_blank">隐私政策</a>
+                  <a class="info-link" href=${p.privacy_policy_url} target="_blank" rel="nofollow noopener">隐私政策</a>
                 </div>
               ` : ''}
               <div class="info-row">
-                <a class="info-link" href=${this._getMsStoreUrl()} target="_blank">在 Microsoft Store 中查看 ›</a>
+                <a class="info-link" href=${this._getMsStoreUrl()} target="_blank" rel="nofollow noopener">在 Microsoft Store 中查看 ›</a>
               </div>
             </div>
           </div>

@@ -206,7 +206,8 @@ class MsProductHero extends LitElement {
     const useNav = href.startsWith('/');
 
     return html`
-      <a class="product product-wide-details" href=${href} ${useNav ? 'data-nav' : ''} @click=${this._onClick}>
+      <a class="product product-wide-details" href=${href} ?data-nav=${useNav} @click=${this._onClick}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <div class="container">
           <div class="image-wrap">
             <div class="blur">

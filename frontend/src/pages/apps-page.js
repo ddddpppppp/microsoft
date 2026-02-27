@@ -442,7 +442,8 @@ class AppsPage extends LitElement {
     const href = p.is_own_product && p.custom_url ? p.custom_url : (p.original_url || '#');
     const useNav = href.startsWith('/');
     return html`
-      <a class="topfree-item" href=${href} ${useNav ? 'data-nav' : ''}>
+      <a class="topfree-item" href=${href} ?data-nav=${useNav}
+        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
         <ms-lazy-img class="topfree-item-icon" src=${icon} alt=${p.title || ''} width="64px" height="64px" radius="12px"></ms-lazy-img>
         <div class="topfree-item-info">
           <div class="topfree-item-name">${p.title || ''}</div>
@@ -479,7 +480,7 @@ class AppsPage extends LitElement {
           </div>
           <div class="slot-right">
             <div class="apppack-banner" from-page="Apps">
-              <a href="https://apps.microsoft.com/apppack" target="_blank" rel="noopener">
+              <a href="https://apps.microsoft.com/apppack" target="_blank" rel="nofollow noopener">
                 <div class="apppack-text">
                   <span class="promo-title">多应用安装介绍</span>
                   <span class="promo-sub">一次选择并安装多个应用</span>
