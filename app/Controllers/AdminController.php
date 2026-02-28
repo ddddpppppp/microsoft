@@ -149,22 +149,85 @@ class AdminController extends Controller {
 
     public function products() {
         $this->requireLogin();
-        $page = (int)($_GET['page'] ?? 1);
-        $search = $_GET['search'] ?? '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $search = trim((string)($_GET['search'] ?? ''));
+        $ownFilter = $_GET['own'] ?? 'all';
+        if (!in_array($ownFilter, ['all', 'own'], true)) {
+            $ownFilter = 'all';
+        }
+
         $productModel = new Product();
-        
-        if ($search) {
-            $like = "%$search%";
-            $result = $productModel->paginate($page, 20, 'title LIKE ?', [$like]);
+
+        $whereParts = [];
+        $params = [];
+        if ($search !== '') {
+            $whereParts[] = 'title LIKE ?';
+            $params[] = '%' . $search . '%';
+        }
+        if ($ownFilter === 'own') {
+            $whereParts[] = 'is_own_product = 1';
+        }
+
+        if ($whereParts) {
+            $result = $productModel->paginate($page, 20, implode(' AND ', $whereParts), $params);
         } else {
             $result = $productModel->paginate($page, 20);
         }
-        
+
+        // Attach today's stats and copy link per row for the admin table.
+        $todayStatsByProductId = [];
+        if (!empty($result['items'])) {
+            $productIds = array_values(array_filter(array_map(function ($item) {
+                return (int)($item['id'] ?? 0);
+            }, $result['items'])));
+
+            if ($productIds) {
+                $db = Database::getInstance();
+                $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+                $today = date('Y-m-d');
+                $rows = $db->fetchAll(
+                    "SELECT product_id, view_count, download_click_count
+                     FROM product_stats
+                     WHERE stat_date = ? AND product_id IN ($placeholders)",
+                    array_merge([$today], $productIds)
+                );
+                foreach ($rows as $row) {
+                    $pid = (int)($row['product_id'] ?? 0);
+                    $todayStatsByProductId[$pid] = [
+                        'today_views' => (int)($row['view_count'] ?? 0),
+                        'today_downloads' => (int)($row['download_click_count'] ?? 0),
+                    ];
+                }
+            }
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        foreach ($result['items'] as &$item) {
+            $pid = (int)($item['id'] ?? 0);
+            $item['today_views'] = $todayStatsByProductId[$pid]['today_views'] ?? 0;
+            $item['today_downloads'] = $todayStatsByProductId[$pid]['today_downloads'] ?? 0;
+
+            $isOwn = !empty($item['is_own_product']);
+            $customUrl = trim((string)($item['custom_url'] ?? ''));
+            $originalUrl = trim((string)($item['original_url'] ?? ''));
+            if ($isOwn && $customUrl !== '') {
+                if (strpos($customUrl, '/') !== 0) {
+                    $customUrl = '/' . ltrim($customUrl, '/');
+                }
+                $item['copy_link'] = $host ? ($scheme . '://' . $host . $customUrl) : $customUrl;
+            } else {
+                $item['copy_link'] = $originalUrl;
+            }
+        }
+        unset($item);
+
         echo View::renderWithLayout('admin/layout', 'admin/products', [
             'pageTitle' => '产品管理',
             'products' => $result['items'],
             'pagination' => $result,
-            'search' => $search
+            'search' => $search,
+            'ownFilter' => $ownFilter,
         ]);
     }
 
