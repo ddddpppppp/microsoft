@@ -119,6 +119,7 @@ class MsFooter extends LitElement {
             <button class="locale-btn">中文（中国）</button>
             <a href="https://aka.ms/yourcaliforniaprivacychoices" target="_blank" rel="nofollow noopener">你的隐私选择</a>
             <a href="https://support.microsoft.com/contactus" target="_blank" rel="nofollow noopener">联系 Microsoft</a>
+            <a href="/sitemap.xml">网站地图</a>
             <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="nofollow noopener">隐私</a>
             <a href="https://www.microsoft.com/legal/terms-of-use" target="_blank" rel="nofollow noopener">使用条款</a>
             <a href="https://www.microsoft.com/legal/intellectualproperty/trademarks" target="_blank" rel="nofollow noopener">商标</a>

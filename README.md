@@ -36,3 +36,10 @@ php -S 127.0.0.1:8080 index.php
 - SEO 设置保存：`/admin/settings/save`
 - 文章保存：`/admin/article/save`
 - 文章删除：`/admin/article/delete/{id}`
+
+### 产品媒体 SEO（后台编辑页）
+
+- 支持上传产品 `Logo`（保存到 `public/assets/uploads/products/{id}/`）
+- 支持上传产品截图并编辑每张截图描述（`alt`）
+- Logo 描述与截图描述会写入 `products.screenshots`（兼容旧格式），并用于详情页渲染与 SEO 隐藏内容
+- 通过 `/admin/product/save` 保存后会自动清理该产品详情 HTML 缓存与 sitemap 缓存

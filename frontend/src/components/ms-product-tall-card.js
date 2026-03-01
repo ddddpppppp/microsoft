@@ -148,16 +148,30 @@ class MsProductTallCard extends LitElement {
     this.product = {};
   }
 
+  _firstScreenshotUrl() {
+    const p = this.product;
+    if (!p || !p.screenshots) return '';
+    try {
+      const parsed = typeof p.screenshots === 'string' ? JSON.parse(p.screenshots) : p.screenshots;
+      let list = [];
+      if (Array.isArray(parsed)) {
+        list = parsed;
+      } else if (parsed && Array.isArray(parsed.items)) {
+        list = parsed.items;
+      }
+      if (!list[0]) return '';
+      return typeof list[0] === 'string' ? list[0] : (list[0].url || '');
+    } catch (_) {
+      return '';
+    }
+  }
+
   _getCoverSrc() {
     const p = this.product;
     if (!p) return '';
     if (p.cover_url) return p.cover_url;
-    if (p.screenshots) {
-      try {
-        const arr = typeof p.screenshots === 'string' ? JSON.parse(p.screenshots) : p.screenshots;
-        if (Array.isArray(arr) && arr[0]) return typeof arr[0] === 'string' ? arr[0] : arr[0].url || '';
-      } catch (_) {}
-    }
+    const firstShot = this._firstScreenshotUrl();
+    if (firstShot) return firstShot;
     return p.local_icon || p.icon_url || '';
   }
 

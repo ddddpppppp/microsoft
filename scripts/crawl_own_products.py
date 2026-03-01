@@ -157,7 +157,23 @@ def parse_ms_store_page(ms_id):
             seen.add(base_url)
     
     if cleaned_screenshots:
-        data['screenshots'] = cleaned_screenshots[:6]
+        screenshot_items = []
+        title_for_alt = (data.get('title') or '').strip()
+        for idx, shot_url in enumerate(cleaned_screenshots[:6], start=1):
+            if title_for_alt:
+                shot_alt = f"{title_for_alt} screenshot {idx}"
+            else:
+                shot_alt = f"Product screenshot {idx}"
+            screenshot_items.append({
+                'url': shot_url,
+                'alt': shot_alt,
+            })
+
+        # Keep crawler output consistent with the new product screenshots schema.
+        data['screenshots'] = {
+            'logo_alt': title_for_alt,
+            'items': screenshot_items,
+        }
     
     # What's new
     whats_new_match = re.search(r'此版本中的新增功能.*?<[^>]*>([^<]+)', html, re.DOTALL)
@@ -339,6 +355,12 @@ def main():
                         value = value[:80] + '...'
                     elif isinstance(value, list):
                         value = f"[{len(value)} items]"
+                    elif isinstance(value, dict):
+                        if db_field == 'screenshots':
+                            item_count = len(value.get('items', []))
+                            value = f"{{logo_alt: {value.get('logo_alt', '')}, items: {item_count}}}"
+                        else:
+                            value = "{...}"
                     print(f"  {db_field}: {value}")
             
             if updates:

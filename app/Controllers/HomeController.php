@@ -9,6 +9,36 @@ use App\Models\Article;
 
 class HomeController extends Controller {
 
+    private function normalizeScreenshotMeta($rawScreenshots, $fallbackLogoAlt = '') {
+        $logoAlt = trim((string)$fallbackLogoAlt);
+        $items = [];
+        $decoded = is_string($rawScreenshots) ? json_decode($rawScreenshots, true) : $rawScreenshots;
+
+        if (is_array($decoded)) {
+            if (isset($decoded['items']) && is_array($decoded['items'])) {
+                $logoAlt = trim((string)($decoded['logo_alt'] ?? $logoAlt));
+                $decodedItems = $decoded['items'];
+            } else {
+                $decodedItems = $decoded;
+            }
+
+            foreach ($decodedItems as $item) {
+                if (is_array($item)) {
+                    $url = trim((string)($item['url'] ?? ''));
+                    $alt = trim((string)($item['alt'] ?? ''));
+                } else {
+                    $url = trim((string)$item);
+                    $alt = '';
+                }
+                if ($url !== '') {
+                    $items[] = ['url' => $url, 'alt' => $alt];
+                }
+            }
+        }
+
+        return ['logo_alt' => $logoAlt, 'items' => $items];
+    }
+
     private function renderCached($uri, $seoData) {
         $cached = HtmlCache::get($uri);
         if ($cached !== null) {
@@ -118,19 +148,17 @@ class HomeController extends Controller {
         $title = $h($p['custom_title'] ?: $p['title']);
         $desc = $h($p['custom_description'] ?: $p['description']);
         $icon = $h($p['local_icon'] ?: $p['icon_url'] ?? '');
+        $screenshotMeta = $this->normalizeScreenshotMeta($p['screenshots'] ?? '', $p['title'] ?? '');
+        $logoAlt = $h($screenshotMeta['logo_alt'] !== '' ? $screenshotMeta['logo_alt'] : ($p['title'] ?? 'Product icon'));
         $developer = $h($p['developer'] ?? '');
         $category = $h($p['category'] ?? '');
         $rating = $h($p['rating'] ?? '');
         $price = $p['price_type'] === 'free' || !$p['price'] ? 'Free' : $h($p['price']);
-        $screenshots = $p['screenshots'] ?? '';
-        if (is_string($screenshots)) {
-            $screenshots = json_decode($screenshots, true) ?: [];
-        }
 
         $html = '<div id="seo-content" style="position:absolute;left:-9999px;top:-9999px;overflow:hidden">';
         $html .= '<article>';
         if ($icon) {
-            $html .= '<img src="' . $icon . '" alt="' . $title . '" width="128" height="128">';
+            $html .= '<img src="' . $icon . '" alt="' . $logoAlt . '" width="128" height="128">';
         }
         $html .= '<h1>' . $title . '</h1>';
         if ($developer) $html .= '<p>Developer: ' . $developer . '</p>';
@@ -141,8 +169,13 @@ class HomeController extends Controller {
         if ($p['whats_new'] ?? '') {
             $html .= '<h2>What\'s New</h2><p>' . nl2br($h($p['whats_new'])) . '</p>';
         }
-        foreach ($screenshots as $s) {
-            $html .= '<img src="' . $h($s) . '" alt="Screenshot" loading="lazy">';
+        foreach ($screenshotMeta['items'] as $s) {
+            $shotUrl = $h($s['url'] ?? '');
+            if ($shotUrl === '') {
+                continue;
+            }
+            $shotAlt = $h(($s['alt'] ?? '') !== '' ? $s['alt'] : 'Product screenshot');
+            $html .= '<img src="' . $shotUrl . '" alt="' . $shotAlt . '" loading="lazy">';
         }
         $html .= '</article></div>';
         return $html;

@@ -26,6 +26,80 @@ class AdminController extends Controller {
         }
     }
 
+    private function normalizeScreenshotMeta($rawScreenshots, $fallbackLogoAlt = '') {
+        $logoAlt = trim((string)$fallbackLogoAlt);
+        $items = [];
+        $decoded = is_string($rawScreenshots) ? json_decode($rawScreenshots, true) : $rawScreenshots;
+
+        if (is_array($decoded)) {
+            if (isset($decoded['items']) && is_array($decoded['items'])) {
+                $logoAlt = trim((string)($decoded['logo_alt'] ?? $logoAlt));
+                $decodedItems = $decoded['items'];
+            } else {
+                $decodedItems = $decoded;
+            }
+
+            foreach ($decodedItems as $item) {
+                if (is_array($item)) {
+                    $url = trim((string)($item['url'] ?? ''));
+                    $alt = trim((string)($item['alt'] ?? ''));
+                } else {
+                    $url = trim((string)$item);
+                    $alt = '';
+                }
+                if ($url !== '') {
+                    $items[] = ['url' => $url, 'alt' => $alt];
+                }
+            }
+        }
+
+        return ['logo_alt' => $logoAlt, 'items' => $items];
+    }
+
+    private function encodeScreenshotMeta($logoAlt, array $items) {
+        return json_encode(
+            ['logo_alt' => $logoAlt, 'items' => $items],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+    }
+
+    private function uploadImageFile(array $file, $targetDir, $prefix) {
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        $name = (string)($file['name'] ?? '');
+        $tmp = (string)($file['tmp_name'] ?? '');
+        if ($name === '' || $tmp === '') {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        $allowed = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+        if (!in_array($ext, $allowed, true)) {
+            return null;
+        }
+
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        try {
+            $suffix = bin2hex(random_bytes(4));
+        } catch (\Exception $e) {
+            $suffix = (string)mt_rand(1000, 9999);
+        }
+
+        $filename = $prefix . '-' . date('YmdHis') . '-' . $suffix . '.' . $ext;
+        $targetFile = rtrim($targetDir, '/\\') . DIRECTORY_SEPARATOR . $filename;
+
+        if (!move_uploaded_file($tmp, $targetFile)) {
+            return null;
+        }
+
+        return $filename;
+    }
+
     public function index() {
         $this->requireLogin();
         $statsModel = new ProductStats();
@@ -248,9 +322,95 @@ class AdminController extends Controller {
 
     public function productSave() {
         $this->requireLogin();
-        $id = $_POST['id'] ?? 0;
+        $id = (int)($_POST['id'] ?? 0);
         $productModel = new Product();
-        
+        $product = $productModel->find($id);
+        if (!$product) {
+            $this->redirect('/admin/products');
+        }
+
+        $meta = $this->normalizeScreenshotMeta($product['screenshots'] ?? '', $product['title'] ?? '');
+        $logoAlt = trim((string)($_POST['logo_alt'] ?? $meta['logo_alt']));
+        if ($logoAlt === '') {
+            $logoAlt = trim((string)($product['title'] ?? ''));
+        }
+
+        $uploadDir = BASE_PATH . '/public/assets/uploads/products/' . $id;
+        $localIcon = (string)($product['local_icon'] ?? '');
+        if (isset($_FILES['logo_file']) && (($_FILES['logo_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE)) {
+            $logoFilename = $this->uploadImageFile($_FILES['logo_file'], $uploadDir, 'logo');
+            if ($logoFilename) {
+                $localIcon = '/assets/uploads/products/' . $id . '/' . $logoFilename;
+            }
+        }
+
+        $removeUrls = array_flip(array_map('strval', $_POST['remove_existing_screenshot_urls'] ?? []));
+        $existingUrls = $_POST['existing_screenshot_urls'] ?? [];
+        $existingAlts = $_POST['existing_screenshot_alts'] ?? [];
+        $replaceNames = $_FILES['replace_existing_screenshot_files']['name'] ?? [];
+        $replaceTmps = $_FILES['replace_existing_screenshot_files']['tmp_name'] ?? [];
+        $replaceErrors = $_FILES['replace_existing_screenshot_files']['error'] ?? [];
+        $replaceSizes = $_FILES['replace_existing_screenshot_files']['size'] ?? [];
+        $replaceTypes = $_FILES['replace_existing_screenshot_files']['type'] ?? [];
+        $finalScreenshots = [];
+
+        foreach ($existingUrls as $idx => $urlRaw) {
+            $url = trim((string)$urlRaw);
+            if ($url === '' || isset($removeUrls[$url])) {
+                continue;
+            }
+
+            $replaceName = trim((string)($replaceNames[$idx] ?? ''));
+            if ($replaceName !== '') {
+                $replaceFile = [
+                    'name' => $replaceName,
+                    'tmp_name' => $replaceTmps[$idx] ?? '',
+                    'error' => $replaceErrors[$idx] ?? UPLOAD_ERR_NO_FILE,
+                    'size' => $replaceSizes[$idx] ?? 0,
+                    'type' => $replaceTypes[$idx] ?? '',
+                ];
+                $replacedFilename = $this->uploadImageFile($replaceFile, $uploadDir, 'screenshot');
+                if ($replacedFilename) {
+                    $url = '/assets/uploads/products/' . $id . '/' . $replacedFilename;
+                }
+            }
+
+            $alt = trim((string)($existingAlts[$idx] ?? ''));
+            $finalScreenshots[] = ['url' => $url, 'alt' => $alt];
+        }
+
+        if (isset($_FILES['new_screenshot_files']) && is_array($_FILES['new_screenshot_files']['name'] ?? null)) {
+            $newAlts = $_POST['new_screenshot_alts'] ?? [];
+            $names = $_FILES['new_screenshot_files']['name'];
+            $tmps = $_FILES['new_screenshot_files']['tmp_name'];
+            $errors = $_FILES['new_screenshot_files']['error'];
+            $sizes = $_FILES['new_screenshot_files']['size'];
+            $types = $_FILES['new_screenshot_files']['type'];
+
+            foreach ($names as $idx => $name) {
+                if (trim((string)$name) === '') {
+                    continue;
+                }
+                $file = [
+                    'name' => $name,
+                    'tmp_name' => $tmps[$idx] ?? '',
+                    'error' => $errors[$idx] ?? UPLOAD_ERR_NO_FILE,
+                    'size' => $sizes[$idx] ?? 0,
+                    'type' => $types[$idx] ?? '',
+                ];
+                $shotFilename = $this->uploadImageFile($file, $uploadDir, 'screenshot');
+                if (!$shotFilename) {
+                    continue;
+                }
+                $finalScreenshots[] = [
+                    'url' => '/assets/uploads/products/' . $id . '/' . $shotFilename,
+                    'alt' => trim((string)($newAlts[$idx] ?? '')),
+                ];
+            }
+        }
+
+        $encodedScreenshots = $this->encodeScreenshotMeta($logoAlt, $finalScreenshots);
+
         $data = [
             'custom_title' => $_POST['custom_title'] ?? '',
             'custom_keywords' => $_POST['custom_keywords'] ?? '',
@@ -258,6 +418,8 @@ class AdminController extends Controller {
             'custom_download_url' => $_POST['custom_download_url'] ?? '',
             'custom_url' => $_POST['custom_url'] ?? '',
             'is_own_product' => isset($_POST['is_own_product']) ? 1 : 0,
+            'local_icon' => $localIcon,
+            'screenshots' => $encodedScreenshots,
         ];
         
         $productModel->update($id, $data);

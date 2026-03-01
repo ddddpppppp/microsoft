@@ -789,6 +789,51 @@ class DetailPage extends LitElement {
     return `https://apps.microsoft.com/detail/${this.data.ms_id}?hl=zh-CN&gl=HK`;
   }
 
+  _normalizeScreenshotMeta(rawScreenshots, fallbackLogoAlt = '') {
+    const meta = {
+      logoAlt: (fallbackLogoAlt || '').trim(),
+      items: []
+    };
+    if (!rawScreenshots) return meta;
+
+    let parsed = rawScreenshots;
+    if (typeof rawScreenshots === 'string') {
+      try {
+        parsed = JSON.parse(rawScreenshots || '[]');
+      } catch (e) {
+        parsed = [];
+      }
+    }
+
+    let list = [];
+    if (Array.isArray(parsed)) {
+      list = parsed;
+    } else if (parsed && Array.isArray(parsed.items)) {
+      list = parsed.items;
+      if (typeof parsed.logo_alt === 'string' && parsed.logo_alt.trim()) {
+        meta.logoAlt = parsed.logo_alt.trim();
+      }
+    }
+
+    meta.items = list
+      .map(item => {
+        if (typeof item === 'string') {
+          const url = item.trim();
+          if (!url) return null;
+          return { url, alt: '' };
+        }
+        if (item && typeof item === 'object') {
+          const url = String(item.url || '').trim();
+          if (!url) return null;
+          return { url, alt: String(item.alt || '').trim() };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    return meta;
+  }
+
   _renderPrice() {
     const p = this.data;
     if (!p) return '';
@@ -927,12 +972,14 @@ class DetailPage extends LitElement {
     const p = this.data;
     const icon = p.local_icon || p.icon_url || '';
     const displayTitle = p.title;
-    const screenshots = p.screenshots ? (typeof p.screenshots === 'string' ? JSON.parse(p.screenshots || '[]') : p.screenshots) : [];
+    const screenshotMeta = this._normalizeScreenshotMeta(p.screenshots, displayTitle);
+    const screenshots = screenshotMeta.items;
+    const logoAlt = screenshotMeta.logoAlt || displayTitle;
 
     return html`
       <div class="detail-container">
         <div class="detail-header">
-          <img class="product-icon" src=${icon} alt=${displayTitle} />
+          <img class="product-icon" src=${icon} alt=${logoAlt} />
           <div class="header-info">
             <h1 class="product-title">${displayTitle}</h1>
             ${p.developer ? html`
@@ -950,12 +997,8 @@ class DetailPage extends LitElement {
             ` : ''}
             <div class="action-row">
               <a class="get-btn" href=${this._getDownloadUrl()} target="_blank" rel="nofollow noopener" @click=${this._onDownloadClick}>
-                ${p.price_type === 'free' || !p.price ? '免费获取' : '获取'}
+                ${p.price_type === 'free' || !p.price ? '下载' : '获取'}
               </a>
-              <a class="store-btn" href=${this._getMsStoreUrl()} target="_blank" rel="nofollow noopener">
-                在 Microsoft Store 中查看
-              </a>
-              <div class="price-display">${this._renderPrice()}</div>
               ${p.has_gamepass ? html`<span class="gamepass-badge">Game Pass</span>` : ''}
             </div>
             ${p.age_rating ? html`
@@ -975,7 +1018,7 @@ class DetailPage extends LitElement {
                 <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
               </button>
               <div class="screenshots-row" @scroll=${this._onScreenshotsScroll}>
-                ${screenshots.map(s => html`<img class="screenshot-img" src=${s} alt="截图" loading="lazy" />`)}
+                ${screenshots.map(s => html`<img class="screenshot-img" src=${s.url} alt=${s.alt || displayTitle} loading="lazy" />`)}
               </div>
               <button class="screenshots-nav next" @click=${this._scrollScreenshots.bind(this, 1)}>
                 <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
