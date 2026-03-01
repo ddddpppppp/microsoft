@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { updatePageMeta } from '../utils/seo.js';
 
 class ArticlesPage extends LitElement {
   static properties = {
@@ -182,6 +183,10 @@ class ArticlesPage extends LitElement {
       if (this.currentCategory) params.set('category', this.currentCategory);
       const res = await fetch(`/api/articles?${params}`);
       this.data = await res.json();
+      if (this.data?.seo) {
+        const s = this.data.seo;
+        updatePageMeta({ title: s.title, keywords: s.keywords, description: s.description });
+      }
     } catch (e) {
       console.error('Failed to load articles:', e);
     }

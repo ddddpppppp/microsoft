@@ -59,6 +59,7 @@ $router->group('/admin', function($r) {
     $r->get('/products', [\App\Controllers\AdminController::class, 'products']);
     $r->get('/product/edit/{id}', [\App\Controllers\AdminController::class, 'productEdit']);
     $r->post('/product/save', [\App\Controllers\AdminController::class, 'productSave']);
+    $r->get('/product/clear-cache/{id}', [\App\Controllers\AdminController::class, 'productClearCache']);
     $r->get('/settings', [\App\Controllers\AdminController::class, 'settings']);
     $r->post('/settings/save', [\App\Controllers\AdminController::class, 'settingsSave']);
     $r->get('/articles', [\App\Controllers\AdminController::class, 'articles']);
@@ -90,8 +91,8 @@ $spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/articles', '/desk.htm
 foreach ($spaRoutes as $route) {
     $router->get($route, [\App\Controllers\HomeController::class, 'index']);
 }
-$router->get('/detail/{id}', [\App\Controllers\HomeController::class, 'index']);
-$router->get('/article/{slug}', [\App\Controllers\HomeController::class, 'index']);
+$router->get('/detail/{id}', [\App\Controllers\HomeController::class, 'productDetail']);
+$router->get('/article/{slug}', [\App\Controllers\HomeController::class, 'articleDetail']);
 
 // Custom product pages (own products with custom_url)
 $router->get('/{slug}', [\App\Controllers\HomeController::class, 'customProduct']);

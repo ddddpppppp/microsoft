@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { updatePageMeta } from '../utils/seo.js';
 import '../components/ms-rating.js';
 
 class DetailPage extends LitElement {
@@ -726,6 +727,16 @@ class DetailPage extends LitElement {
       this.data = null;
     }
     this.loading = false;
+    if (this.data) this._updatePageMeta();
+  }
+
+  _updatePageMeta() {
+    const p = this.data;
+    updatePageMeta({
+      title: p.custom_title || p.title || 'Microsoft Store',
+      keywords: p.custom_keywords || '',
+      description: p.custom_description || p.description || ''
+    });
   }
 
   async _loadRelatedProducts(productId) {
@@ -915,7 +926,7 @@ class DetailPage extends LitElement {
 
     const p = this.data;
     const icon = p.local_icon || p.icon_url || '';
-    const displayTitle = p.custom_title || p.title;
+    const displayTitle = p.title;
     const screenshots = p.screenshots ? (typeof p.screenshots === 'string' ? JSON.parse(p.screenshots || '[]') : p.screenshots) : [];
 
     return html`
@@ -978,7 +989,7 @@ class DetailPage extends LitElement {
             <div class="section">
               <h3>说明</h3>
               <div class="description-wrapper">
-                <div class="description-text ${this.descriptionExpanded ? 'expanded' : ''}">${p.custom_description || p.description || '暂无描述信息。'}</div>
+                <div class="description-text ${this.descriptionExpanded ? 'expanded' : ''}">${p.description || '暂无描述信息。'}</div>
                 <button class="description-toggle ${this.descriptionExpanded ? 'expanded' : ''}" @click=${this._toggleDescription}>
                   ${this.descriptionExpanded ? '收起' : '展开更多'}
                   <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>

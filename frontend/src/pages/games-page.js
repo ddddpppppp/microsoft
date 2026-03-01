@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { cachedFetch } from '../utils/api-cache.js';
+import { updatePageMeta } from '../utils/seo.js';
 import '../components/ms-hero-carousel.js';
 import '../components/ms-featured-row.js';
 import '../components/ms-collection-row.js';
@@ -306,7 +307,7 @@ class GamesPage extends LitElement {
   }
 
   async _loadData() {
-    if (this.data) { this.loading = false; return; }
+    if (this.data) { this.loading = false; this._applySeo(); return; }
     try {
       const [gamesData, homeData] = await Promise.all([
         cachedFetch('/api/games'),
@@ -318,6 +319,13 @@ class GamesPage extends LitElement {
       console.error('Failed to load games data:', e);
     }
     this.loading = false;
+    this._applySeo();
+  }
+
+  _applySeo() {
+    if (!this.data?.seo) return;
+    const s = this.data.seo;
+    updatePageMeta({ title: s.title, keywords: s.keywords, description: s.description });
   }
 
   _prepareProducts(col) {

@@ -9,7 +9,7 @@ class Controller {
         exit;
     }
 
-    protected function view($name, $data = []) {
+    protected function view($name, $data = [], $return = false) {
         extract($data);
         $viewFile = __DIR__ . '/../Views/' . $name . '.php';
         if (!file_exists($viewFile)) {
@@ -19,7 +19,9 @@ class Controller {
         }
         ob_start();
         require $viewFile;
-        echo ob_get_clean();
+        $html = ob_get_clean();
+        if ($return) return $html;
+        echo $html;
         exit;
     }
 

@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { cachedFetch } from '../utils/api-cache.js';
+import { updatePageMeta } from '../utils/seo.js';
 import '../components/ms-hero-carousel.js';
 import '../components/ms-collection-row.js';
 import '../components/ms-collection-grid.js';
@@ -75,13 +76,20 @@ class HomePage extends LitElement {
   }
 
   async _loadData() {
-    if (this.data) { this.loading = false; return; }
+    if (this.data) { this.loading = false; this._applySeo(); return; }
     try {
       this.data = await cachedFetch('/api/home');
     } catch (e) {
       console.error('Failed to load home data:', e);
     }
     this.loading = false;
+    this._applySeo();
+  }
+
+  _applySeo() {
+    if (!this.data?.seo) return;
+    const s = this.data.seo;
+    updatePageMeta({ title: s.title, keywords: s.keywords, description: s.description });
   }
 
   _prepareProducts(col) {

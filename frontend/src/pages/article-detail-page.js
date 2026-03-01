@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { updatePageMeta } from '../utils/seo.js';
 
 class ArticleDetailPage extends LitElement {
   static properties = {
@@ -196,6 +197,16 @@ class ArticleDetailPage extends LitElement {
       this.data = null;
     }
     this.loading = false;
+    if (this.data && this.data.article) this._updatePageMeta();
+  }
+
+  _updatePageMeta() {
+    const a = this.data.article;
+    updatePageMeta({
+      title: a.title || '资讯详情',
+      keywords: a.keywords || '',
+      description: a.meta_description || ''
+    });
   }
 
   _navigate(slug) {

@@ -1,6 +1,9 @@
 <?php if (isset($_GET['saved'])): ?>
 <div class="alert alert-success alert-dismissible fade show">保存成功！<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 <?php endif; ?>
+<?php if (isset($_GET['cache_cleared'])): ?>
+<div class="alert alert-info alert-dismissible fade show">缓存已清除！<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+<?php endif; ?>
 <div class="card">
     <div class="card-body">
         <div class="row mb-4">
@@ -41,6 +44,7 @@
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">保存</button>
+                <a href="/admin/product/clear-cache/<?= $product['id'] ?>" class="btn btn-warning" onclick="return confirm('确定清除该产品的SEO缓存？')">清除缓存</a>
                 <a href="/admin/products" class="btn btn-secondary">返回列表</a>
             </div>
         </form>

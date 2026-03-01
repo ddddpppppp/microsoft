@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { updatePageMeta } from '../utils/seo.js';
 
 class AboutPage extends LitElement {
   static styles = css`
@@ -308,6 +309,23 @@ class AboutPage extends LitElement {
       }
     }
   `;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._applySeo();
+  }
+
+  async _applySeo() {
+    try {
+      const res = await fetch('/api/about');
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.seo) {
+          updatePageMeta({ title: data.seo.title, keywords: data.seo.keywords, description: data.seo.description });
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
 
   render() {
     return html`

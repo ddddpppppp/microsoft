@@ -20,4 +20,9 @@ if ($seoDescription) {
 }
 $distHtml = str_replace('</head>', $metaTags . '</head>', $distHtml);
 
+$seoContent = $seo_content ?? '';
+if ($seoContent) {
+    $distHtml = str_replace('<ms-app>', $seoContent . "\n<ms-app>", $distHtml);
+}
+
 echo $distHtml;
