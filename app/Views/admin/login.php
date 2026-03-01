@@ -9,7 +9,7 @@
     <style>
         * { box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #f8fafc;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,42 +22,42 @@
             padding: 20px;
         }
         .login-box {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            background: #fff;
+            border-radius: 14px;
+            padding: 28px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
         }
         .login-header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         .login-header h2 {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #0f172a;
             margin: 0;
         }
         .login-header p {
-            color: #666;
+            color: #64748b;
             margin-top: 8px;
             font-size: 14px;
         }
         .form-label {
-            font-weight: 500;
-            color: #333;
-            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 13px;
         }
         .form-control {
-            border: 2px solid #e0e0e0;
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 15px;
-            transition: all 0.3s ease;
+            padding: 10px 12px;
+            font-size: 14px;
+            transition: border-color .2s ease, box-shadow .2s ease;
         }
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.35);
         }
         .captcha-group {
             display: flex;
@@ -76,10 +76,7 @@
             border-radius: 8px;
             overflow: hidden;
             flex-shrink: 0;
-            transition: transform 0.2s ease;
-        }
-        .captcha-wrapper:hover {
-            transform: scale(1.02);
+            border: 1px solid #e2e8f0;
         }
         .captcha-wrapper img {
             height: 50px;
@@ -90,7 +87,7 @@
             position: absolute;
             bottom: 4px;
             right: 4px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.65);
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -105,72 +102,69 @@
         }
         .btn-login {
             width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #2563eb;
             border-radius: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2563eb;
             color: #fff;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color .2s ease;
             margin-top: 8px;
         }
         .btn-login:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            background: #1d4ed8;
         }
         .btn-login:disabled {
-            background: #ccc;
+            background: #94a3b8;
+            border-color: #94a3b8;
             cursor: not-allowed;
         }
         .alert {
-            border: none;
+            border: 1px solid transparent;
             border-radius: 10px;
             padding: 14px 18px;
             font-size: 14px;
         }
         .alert-danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-            color: #fff;
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
         }
         .alert-warning {
-            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
-            color: #fff;
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
         }
         .blocked-timer {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            background: #fef2f2;
+            border: 1px solid #fecaca;
             border-radius: 12px;
-            color: #fff;
+            color: #991b1b;
             margin-bottom: 20px;
         }
         .blocked-timer .icon {
-            font-size: 48px;
+            font-size: 40px;
             margin-bottom: 12px;
         }
         .blocked-timer .time {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 700;
             font-family: monospace;
         }
         .blocked-timer p {
             margin: 8px 0 0;
-            opacity: 0.9;
+            opacity: 0.75;
         }
         .attempts-warning {
             text-align: center;
             font-size: 13px;
-            color: #e74c3c;
+            color: #b45309;
             margin-top: 12px;
         }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
-        }
-        .shake { animation: shake 0.4s ease; }
     </style>
 </head>
 <body>
