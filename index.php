@@ -30,6 +30,10 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|map)$/i', $uri)) 
     return false;
 }
 
+// SEO
+$router->get('/sitemap.xml', [\App\Controllers\SitemapController::class, 'index']);
+$router->get('/robots.txt', [\App\Controllers\RobotsController::class, 'index']);
+
 // API routes
 $router->group('/api', function($r) {
     $r->get('/home', [\App\Controllers\ApiController::class, 'home']);

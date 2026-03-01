@@ -13,6 +13,7 @@ use App\Models\AiReviewTask;
 use App\Models\ProductReview;
 use App\Models\ProductStats;
 use App\Core\HtmlCache;
+use App\Services\SitemapCache;
 use App\Services\LoginAttemptService;
 use App\Services\CaptchaService;
 
@@ -266,6 +267,7 @@ class AdminController extends Controller {
             if ($product['ms_id']) HtmlCache::forget('/detail/' . $product['ms_id']);
             if ($product['custom_url']) HtmlCache::forget($product['custom_url']);
         }
+        SitemapCache::clear();
 
         $this->redirect('/admin/product/edit/' . $id . '?saved=1');
     }
@@ -278,6 +280,7 @@ class AdminController extends Controller {
             if ($product['ms_id']) HtmlCache::forget('/detail/' . $product['ms_id']);
             if ($product['custom_url']) HtmlCache::forget($product['custom_url']);
         }
+        SitemapCache::clear();
         $this->redirect('/admin/product/edit/' . $id . '?cache_cleared=1');
     }
 
@@ -310,6 +313,7 @@ class AdminController extends Controller {
         foreach (array_keys($pageUris) as $uri) {
             HtmlCache::forget($uri);
         }
+        SitemapCache::clear();
 
         $this->redirect('/admin/settings?saved=1');
     }
@@ -378,10 +382,12 @@ class AdminController extends Controller {
                 HtmlCache::forget('/article/' . $data['slug']);
             }
             HtmlCache::forget('/articles');
+            SitemapCache::clear();
             $this->redirect('/admin/article/edit/' . $id . '?saved=1');
         } else {
             $newId = $articleModel->create($data);
             HtmlCache::forget('/articles');
+            SitemapCache::clear();
             $this->redirect('/admin/article/edit/' . $newId . '?saved=1');
         }
     }
@@ -394,6 +400,7 @@ class AdminController extends Controller {
             HtmlCache::forget('/article/' . $article['slug']);
         }
         HtmlCache::forget('/articles');
+        SitemapCache::clear();
         $articleModel->delete($id);
         $this->redirect('/admin/articles');
     }
