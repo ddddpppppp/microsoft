@@ -39,6 +39,7 @@ if ($event !== 'push') {
     echo json_encode(['ok' => true, 'message' => 'Ignored non-push event']);
     exit;
 }
+
 $json = json_decode($payload, true);
 if (!is_array($json)) {
     http_response_code(400);
