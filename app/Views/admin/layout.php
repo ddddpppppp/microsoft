@@ -352,11 +352,12 @@
             padding: 12px 14px;
         }
 
-        .alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-        .alert-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        .alert-success { background:rgb(216, 252, 227); border-color: #bbf7d0; color: #166534; }
+        .alert-danger { background:rgb(255, 228, 228); border-color: #fecaca; color: #991b1b; }
         .alert-info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
 
         .pagination {
+            margin-top: 16px;
             --bs-pagination-border-color: var(--border);
             --bs-pagination-color: #334155;
             --bs-pagination-bg: #fff;

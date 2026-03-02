@@ -14,6 +14,9 @@
                 <button type="submit" class="btn btn-primary">搜索</button>
                 <?php if (!empty($search) || (($ownFilter ?? 'all') !== 'all')): ?><a href="/admin/products" class="btn btn-secondary">清除</a><?php endif; ?>
             </div>
+            <div class="col-auto ms-auto">
+                <a href="/admin/product/create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>添加产品</a>
+            </div>
         </form>
         <div class="table-responsive">
             <table class="table table-hover">

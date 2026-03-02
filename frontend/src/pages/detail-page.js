@@ -292,8 +292,7 @@ class DetailPage extends LitElement {
     }
     .screenshot-img {
       height: 220px;
-      min-width: 300px;
-      width: auto;
+      width: 300px;
       border-radius: 8px;
       object-fit: contain;
       flex-shrink: 0;

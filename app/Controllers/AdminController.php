@@ -307,6 +307,30 @@ class AdminController extends Controller {
         ]);
     }
 
+    public function productCreate() {
+        $this->requireLogin();
+        $product = [
+            'id' => 0, 'ms_id' => '', 'title' => '', 'description' => '',
+            'icon_url' => '', 'local_icon' => '', 'rating' => '0.0', 'rating_count' => 0,
+            'category' => '', 'price' => '', 'price_type' => 'free',
+            'original_price' => '', 'discount_percent' => '', 'original_url' => '',
+            'custom_url' => '', 'custom_title' => '', 'custom_keywords' => '',
+            'custom_description' => '', 'custom_download_url' => '',
+            'is_own_product' => 0, 'product_type' => 'app', 'has_gamepass' => 0,
+            'developer' => '', 'screenshots' => '', 'whats_new' => '',
+            'release_date' => '', 'last_update' => '', 'app_size' => '',
+            'system_requirements' => '', 'age_rating' => '', 'age_rating_icon' => '',
+            'supported_languages' => '', 'publisher_website' => '',
+            'publisher_support' => '', 'privacy_policy_url' => '', 'social_card_image' => '',
+        ];
+        echo View::renderWithLayout('admin/layout', 'admin/product_edit', [
+            'pageTitle' => '添加产品',
+            'product' => $product,
+            'relatedProducts' => [],
+            'isCreate' => true,
+        ]);
+    }
+
     public function productEdit($id) {
         $this->requireLogin();
         $productModel = new Product();
@@ -314,9 +338,12 @@ class AdminController extends Controller {
         if (!$product) {
             $this->redirect('/admin/products');
         }
+        $relatedProducts = $productModel->getRelatedProductsFull($id);
         echo View::renderWithLayout('admin/layout', 'admin/product_edit', [
             'pageTitle' => '编辑产品',
-            'product' => $product
+            'product' => $product,
+            'relatedProducts' => $relatedProducts,
+            'isCreate' => false,
         ]);
     }
 
@@ -324,23 +351,39 @@ class AdminController extends Controller {
         $this->requireLogin();
         $id = (int)($_POST['id'] ?? 0);
         $productModel = new Product();
-        $product = $productModel->find($id);
-        if (!$product) {
-            $this->redirect('/admin/products');
+        $isCreate = ($id === 0);
+
+        if ($isCreate) {
+            $msId = trim($_POST['ms_id'] ?? '');
+            $title = trim($_POST['title'] ?? '');
+            if ($msId === '' || $title === '') {
+                $this->redirect('/admin/product/create?error=missing_fields');
+                return;
+            }
+            $product = [
+                'ms_id' => $msId, 'title' => $title, 'screenshots' => '', 'local_icon' => '',
+            ];
+        } else {
+            $product = $productModel->find($id);
+            if (!$product) {
+                $this->redirect('/admin/products');
+                return;
+            }
         }
 
         $meta = $this->normalizeScreenshotMeta($product['screenshots'] ?? '', $product['title'] ?? '');
         $logoAlt = trim((string)($_POST['logo_alt'] ?? $meta['logo_alt']));
         if ($logoAlt === '') {
-            $logoAlt = trim((string)($product['title'] ?? ''));
+            $logoAlt = trim((string)($_POST['title'] ?? $product['title'] ?? ''));
         }
 
-        $uploadDir = BASE_PATH . '/public/assets/uploads/products/' . $id;
+        $uploadId = $isCreate ? 'new_' . time() : $id;
+        $uploadDir = BASE_PATH . '/public/assets/uploads/products/' . $uploadId;
         $localIcon = (string)($product['local_icon'] ?? '');
         if (isset($_FILES['logo_file']) && (($_FILES['logo_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE)) {
             $logoFilename = $this->uploadImageFile($_FILES['logo_file'], $uploadDir, 'logo');
             if ($logoFilename) {
-                $localIcon = '/assets/uploads/products/' . $id . '/' . $logoFilename;
+                $localIcon = '/assets/uploads/products/' . $uploadId . '/' . $logoFilename;
             }
         }
 
@@ -371,7 +414,7 @@ class AdminController extends Controller {
                 ];
                 $replacedFilename = $this->uploadImageFile($replaceFile, $uploadDir, 'screenshot');
                 if ($replacedFilename) {
-                    $url = '/assets/uploads/products/' . $id . '/' . $replacedFilename;
+                    $url = '/assets/uploads/products/' . $uploadId . '/' . $replacedFilename;
                 }
             }
 
@@ -403,7 +446,7 @@ class AdminController extends Controller {
                     continue;
                 }
                 $finalScreenshots[] = [
-                    'url' => '/assets/uploads/products/' . $id . '/' . $shotFilename,
+                    'url' => '/assets/uploads/products/' . $uploadId . '/' . $shotFilename,
                     'alt' => trim((string)($newAlts[$idx] ?? '')),
                 ];
             }
@@ -412,17 +455,71 @@ class AdminController extends Controller {
         $encodedScreenshots = $this->encodeScreenshotMeta($logoAlt, $finalScreenshots);
 
         $data = [
+            'title' => $_POST['title'] ?? $product['title'],
+            'description' => $_POST['description'] ?? $product['description'],
             'custom_title' => $_POST['custom_title'] ?? '',
             'custom_keywords' => $_POST['custom_keywords'] ?? '',
             'custom_description' => $_POST['custom_description'] ?? '',
             'custom_download_url' => $_POST['custom_download_url'] ?? '',
             'custom_url' => $_POST['custom_url'] ?? '',
+            'original_url' => $_POST['original_url'] ?? $product['original_url'],
+            'category' => $_POST['category'] ?? $product['category'],
+            'price' => $_POST['price'] ?? $product['price'],
+            'price_type' => $_POST['price_type'] ?? $product['price_type'],
+            'original_price' => $_POST['original_price'] ?? $product['original_price'],
+            'discount_percent' => $_POST['discount_percent'] ?? $product['discount_percent'],
+            'product_type' => $_POST['product_type'] ?? $product['product_type'],
             'is_own_product' => isset($_POST['is_own_product']) ? 1 : 0,
+            'has_gamepass' => isset($_POST['has_gamepass']) ? 1 : 0,
+            'developer' => $_POST['developer'] ?? $product['developer'],
+            'rating' => $_POST['rating'] ?? $product['rating'],
+            'rating_count' => (int)($_POST['rating_count'] ?? $product['rating_count']),
+            'release_date' => $_POST['release_date'] ?? $product['release_date'],
+            'last_update' => $_POST['last_update'] ?? $product['last_update'],
+            'app_size' => $_POST['app_size'] ?? $product['app_size'],
+            'system_requirements' => $_POST['system_requirements'] ?? $product['system_requirements'],
+            'age_rating' => $_POST['age_rating'] ?? $product['age_rating'],
+            'age_rating_icon' => $_POST['age_rating_icon'] ?? $product['age_rating_icon'],
+            'supported_languages' => $_POST['supported_languages'] ?? $product['supported_languages'],
+            'whats_new' => $_POST['whats_new'] ?? $product['whats_new'],
+            'publisher_website' => $_POST['publisher_website'] ?? $product['publisher_website'],
+            'publisher_support' => $_POST['publisher_support'] ?? $product['publisher_support'],
+            'privacy_policy_url' => $_POST['privacy_policy_url'] ?? $product['privacy_policy_url'],
+            'social_card_image' => $_POST['social_card_image'] ?? $product['social_card_image'],
             'local_icon' => $localIcon,
             'screenshots' => $encodedScreenshots,
         ];
         
-        $productModel->update($id, $data);
+        if ($isCreate) {
+            $data['ms_id'] = trim($_POST['ms_id'] ?? '');
+            $id = $productModel->create($data);
+
+            $oldDir = BASE_PATH . '/public/assets/uploads/products/' . $uploadId;
+            $newDir = BASE_PATH . '/public/assets/uploads/products/' . $id;
+            if (is_dir($oldDir) && $oldDir !== $newDir) {
+                rename($oldDir, $newDir);
+                $oldPrefix = '/assets/uploads/products/' . $uploadId . '/';
+                $newPrefix = '/assets/uploads/products/' . $id . '/';
+                $updateData = [];
+                if ($localIcon !== '') {
+                    $updateData['local_icon'] = str_replace($oldPrefix, $newPrefix, $data['local_icon']);
+                }
+                if (strpos($data['screenshots'], $oldPrefix) !== false) {
+                    $updateData['screenshots'] = str_replace($oldPrefix, $newPrefix, $data['screenshots']);
+                }
+                if (!empty($updateData)) {
+                    $productModel->update($id, $updateData);
+                }
+            }
+        } else {
+            $productModel->update($id, $data);
+        }
+
+        $relatedJson = $_POST['related_products_json'] ?? '[]';
+        $relatedItems = json_decode($relatedJson, true);
+        if (is_array($relatedItems)) {
+            $productModel->syncRelatedProducts($id, $relatedItems);
+        }
 
         $product = $productModel->find($id);
         if ($product) {
@@ -432,6 +529,22 @@ class AdminController extends Controller {
         SitemapCache::clear();
 
         $this->redirect('/admin/product/edit/' . $id . '?saved=1');
+    }
+
+    public function productSearchApi() {
+        $this->requireLogin();
+        $q = trim($_GET['q'] ?? '');
+        $excludeId = (int)($_GET['exclude'] ?? 0);
+        if ($q === '') {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            exit;
+        }
+        $productModel = new Product();
+        $results = $productModel->searchForPicker($q, $excludeId, 15);
+        header('Content-Type: application/json');
+        echo json_encode($results);
+        exit;
     }
 
     public function productClearCache($id) {

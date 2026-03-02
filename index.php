@@ -21,11 +21,56 @@ spl_autoload_register(function ($class) {
     if (file_exists($file)) require $file;
 });
 
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
+
+// Serve /assets/* and /dist/* from /public without requiring filesystem symlinks.
+$serveMappedStatic = function (string $prefix, string $targetRoot) use ($uri): bool {
+    if (strpos($uri, $prefix) !== 0) {
+        return false;
+    }
+
+    $relativePath = ltrim(substr($uri, strlen($prefix)), '/');
+    if ($relativePath === '' || strpos($relativePath, '..') !== false) {
+        http_response_code(404);
+        exit;
+    }
+
+    $filePath = BASE_PATH . $targetRoot . '/' . $relativePath;
+    if (!is_file($filePath)) {
+        http_response_code(404);
+        exit;
+    }
+
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $mimeMap = [
+        'css' => 'text/css; charset=UTF-8',
+        'js' => 'application/javascript; charset=UTF-8',
+        'map' => 'application/json; charset=UTF-8',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'svg' => 'image/svg+xml',
+        'ico' => 'image/x-icon',
+        'woff' => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf' => 'font/ttf',
+    ];
+
+    header('Content-Type: ' . ($mimeMap[$extension] ?? 'application/octet-stream'));
+    header('Content-Length: ' . (string)filesize($filePath));
+    readfile($filePath);
+    exit;
+};
+
+$serveMappedStatic('/assets/', '/public/assets');
+$serveMappedStatic('/dist/', '/public/dist');
+
 $app = new App\Core\App();
 $router = $app->getRouter();
 
-// Static file passthrough
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Static file passthrough (for normal web server static handling).
 if (preg_match('/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|map)$/i', $uri)) {
     return false;
 }
@@ -61,9 +106,11 @@ $router->group('/admin', function($r) {
     $r->get('/captcha/refresh', [\App\Controllers\AdminController::class, 'captchaRefresh']);
     $r->get('/logout', [\App\Controllers\AdminController::class, 'logout']);
     $r->get('/products', [\App\Controllers\AdminController::class, 'products']);
+    $r->get('/product/create', [\App\Controllers\AdminController::class, 'productCreate']);
     $r->get('/product/edit/{id}', [\App\Controllers\AdminController::class, 'productEdit']);
     $r->post('/product/save', [\App\Controllers\AdminController::class, 'productSave']);
     $r->get('/product/clear-cache/{id}', [\App\Controllers\AdminController::class, 'productClearCache']);
+    $r->get('/product/search-api', [\App\Controllers\AdminController::class, 'productSearchApi']);
     $r->get('/settings', [\App\Controllers\AdminController::class, 'settings']);
     $r->post('/settings/save', [\App\Controllers\AdminController::class, 'settingsSave']);
     $r->get('/articles', [\App\Controllers\AdminController::class, 'articles']);

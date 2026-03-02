@@ -64,7 +64,6 @@ class Product extends Model {
     }
 
     public function getRelatedProducts($productId) {
-        // Get related products and check if any are own products
         $related = $this->db->fetchAll(
             "SELECT rp.*, p.is_own_product, p.custom_url 
              FROM related_products rp
@@ -74,5 +73,43 @@ class Product extends Model {
             [$productId]
         );
         return $related;
+    }
+
+    public function getRelatedProductsFull($productId) {
+        return $this->db->fetchAll(
+            "SELECT rp.id, rp.related_ms_id, rp.related_title, rp.related_icon_url,
+                    rp.related_rating, rp.related_category, rp.related_price, rp.display_order
+             FROM related_products rp
+             WHERE rp.product_id = ?
+             ORDER BY rp.display_order ASC",
+            [$productId]
+        );
+    }
+
+    public function syncRelatedProducts($productId, array $items) {
+        $this->db->delete('related_products', 'product_id = ?', [$productId]);
+        foreach ($items as $order => $item) {
+            $this->db->insert('related_products', [
+                'product_id'       => $productId,
+                'related_ms_id'    => $item['ms_id'],
+                'related_title'    => $item['title'],
+                'related_icon_url' => $item['icon_url'],
+                'related_rating'   => $item['rating'],
+                'related_category' => $item['category'],
+                'related_price'    => $item['price'],
+                'display_order'    => $order + 1,
+            ]);
+        }
+    }
+
+    public function searchForPicker($keyword, $excludeId = 0, $limit = 20) {
+        $like = "%{$keyword}%";
+        return $this->db->fetchAll(
+            "SELECT id, ms_id, title, local_icon, icon_url, rating, category, price, price_type
+             FROM products
+             WHERE id != ? AND (title LIKE ? OR ms_id LIKE ?)
+             ORDER BY id DESC LIMIT ?",
+            [$excludeId, $like, $like, $limit]
+        );
     }
 }
