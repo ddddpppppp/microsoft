@@ -801,7 +801,7 @@ class AdminController extends Controller {
         $title = $parsed['title'] ?: '未命名文章';
         $content = $parsed['content'];
 
-        $slug = 'ai-' . date('YmdHis') . '-' . substr(md5($title), 0, 6);
+        $slug = 'ai-' . time() . '-' . mt_rand(100000, 999999);
         $coverImage = 'https://picsum.photos/seed/ai-' . mt_rand(100000, 999999) . '/1200/675';
 
         $articleModel = new Article();

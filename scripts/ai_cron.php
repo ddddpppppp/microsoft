@@ -55,7 +55,7 @@ foreach ($dueTasks as $task) {
     $parsed = $aiService->parseArticle($result['content']);
     $title = $parsed['title'] ?: '未命名文章';
     $content = $parsed['content'];
-    $slug = 'ai-' . date('YmdHis') . '-' . substr(md5($title . $task['id']), 0, 6);
+    $slug = 'ai-' . time() . '-' . mt_rand(100000, 999999);
     $summary = mb_substr(strip_tags($content), 0, 200);
 
     $coverImage = 'https://picsum.photos/seed/' . urlencode($slug) . '/800/450';
