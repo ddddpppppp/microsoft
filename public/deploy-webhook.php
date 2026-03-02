@@ -30,7 +30,7 @@ $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
 
 if (!hash_equals($expected, $signature)) {
     http_response_code(401);
-    echo json_encode(['ok' => false, 'message' => 'Invalid signature']);
+    echo json_encode(['ok' => false, 'message' => 'Invalid signature!!!']);
     exit;
 }
 
