@@ -17,7 +17,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit;
 }
 
-$secret = getenv('GITHUB_WEBHOOK_SECRET') ?: '';
+$secret = getenv('GITHUB_WEBHOOK_SECRET') ?: 'dashdgjkh3432rdfg23wsa1234dasd';
 if ($secret === '') {
     http_response_code(500);
     echo json_encode(['ok' => false, 'message' => 'Server secret is not configured']);
@@ -39,7 +39,6 @@ if ($event !== 'push') {
     echo json_encode(['ok' => true, 'message' => 'Ignored non-push event']);
     exit;
 }
-
 $json = json_decode($payload, true);
 if (!is_array($json)) {
     http_response_code(400);
