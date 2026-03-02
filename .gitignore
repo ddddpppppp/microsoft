@@ -4,3 +4,5 @@ dist/
 debug*
 storage/
 uploads/*
+*.zip
+*.7z
