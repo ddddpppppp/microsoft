@@ -332,19 +332,19 @@ class AboutPage extends LitElement {
       <div class="hero">
         <div class="hero-content">
           <h1 class="hero-title">你想要的一切，尽在其中</h1>
-          <a class="hero-btn" href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank">
+          <a class="hero-btn" href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank" rel="nofollow noopener noreferrer">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path d="M7.5 1H1v6.5h6.5V1zM8.5 1v6.5H15V1H8.5zM1 8.5V15h6.5V8.5H1zM8.5 8.5V15H15V8.5H8.5z"/>
             </svg>
             打开 Microsoft Store 应用
           </a>
           <p class="hero-sub">
-            如果设备上没有 Microsoft Store 应用，<a href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank">单击此处</a>立即下载。
+            如果设备上没有 Microsoft Store 应用，<a href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank" rel="nofollow noopener noreferrer">单击此处</a>立即下载。
           </p>
         </div>
         <div class="hero-visual">
           <div class="hero-visual-inner">
-            <img src="/assets/images/about-store-hero.png" alt="Microsoft Store 应用" />
+            <img src="/assets/images/about-store-hero.jpg" alt="Microsoft Store 应用" />
           </div>
         </div>
       </div>
@@ -363,7 +363,7 @@ class AboutPage extends LitElement {
           找到你喜爱的应用。放松心情，释放你的创造力和生产力。
         </p>
         <p class="carousel-note">设备上没有 Microsoft Store 应用?</p>
-        <a class="carousel-btn" href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank">
+        <a class="carousel-btn" href="https://apps.microsoft.com/detail/9WZDNCRFJBMP" target="_blank" rel="nofollow noopener noreferrer">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 1v10l4-4-4-4V1zM3 2v12h10V2H3z"/>
           </svg>
@@ -401,7 +401,7 @@ class AboutPage extends LitElement {
 
       <div class="footnotes">
         <p class="footnote"><sup>[+]</sup>模拟画面。功能和应用可用性可能根据地区变化。应用、游戏及其它内容或订阅需分别购买；免费应用可能包含广告或应用内购买。</p>
-        <p class="footnote"><sup>[1]</sup>仅适用于所选区域。 <a href="https://www.microsoft.com/servicesagreement/" target="_blank">使用条款</a></p>
+        <p class="footnote"><sup>[1]</sup>仅适用于所选区域。 <a href="https://www.microsoft.com/servicesagreement/" target="_blank" rel="nofollow noopener noreferrer">使用条款</a></p>
         <p class="footnote"><sup>[2]</sup>仅适用于所选区域。</p>
         <p class="footnote"><sup>[3]</sup>安全付款方式依赖于所选内容和应用。</p>
         <p class="footnote"><sup>[4]</sup>在 Store 中上架但由开发者自行分发的应用由开发者自行负责更新。</p>

@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\Article;
 use App\Models\ProductReview;
 use App\Models\ProductStats;
+use App\Core\Redis;
 
 class ApiController extends Controller {
     public function home() {
@@ -137,12 +138,29 @@ class ApiController extends Controller {
     }
 
     public function search() {
-        $keyword = $_GET['q'] ?? '';
-        if (empty($keyword)) {
+        $keyword = trim($_GET['q'] ?? '');
+        if ($keyword === '' || mb_strlen($keyword) > 100) {
             $this->json(['results' => []]);
+            return;
         }
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $redis = Redis::getInstance();
+        if ($redis->isAvailable()) {
+            $rateKey = 'search_rate:' . $ip;
+            $count = $redis->incr($rateKey);
+            if ($count === 1) {
+                $redis->expire($rateKey, 60);
+            }
+            if ($count > 30) {
+                http_response_code(429);
+                $this->json(['error' => 'Too many requests', 'results' => []]);
+                return;
+            }
+        }
+
         $productModel = new Product();
-        $results = $productModel->search($keyword);
+        $results = $productModel->searchLite($keyword);
         $this->json(['results' => $results]);
     }
 

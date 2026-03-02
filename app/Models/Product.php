@@ -32,6 +32,19 @@ class Product extends Model {
         );
     }
 
+    public function searchLite($keyword, $limit = 10) {
+        $like = '%' . $keyword . '%';
+        return $this->db->fetchAll(
+            "SELECT id, ms_id, title, local_icon, icon_url, category, price, price_type,
+                    rating, original_url, custom_url, is_own_product, product_type
+             FROM products
+             WHERE title LIKE ? OR ms_id LIKE ?
+             ORDER BY is_own_product DESC, rating_count DESC
+             LIMIT ?",
+            [$like, $like, $limit]
+        );
+    }
+
     /**
      * Products that appear in hero_cards collections and have empty description but have original_url.
      */

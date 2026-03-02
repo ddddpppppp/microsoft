@@ -177,7 +177,49 @@ class HomeController extends Controller {
             $shotAlt = $h(($s['alt'] ?? '') !== '' ? $s['alt'] : 'Product screenshot');
             $html .= '<img src="' . $shotUrl . '" alt="' . $shotAlt . '" loading="lazy">';
         }
+        $html .= $this->buildRelatedProductsSeoContent((int)($p['id'] ?? 0));
         $html .= '</article></div>';
+        return $html;
+    }
+
+    private function buildRelatedProductsSeoContent(int $productId): string {
+        if ($productId <= 0) {
+            return '';
+        }
+
+        $productModel = new Product();
+        $relatedItems = $productModel->getRelatedProducts($productId);
+        if (!$relatedItems || count($relatedItems) === 0) {
+            return '';
+        }
+
+        $h = function($s) { return htmlspecialchars((string)($s ?? ''), ENT_QUOTES, 'UTF-8'); };
+        $html = '<section class="seo-related-products">';
+        $html .= '<h2>Discover More</h2><ul>';
+
+        foreach ($relatedItems as $item) {
+            $isInternal = !empty($item['is_own_product']) && !empty($item['custom_url']);
+            $href = $isInternal
+                ? (string)$item['custom_url']
+                : ('https://apps.microsoft.com/detail/' . rawurlencode((string)($item['related_ms_id'] ?? '')) . '?hl=zh-CN&gl=HK');
+            if (trim($href) === '') {
+                continue;
+            }
+
+            $title = $h($item['related_title'] ?? '');
+            $category = $h($item['related_category'] ?? '');
+            $rating = $h($item['related_rating'] ?? '');
+            $price = $h(($item['related_price'] ?? '') !== '' ? $item['related_price'] : 'Free');
+
+            $html .= '<li>';
+            $html .= '<a href="' . $h($href) . '">' . ($title !== '' ? $title : $h($href)) . '</a>';
+            if ($category !== '') $html .= '<span> | Category: ' . $category . '</span>';
+            if ($rating !== '') $html .= '<span> | Rating: ' . $rating . '</span>';
+            $html .= '<span> | Price: ' . $price . '</span>';
+            $html .= '</li>';
+        }
+
+        $html .= '</ul></section>';
         return $html;
     }
 

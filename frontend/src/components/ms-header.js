@@ -2,7 +2,10 @@ import { LitElement, html, css } from 'lit';
 
 class MsHeader extends LitElement {
   static properties = {
-    currentRoute: { type: String }
+    currentRoute: { type: String },
+    _searchResults: { state: true },
+    _searchOpen: { state: true },
+    _searchLoading: { state: true },
   };
 
   static styles = css`
@@ -129,6 +132,81 @@ class MsHeader extends LitElement {
       font-size: 14px;
     }
 
+    .search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      z-index: 100;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: background .12s;
+      cursor: pointer;
+    }
+    .search-result-item:hover { background: #f5f5f5; }
+    .search-result-item:first-child { border-radius: 8px 8px 0 0; }
+    .search-result-item:last-child { border-radius: 0 0 8px 8px; }
+    .sr-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f5f5f5;
+    }
+    .sr-info { flex: 1; min-width: 0; }
+    .sr-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #131316;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .sr-meta {
+      font-size: 11.5px;
+      color: #767676;
+      line-height: 1.3;
+      margin-top: 1px;
+    }
+    .sr-price {
+      font-size: 12px;
+      color: #0067b8;
+      font-weight: 500;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .sr-empty, .sr-loading {
+      padding: 20px 16px;
+      text-align: center;
+      color: #767676;
+      font-size: 13px;
+    }
+    .sr-loading-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #e5e5e5;
+      border-top-color: #0067b8;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
     .right-elements {
       display: flex;
       flex-direction: row;
@@ -233,6 +311,11 @@ class MsHeader extends LitElement {
   constructor() {
     super();
     this.currentRoute = 'home';
+    this._searchResults = [];
+    this._searchOpen = false;
+    this._searchLoading = false;
+    this._searchTimer = null;
+    this._handleDocClick = this._handleDocClick.bind(this);
   }
 
   _isActive(route) {
@@ -269,6 +352,84 @@ class MsHeader extends LitElement {
     });
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('click', this._handleDocClick);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('click', this._handleDocClick);
+  }
+
+  _handleDocClick(e) {
+    if (!e.composedPath().includes(this)) {
+      this._searchOpen = false;
+    }
+  }
+
+  _onSearchInput(e) {
+    const q = e.target.value.trim();
+    clearTimeout(this._searchTimer);
+    if (q.length < 1) {
+      this._searchOpen = false;
+      this._searchResults = [];
+      return;
+    }
+    this._searchLoading = true;
+    this._searchOpen = true;
+    this._searchTimer = setTimeout(() => this._doSearch(q), 250);
+  }
+
+  async _doSearch(q) {
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        this._searchResults = [];
+        return;
+      }
+      const data = await res.json();
+      this._searchResults = data.results || [];
+    } catch {
+      this._searchResults = [];
+    } finally {
+      this._searchLoading = false;
+    }
+  }
+
+  _onSearchFocus(e) {
+    if (e.target.value.trim() && this._searchResults.length) {
+      this._searchOpen = true;
+    }
+  }
+
+  _onSearchKeydown(e) {
+    if (e.key === 'Escape') {
+      this._searchOpen = false;
+      e.target.blur();
+    }
+  }
+
+  _getResultHref(p) {
+    if (p.is_own_product && p.custom_url) return p.custom_url;
+    if (p.original_url) return p.original_url;
+    if (p.ms_id) return '/detail/' + p.ms_id;
+    return '#';
+  }
+
+  _isResultInternal(p) {
+    return !!(p.is_own_product && p.custom_url);
+  }
+
+  _onResultClick(e, p) {
+    this._searchOpen = false;
+    const href = this._getResultHref(p);
+    if (this._isResultInternal(p)) {
+      e.preventDefault();
+      window.msApp?.navigate(href);
+    }
+  }
+
   render() {
     return html`
       <header>
@@ -296,7 +457,39 @@ class MsHeader extends LitElement {
               <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8.5 3a5.5 5.5 0 014.383 8.823l4.147 4.147a.75.75 0 01-1.06 1.06l-4.147-4.147A5.5 5.5 0 118.5 3zm0 1.5a4 4 0 100 8 4 4 0 000-8z" fill="currentColor"/>
               </svg>
-              <input type="text" class="search-box" placeholder="搜索应用、游戏等" />
+              <input type="text" class="search-box" placeholder="搜索应用、游戏等"
+                @input=${this._onSearchInput}
+                @focus=${this._onSearchFocus}
+                @keydown=${this._onSearchKeydown}
+              />
+              ${this._searchOpen ? html`
+                <div class="search-dropdown">
+                  ${this._searchLoading ? html`
+                    <div class="sr-loading"><span class="sr-loading-spinner"></span>搜索中...</div>
+                  ` : this._searchResults.length === 0 ? html`
+                    <div class="sr-empty">未找到相关结果</div>
+                  ` : this._searchResults.map(p => {
+                    const href = this._getResultHref(p);
+                    const internal = this._isResultInternal(p);
+                    const icon = p.local_icon || p.icon_url || '';
+                    return html`
+                      <a class="search-result-item"
+                        href=${href}
+                        rel=${internal ? '' : 'nofollow noopener'}
+                        target=${internal ? '' : '_blank'}
+                        @click=${(e) => this._onResultClick(e, p)}
+                      >
+                        <img class="sr-icon" src=${icon} alt="" loading="lazy" />
+                        <div class="sr-info">
+                          <div class="sr-title">${p.title}</div>
+                          <div class="sr-meta">${p.category || p.product_type}${p.rating > 0 ? ` · ${p.rating}` : ''}</div>
+                        </div>
+                        <span class="sr-price">${p.price || '免费'}</span>
+                      </a>
+                    `;
+                  })}
+                </div>
+              ` : ''}
             </div>
             <a href="https://apps.microsoft.com/apppack" target="_blank" class="multi-app-btn" rel="nofollow noopener">
               <svg viewBox="0 0 16 16" fill="currentColor">
