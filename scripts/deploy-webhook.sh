@@ -33,9 +33,9 @@ LOCK_FILE="${LOCK_FILE:-/tmp/microsoft-webhook-deploy.lock}"
   git pull --ff-only origin "${DEPLOY_BRANCH}"
 
   echo "[INFO] Copy files to target..."
-  rsync -a --delete "${REPO_DIR}/app/" "${TARGET_DIR}/app/"
-  rsync -a --delete "${REPO_DIR}/public/" "${TARGET_DIR}/public/"
-  rsync -a --delete "${REPO_DIR}/scripts/" "${TARGET_DIR}/scripts/"
+  rsync -a "${REPO_DIR}/app/" "${TARGET_DIR}/app/"
+  rsync -a "${REPO_DIR}/public/" "${TARGET_DIR}/public/"
+  rsync -a "${REPO_DIR}/scripts/" "${TARGET_DIR}/scripts/"
   rsync -a "${REPO_DIR}/index.php" "${TARGET_DIR}/index.php"
 
   echo "[INFO] Deploy done."
