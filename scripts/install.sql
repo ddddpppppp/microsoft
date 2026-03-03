@@ -849,6 +849,57 @@ ALTER TABLE `product_reviews`
 --
 ALTER TABLE `related_products`
   ADD CONSTRAINT `related_products_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `ai_vocabulary_groups`
+--
+
+CREATE TABLE `ai_vocabulary_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(500) DEFAULT '',
+  `sort_order` int(11) DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `ai_vocabularies`
+--
+
+CREATE TABLE `ai_vocabularies` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
+  `word` varchar(200) NOT NULL,
+  `url` varchar(500) DEFAULT '',
+  `sort_order` int(11) DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_group_id` (`group_id`),
+  KEY `idx_word` (`word`),
+  CONSTRAINT `ai_vocabularies_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `ai_vocabulary_groups` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- 为 ai_generate_article_tasks 新增词汇配置和风格字段
+--
+
+ALTER TABLE `ai_generate_article_tasks`
+  ADD COLUMN `vocabulary_config` text AFTER `category`,
+  ADD COLUMN `article_style` varchar(20) DEFAULT 'seo' AFTER `vocabulary_config`;
+
+--
+-- 为 articles 新增任务来源字段（0=后台手动生成）
+--
+ALTER TABLE `articles`
+  ADD COLUMN `source_task_id` int(11) NOT NULL DEFAULT '0' AFTER `author`,
+  ADD KEY `idx_source_task_id` (`source_task_id`);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

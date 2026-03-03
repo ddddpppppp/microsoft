@@ -127,6 +127,15 @@ $router->group('/admin', function($r) {
     $r->get('/ai-article-task/toggle/{id}', [\App\Controllers\AdminController::class, 'aiTaskToggle']);
     $r->post('/ai-article-task/run', [\App\Controllers\AdminController::class, 'aiTaskRun']);
     $r->post('/ai-article-config/save', [\App\Controllers\AdminController::class, 'aiConfigSave']);
+    // Vocabulary management
+    $r->get('/ai-vocabulary', [\App\Controllers\AdminController::class, 'aiVocabulary']);
+    $r->post('/ai-vocabulary-group/save', [\App\Controllers\AdminController::class, 'aiVocabularyGroupSave']);
+    $r->get('/ai-vocabulary-group/delete/{id}', [\App\Controllers\AdminController::class, 'aiVocabularyGroupDelete']);
+    $r->post('/ai-vocabulary/save', [\App\Controllers\AdminController::class, 'aiVocabularySave']);
+    $r->post('/ai-vocabulary/batch-import', [\App\Controllers\AdminController::class, 'aiVocabularyBatchImport']);
+    $r->get('/ai-vocabulary/delete/{id}', [\App\Controllers\AdminController::class, 'aiVocabularyDelete']);
+    $r->post('/ai-vocabulary/batch-delete', [\App\Controllers\AdminController::class, 'aiVocabularyBatchDelete']);
+    $r->get('/ai-vocabulary/search', [\App\Controllers\AdminController::class, 'aiVocabularySearch']);
     // AI review generation
     $r->get('/ai-review', [\App\Controllers\AdminController::class, 'aiReview']);
     $r->get('/ai-review-task/create', [\App\Controllers\AdminController::class, 'aiReviewTaskCreate']);

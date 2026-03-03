@@ -21,7 +21,7 @@ spl_autoload_register(function ($class) {
     if (file_exists($file)) require $file;
 });
 
-use App\Core\AiService;
+use App\Services\AiService;
 use App\Models\AiArticleTask;
 use App\Models\Article;
 use App\Models\AiReviewTask;
@@ -41,11 +41,56 @@ echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueTasks) . " due task(s)\n
 
 $aiService = new AiService();
 $articleModel = new Article();
+$db = \App\Core\Database::getInstance();
 
 foreach ($dueTasks as $task) {
     echo "[" . date('Y-m-d H:i:s') . "] Processing task #{$task['id']}: {$task['name']}\n";
 
-    $result = $aiService->generateArticle($task['ai_provider'], $task['prompt']);
+    $taskId = (int)$task['id'];
+    $options = [
+        'article_style' => $task['article_style'] ?? 'seo',
+        'debug_context' => [
+            'entry' => 'ai_cron',
+            'trigger' => 'scheduled_task',
+            'task_id' => $taskId,
+            'source_task_id' => $taskId,
+        ],
+    ];
+
+    // Build vocabulary instructions
+    $vocabConfigRaw = $task['vocabulary_config'] ?? '';
+    $vocabConfig = $vocabConfigRaw ? json_decode($vocabConfigRaw, true) : null;
+    if ($vocabConfig && !empty($vocabConfig['vocabs'])) {
+        $vocabs = $vocabConfig['vocabs'];
+        $mustVocabs = [];
+        $randomPool = [];
+        foreach ($vocabs as $v) {
+            if (!empty($v['must'])) {
+                $mustVocabs[] = $v;
+            } else {
+                $randomPool[] = $v;
+            }
+        }
+        $randomCount = (int)($vocabConfig['random_count'] ?? 5);
+        if (count($randomPool) > $randomCount) {
+            shuffle($randomPool);
+            $randomPool = array_slice($randomPool, 0, $randomCount);
+        }
+        $finalVocabs = array_merge($mustVocabs, $randomPool);
+        $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
+    }
+
+    // Title dedup by task id
+    $recentTitleRows = $db->fetchAll(
+        "SELECT title FROM articles WHERE source_task_id = ? ORDER BY id DESC LIMIT 50",
+        [$taskId]
+    );
+    $recentTitles = array_column($recentTitleRows, 'title');
+    if (!empty($recentTitles)) {
+        $options['title_dedup'] = AiService::buildTitleDedup($recentTitles);
+    }
+
+    $result = $aiService->generateArticle($task['ai_provider'], $task['prompt'], $options);
 
     if (!$result['success']) {
         echo "[" . date('Y-m-d H:i:s') . "] ERROR: {$result['error']}\n";
@@ -68,6 +113,7 @@ foreach ($dueTasks as $task) {
         'category'     => $task['category'],
         'author'       => '小编',
         'cover_image'  => $coverImage,
+        'source_task_id' => $taskId,
     ]);
 
     $taskModel->markRun($task['id']);

@@ -2,6 +2,24 @@
 <div class="alert alert-success alert-dismissible fade show">API 配置已保存！<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 <?php endif; ?>
 
+<style>
+.vocab-picker { border: 1px solid var(--border); border-radius: 10px; padding: 12px; background: #f8fafc; }
+.vocab-picker .vocab-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; margin: 3px; border-radius: 999px; font-size: 13px;
+    border: 1px solid #cbd5e1; background: #fff; cursor: pointer; transition: all .15s;
+}
+.vocab-picker .vocab-tag:hover { border-color: #93c5fd; background: #eff6ff; }
+.vocab-picker .vocab-tag.selected { border-color: #2563eb; background: #dbeafe; color: #1e3a8a; }
+.selected-vocabs-area { min-height: 48px; }
+.selected-vocab-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+    border: 1px solid var(--border); border-radius: 8px; background: #fff; margin-bottom: 6px;
+}
+.selected-vocab-item .vocab-name { font-weight: 600; min-width: 80px; }
+.selected-vocab-item .form-check-input { margin: 0; }
+</style>
+
 <!-- Quick Generate -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -60,14 +78,22 @@
                     <label class="form-label">文章分类</label>
                     <input type="text" name="category" class="form-control" placeholder="如：使用教程、行业资讯">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label class="form-label">文章风格</label>
+                    <select name="article_style" class="form-select">
+                        <option value="seo">SEO 风格</option>
+                        <option value="media">自媒体风格</option>
+                        <option value="geo">GEO 风格</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">发布状态</label>
                     <select name="auto_publish" class="form-select">
                         <option value="0">存为草稿</option>
                         <option value="1">直接发布</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-success w-100" id="btnGenerate">
                         <i class="bi bi-magic"></i> 立即生成
                     </button>
@@ -77,6 +103,49 @@
                 <label class="form-label">提示词 <span class="text-danger">*</span></label>
                 <textarea name="prompt" class="form-control" rows="4" placeholder="输入提示词，例如：写一篇关于Windows 11最新功能介绍的文章，包含系统要求、新特性、升级方法等内容，字数约1500字" required></textarea>
             </div>
+
+            <!-- Vocabulary Selection -->
+            <?php if (!empty($vocabGroups)): ?>
+            <div class="card mb-3">
+                <div class="card-header py-2">
+                    <h6 class="mb-0"><i class="bi bi-bookmark-star"></i> 关键词汇选择</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">词汇分组</label>
+                            <select class="form-select" id="vocabGroupSelect">
+                                <option value="">-- 选择分组 --</option>
+                                <?php foreach ($vocabGroups as $g): ?>
+                                <option value="<?= $g['id'] ?>"><?= htmlspecialchars($g['name']) ?> (<?= $g['vocab_count'] ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">搜索词汇</label>
+                            <input type="text" class="form-control" id="vocabSearchInput" placeholder="输入关键字搜索...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">本次随机使用词数</label>
+                            <input type="number" class="form-control" id="randomCount" value="5" min="0" max="100">
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+
+                    <div class="vocab-picker mb-3" id="vocabPool">
+                        <div class="text-muted text-center py-2">请先选择词汇分组</div>
+                    </div>
+
+                    <h6 class="mb-2">已选词汇 <span class="badge bg-primary" id="selectedCount">0</span></h6>
+                    <div class="selected-vocabs-area" id="selectedVocabs">
+                        <div class="text-muted text-center py-2" id="noSelectedHint">点击上方词汇标签选择</div>
+                    </div>
+                    <small class="text-muted d-block mt-2" id="vocabUsageHint">
+                        预计关键词总出现次数：0（必选词 + 随机词）
+                    </small>
+                </div>
+            </div>
+            <?php endif; ?>
         </form>
         <div id="genResult" class="d-none">
             <hr>
@@ -113,6 +182,7 @@
                         <th width="50">ID</th>
                         <th>任务名称</th>
                         <th width="90">AI</th>
+                        <th width="80">风格</th>
                         <th width="100">类型</th>
                         <th width="140">执行计划</th>
                         <th width="65">已生成</th>
@@ -131,6 +201,13 @@
                             <small class="text-muted"><?= htmlspecialchars(mb_substr($t['prompt'], 0, 60)) ?>...</small>
                         </td>
                         <td><span class="badge bg-info"><?= htmlspecialchars($t['ai_provider']) ?></span></td>
+                        <td>
+                            <?php
+                            $styleLabels = ['seo' => 'SEO', 'media' => '自媒体', 'geo' => 'GEO'];
+                            $style = $t['article_style'] ?? 'seo';
+                            ?>
+                            <span class="badge bg-secondary"><?= $styleLabels[$style] ?? $style ?></span>
+                        </td>
                         <td>
                             <?php
                             $typeLabels = ['once' => '一次性', 'interval' => '间隔', 'daily' => '每天'];
@@ -161,7 +238,7 @@
                             <a href="/admin/ai-article-task/toggle/<?= $t['id'] ?>" class="btn btn-sm btn-outline-<?= $t['is_active'] ? 'warning' : 'success' ?>">
                                 <?= $t['is_active'] ? '停用' : '启用' ?>
                             </a>
-                            <button class="btn btn-sm btn-outline-success btn-run-task" data-task-id="<?= $t['id'] ?>" data-prompt="<?= htmlspecialchars($t['prompt']) ?>" data-provider="<?= htmlspecialchars($t['ai_provider']) ?>" data-category="<?= htmlspecialchars($t['category']) ?>" data-auto-publish="<?= $t['auto_publish'] ?>">
+                            <button class="btn btn-sm btn-outline-success btn-run-task" data-task-id="<?= $t['id'] ?>">
                                 <i class="bi bi-play-fill"></i>
                             </button>
                             <a href="/admin/ai-article-task/delete/<?= $t['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定删除此任务？')">
@@ -171,7 +248,7 @@
                     </tr>
                     <?php endforeach; ?>
                     <?php if (empty($tasks)): ?>
-                    <tr><td colspan="10" class="text-center text-muted py-4">暂无定时任务，点击"新建任务"创建</td></tr>
+                    <tr><td colspan="11" class="text-center text-muted py-4">暂无定时任务，点击"新建任务"创建</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -189,25 +266,160 @@
 </div>
 
 <script>
+var selectedVocabs = {};
+var vocabSearchTimer = null;
+
+// Vocab group select
+var groupSel = document.getElementById('vocabGroupSelect');
+if (groupSel) {
+    groupSel.addEventListener('change', function() {
+        loadVocabs(this.value, '');
+    });
+}
+
+var searchInput = document.getElementById('vocabSearchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(vocabSearchTimer);
+        var kw = this.value;
+        vocabSearchTimer = setTimeout(function() {
+            var gid = groupSel ? groupSel.value : '';
+            loadVocabs(gid, kw);
+        }, 300);
+    });
+}
+var randomCountInput = document.getElementById('randomCount');
+if (randomCountInput) {
+    randomCountInput.addEventListener('input', updateVocabUsageHint);
+    randomCountInput.addEventListener('change', updateVocabUsageHint);
+}
+
+function loadVocabs(groupId, keyword) {
+    var pool = document.getElementById('vocabPool');
+    if (!groupId && !keyword) {
+        pool.innerHTML = '<div class="text-muted text-center py-2">请先选择词汇分组</div>';
+        return;
+    }
+    pool.innerHTML = '<div class="text-muted text-center py-2">加载中...</div>';
+    var url = '/admin/ai-vocabulary/search?group_id=' + encodeURIComponent(groupId) + '&keyword=' + encodeURIComponent(keyword);
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        if (!data.items || data.items.length === 0) {
+            pool.innerHTML = '<div class="text-muted text-center py-2">无匹配词汇</div>';
+            return;
+        }
+        var html = '';
+        data.items.forEach(function(v) {
+            var sel = selectedVocabs[v.id] ? ' selected' : '';
+            html += '<span class="vocab-tag' + sel + '" data-id="' + v.id + '" data-word="' + escAttr(v.word) + '" data-url="' + escAttr(v.url || '') + '" onclick="toggleVocab(this)">' + escHtml(v.word) + '</span>';
+        });
+        pool.innerHTML = html;
+    });
+}
+
+function toggleVocab(el) {
+    var id = el.dataset.id;
+    if (selectedVocabs[id]) {
+        delete selectedVocabs[id];
+        el.classList.remove('selected');
+    } else {
+        var defRepeat = 1;
+        selectedVocabs[id] = { id: id, word: el.dataset.word, url: el.dataset.url, must: false, repeat: defRepeat };
+        el.classList.add('selected');
+    }
+    renderSelected();
+}
+
+function renderSelected() {
+    var area = document.getElementById('selectedVocabs');
+    var keys = Object.keys(selectedVocabs);
+    document.getElementById('selectedCount').textContent = keys.length;
+    if (keys.length === 0) {
+        area.innerHTML = '<div class="text-muted text-center py-2" id="noSelectedHint">点击上方词汇标签选择</div>';
+        updateVocabUsageHint();
+        return;
+    }
+    var html = '';
+    keys.forEach(function(id) {
+        var v = selectedVocabs[id];
+        html += '<div class="selected-vocab-item">'
+            + '<span class="vocab-name">' + escHtml(v.word) + '</span>'
+            + (v.url ? '<a href="' + escAttr(v.url) + '" target="_blank" class="text-muted" style="font-size:12px;max-width:200px" title="' + escAttr(v.url) + '"><i class="bi bi-link-45deg"></i></a>' : '')
+            + '<label class="form-check-label ms-auto" style="font-size:13px"><input type="checkbox" class="form-check-input me-1" ' + (v.must ? 'checked' : '') + ' onchange="selectedVocabs[' + id + '].must=this.checked;updateVocabUsageHint()"> 必选</label>'
+            + '<label style="font-size:13px">目标出现<input type="number" class="form-control form-control-sm d-inline-block mx-1" style="width:60px" value="' + v.repeat + '" min="1" max="20" onchange="selectedVocabs[' + id + '].repeat=parseInt(this.value)||1;updateVocabUsageHint()">次</label>'
+            + '<button type="button" class="btn btn-sm btn-outline-danger p-0 px-1" onclick="delete selectedVocabs[' + id + '];renderSelected();refreshPoolTags()"><i class="bi bi-x"></i></button>'
+            + '</div>';
+    });
+    area.innerHTML = html;
+    updateVocabUsageHint();
+}
+
+function refreshPoolTags() {
+    document.querySelectorAll('#vocabPool .vocab-tag').forEach(function(el) {
+        el.classList.toggle('selected', !!selectedVocabs[el.dataset.id]);
+    });
+}
+
+function updateVocabUsageHint() {
+    var keys = Object.keys(selectedVocabs);
+    var mustTotal = 0;
+    var optionalRepeats = [];
+    keys.forEach(function(id) {
+        var repeat = parseInt(selectedVocabs[id].repeat, 10) || 0;
+        if (selectedVocabs[id].must) {
+            mustTotal += repeat;
+        } else {
+            optionalRepeats.push(repeat);
+        }
+    });
+    var randomCount = parseInt(document.getElementById('randomCount').value, 10) || 0;
+    randomCount = Math.max(0, Math.min(randomCount, optionalRepeats.length));
+
+    // 随机词会在可选词中抽取，出现次数有波动：显示最小~最大区间
+    optionalRepeats.sort(function(a, b) { return a - b; });
+    var randomMin = 0;
+    var randomMax = 0;
+    for (var i = 0; i < randomCount; i++) {
+        randomMin += optionalRepeats[i] || 0;
+        randomMax += optionalRepeats[optionalRepeats.length - 1 - i] || 0;
+    }
+    var totalMin = mustTotal + randomMin;
+    var totalMax = mustTotal + randomMax;
+    var hint = document.getElementById('vocabUsageHint');
+    if (hint) {
+        if (totalMin === totalMax) {
+            hint.textContent = '预计关键词总出现次数：' + totalMin + '（必选词 + 随机词）';
+        } else {
+            hint.textContent = '预计关键词总出现次数：' + totalMin + ' ~ ' + totalMax + '（必选词 + 随机词）';
+        }
+    }
+}
+
+// Form submit
 document.getElementById('quickGenForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    runGenerate({
+    var params = {
         prompt: this.prompt.value,
         provider: this.querySelector('[name=provider]').value,
         category: this.querySelector('[name=category]').value,
         auto_publish: this.querySelector('[name=auto_publish]').value,
-    });
+        article_style: this.querySelector('[name=article_style]').value,
+    };
+
+    var vocabKeys = Object.keys(selectedVocabs);
+    if (vocabKeys.length > 0) {
+        var vocabConfig = {
+            vocabs: vocabKeys.map(function(id) { return selectedVocabs[id]; }),
+            random_count: parseInt(document.getElementById('randomCount').value) || 5
+        };
+        params.vocabulary_config = JSON.stringify(vocabConfig);
+    }
+    runGenerate(params);
 });
 
+// Run task buttons (from task list)
 document.querySelectorAll('.btn-run-task').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        runGenerate({
-            task_id: this.dataset.taskId,
-            prompt: this.dataset.prompt,
-            provider: this.dataset.provider,
-            category: this.dataset.category,
-            auto_publish: this.dataset.autoPublish,
-        });
+        runGenerate({ task_id: this.dataset.taskId });
     });
 });
 
@@ -228,10 +440,7 @@ function runGenerate(params) {
         formData.append(key, params[key]);
     }
 
-    fetch('/admin/ai-article-task/run', {
-        method: 'POST',
-        body: formData,
-    })
+    fetch('/admin/ai-article-task/run', { method: 'POST', body: formData })
     .then(function(r) { return r.json(); })
     .then(function(data) {
         loading.classList.add('d-none');
@@ -253,4 +462,7 @@ function runGenerate(params) {
         document.getElementById('genErrorMsg').textContent = '请求失败: ' + err.message;
     });
 }
+
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>

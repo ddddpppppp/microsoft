@@ -415,10 +415,11 @@
     <div class="sidebar">
         <div class="brand">Microsoft Store 管理</div>
         <nav>
-            <a href="/admin" class="nav-link <?= $isActive(['/admin']) && !$isActive(['/admin/products', '/admin/product', '/admin/settings', '/admin/articles', '/admin/ai-article', '/admin/ai-review']) ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> 仪表盘</a>
+            <a href="/admin" class="nav-link <?= $isActive(['/admin']) && !$isActive(['/admin/products', '/admin/product', '/admin/settings', '/admin/articles', '/admin/ai-vocabulary', '/admin/ai-article', '/admin/ai-review']) ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> 仪表盘</a>
             <a href="/admin/products" class="nav-link <?= $isActive(['/admin/products', '/admin/product']) ? 'active' : '' ?>"><i class="bi bi-box-seam"></i> 产品管理</a>
             <a href="/admin/settings" class="nav-link <?= $isActive(['/admin/settings']) ? 'active' : '' ?>"><i class="bi bi-gear"></i> SEO 设置</a>
             <a href="/admin/articles" class="nav-link <?= $isActive(['/admin/articles', '/admin/article']) ? 'active' : '' ?>"><i class="bi bi-newspaper"></i> 资讯管理</a>
+            <a href="/admin/ai-vocabulary" class="nav-link <?= $isActive(['/admin/ai-vocabulary']) ? 'active' : '' ?>"><i class="bi bi-bookmark-star"></i> 词汇管理</a>
             <a href="/admin/ai-article" class="nav-link <?= $isActive(['/admin/ai-article']) ? 'active' : '' ?>"><i class="bi bi-robot"></i> AI 文章生成</a>
             <a href="/admin/ai-review" class="nav-link <?= $isActive(['/admin/ai-review']) ? 'active' : '' ?>"><i class="bi bi-chat-square-quote"></i> AI 评价生成</a>
         </nav>

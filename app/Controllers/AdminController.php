@@ -11,6 +11,8 @@ use App\Models\Article;
 use App\Models\AiArticleTask;
 use App\Models\AiReviewTask;
 use App\Models\ProductReview;
+use App\Models\AiVocabularyGroup;
+use App\Models\AiVocabulary;
 use App\Models\ProductStats;
 use App\Core\HtmlCache;
 use App\Services\SitemapCache;
@@ -607,13 +609,15 @@ class AdminController extends Controller {
 
     public function articleCreate() {
         $this->requireLogin();
+        $groupModel = new AiVocabularyGroup();
         echo View::renderWithLayout('admin/layout', 'admin/article_edit', [
             'pageTitle' => '新建资讯',
             'article' => [
                 'id' => '', 'title' => '', 'content' => '', 'slug' => '', 'status' => 'draft',
                 'cover_image' => '', 'summary' => '', 'category' => '', 'is_recommended' => 0,
                 'author' => '', 'keywords' => '', 'meta_description' => ''
-            ]
+            ],
+            'vocabGroups' => $groupModel->getAllWithCount(),
         ]);
     }
 
@@ -622,9 +626,11 @@ class AdminController extends Controller {
         $articleModel = new Article();
         $article = $articleModel->find($id);
         if (!$article) $this->redirect('/admin/articles');
+        $groupModel = new AiVocabularyGroup();
         echo View::renderWithLayout('admin/layout', 'admin/article_edit', [
             'pageTitle' => '编辑资讯',
-            'article' => $article
+            'article' => $article,
+            'vocabGroups' => $groupModel->getAllWithCount(),
         ]);
     }
 
@@ -687,24 +693,31 @@ class AdminController extends Controller {
         $taskModel = new AiArticleTask();
         $tasks = $taskModel->all('created_at DESC');
         $aiConfig = require BASE_PATH . '/config/ai.php';
+        $groupModel = new AiVocabularyGroup();
+        $vocabGroups = $groupModel->getAllWithCount();
         echo View::renderWithLayout('admin/layout', 'admin/ai_article_generate', [
             'pageTitle' => 'AI 文章生成',
             'tasks' => $tasks,
             'aiConfig' => $aiConfig,
+            'vocabGroups' => $vocabGroups,
         ]);
     }
 
     public function aiTaskCreate() {
         $this->requireLogin();
         $aiConfig = require BASE_PATH . '/config/ai.php';
+        $groupModel = new AiVocabularyGroup();
+        $vocabGroups = $groupModel->getAllWithCount();
         echo View::renderWithLayout('admin/layout', 'admin/ai_article_task_edit', [
             'pageTitle' => '新建 AI 任务',
             'task' => [
                 'id' => '', 'name' => '', 'ai_provider' => 'deepseek', 'prompt' => '',
-                'category' => '', 'auto_publish' => 0, 'schedule_type' => 'once',
+                'category' => '', 'vocabulary_config' => '', 'article_style' => 'seo',
+                'auto_publish' => 0, 'schedule_type' => 'once',
                 'interval_days' => 1, 'daily_time' => '09:00', 'is_active' => 1,
             ],
             'aiConfig' => $aiConfig,
+            'vocabGroups' => $vocabGroups,
         ]);
     }
 
@@ -714,10 +727,13 @@ class AdminController extends Controller {
         $task = $taskModel->find($id);
         if (!$task) $this->redirect('/admin/ai-article');
         $aiConfig = require BASE_PATH . '/config/ai.php';
+        $groupModel = new AiVocabularyGroup();
+        $vocabGroups = $groupModel->getAllWithCount();
         echo View::renderWithLayout('admin/layout', 'admin/ai_article_task_edit', [
             'pageTitle' => '编辑 AI 任务',
             'task' => $task,
             'aiConfig' => $aiConfig,
+            'vocabGroups' => $vocabGroups,
         ]);
     }
 
@@ -726,15 +742,17 @@ class AdminController extends Controller {
         $taskModel = new AiArticleTask();
         $id = $_POST['id'] ?? '';
         $data = [
-            'name'          => $_POST['name'] ?? '',
-            'ai_provider'   => $_POST['ai_provider'] ?? 'deepseek',
-            'prompt'        => $_POST['prompt'] ?? '',
-            'category'      => $_POST['category'] ?? '',
-            'auto_publish'  => isset($_POST['auto_publish']) ? 1 : 0,
-            'schedule_type' => $_POST['schedule_type'] ?? 'once',
-            'interval_days' => max(1, (int)($_POST['interval_days'] ?? 1)),
-            'daily_time'    => $_POST['daily_time'] ?? '09:00',
-            'is_active'     => isset($_POST['is_active']) ? 1 : 0,
+            'name'              => $_POST['name'] ?? '',
+            'ai_provider'       => $_POST['ai_provider'] ?? 'deepseek',
+            'prompt'            => $_POST['prompt'] ?? '',
+            'category'          => $_POST['category'] ?? '',
+            'vocabulary_config' => $_POST['vocabulary_config'] ?? '',
+            'article_style'     => $_POST['article_style'] ?? 'seo',
+            'auto_publish'      => isset($_POST['auto_publish']) ? 1 : 0,
+            'schedule_type'     => $_POST['schedule_type'] ?? 'once',
+            'interval_days'     => max(1, (int)($_POST['interval_days'] ?? 1)),
+            'daily_time'        => $_POST['daily_time'] ?? '09:00',
+            'is_active'         => isset($_POST['is_active']) ? 1 : 0,
         ];
 
         if ($data['schedule_type'] === 'interval') {
@@ -778,19 +796,77 @@ class AdminController extends Controller {
         $this->requireLogin();
         header('Content-Type: application/json; charset=utf-8');
 
-        $taskId = $_POST['task_id'] ?? '';
+        $taskId = (int)($_POST['task_id'] ?? 0);
         $prompt = $_POST['prompt'] ?? '';
         $provider = $_POST['provider'] ?? 'deepseek';
         $category = $_POST['category'] ?? '';
         $autoPublish = !empty($_POST['auto_publish']);
+        $articleStyle = $_POST['article_style'] ?? 'seo';
+        $vocabConfigRaw = $_POST['vocabulary_config'] ?? '';
+
+        // If running from task list button, load task data
+        if ($taskId > 0 && empty($prompt)) {
+            $taskModel = new AiArticleTask();
+            $task = $taskModel->find($taskId);
+            if ($task) {
+                $prompt = $task['prompt'];
+                $provider = $task['ai_provider'];
+                $category = $task['category'];
+                $autoPublish = !empty($task['auto_publish']);
+                $articleStyle = $task['article_style'] ?? 'seo';
+                $vocabConfigRaw = $task['vocabulary_config'] ?? '';
+            }
+        }
 
         if (empty($prompt)) {
             echo json_encode(['success' => false, 'error' => '提示词不能为空']);
             exit;
         }
 
+        $options = [
+            'article_style' => $articleStyle,
+            'debug_context' => [
+                'entry' => 'admin_ai_task_run',
+                'trigger' => $taskId > 0 ? 'task_button_or_test' : 'manual_quick_generate',
+                'task_id' => $taskId > 0 ? $taskId : 0,
+                'source_task_id' => $taskId > 0 ? $taskId : 0,
+            ],
+        ];
+
+        // Build vocabulary instructions
+        $vocabConfig = $vocabConfigRaw ? json_decode($vocabConfigRaw, true) : null;
+        if ($vocabConfig && !empty($vocabConfig['vocabs'])) {
+            $vocabs = $vocabConfig['vocabs'];
+            $mustIds = [];
+            $randomPool = [];
+            foreach ($vocabs as $v) {
+                if (!empty($v['must'])) {
+                    $mustIds[] = $v;
+                } else {
+                    $randomPool[] = $v;
+                }
+            }
+
+            $randomCount = (int)($vocabConfig['random_count'] ?? 5);
+            if (count($randomPool) > $randomCount) {
+                shuffle($randomPool);
+                $randomPool = array_slice($randomPool, 0, $randomCount);
+            }
+
+            $finalVocabs = array_merge($mustIds, $randomPool);
+            $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
+        }
+
+        // Build title dedup
+        $articleModel = new Article();
+        $sourceTaskId = $taskId > 0 ? $taskId : 0;
+        $recentTitles = $this->getRecentArticleTitles($sourceTaskId, 50);
+        if (!empty($recentTitles)) {
+            $options['title_dedup'] = AiService::buildTitleDedup($recentTitles);
+        }
+
         $aiService = new AiService();
-        $result = $aiService->generateArticle($provider, $prompt);
+        $result = $aiService->generateArticle($provider, $prompt, $options);
 
         if (!$result['success']) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -804,23 +880,22 @@ class AdminController extends Controller {
         $slug = 'ai-' . time() . '-' . mt_rand(100000, 999999);
         $coverImage = 'https://picsum.photos/seed/ai-' . mt_rand(100000, 999999) . '/1200/675';
 
-        $articleModel = new Article();
         $summary = mb_substr(strip_tags($content), 0, 200);
-        $articleData = [
-            'title'   => $title,
-            'content' => $content,
-            'slug'    => $slug,
-            'status'  => $autoPublish ? 'published' : 'draft',
+        $articleId = $articleModel->create([
+            'title'       => $title,
+            'content'     => $content,
+            'slug'        => $slug,
+            'status'      => $autoPublish ? 'published' : 'draft',
             'cover_image' => $coverImage,
-            'summary' => $summary,
-            'category' => $category,
-            'author'  => '小编',
-        ];
-        $articleId = $articleModel->create($articleData);
+            'summary'     => $summary,
+            'category'    => $category,
+            'author'      => '小编',
+            'source_task_id' => $sourceTaskId,
+        ]);
 
-        if ($taskId) {
-            $taskModel = new AiArticleTask();
-            $taskModel->markRun($taskId);
+        if ($taskId > 0) {
+            $taskModel2 = new AiArticleTask();
+            $taskModel2->markRun($taskId);
         }
 
         echo json_encode([
@@ -832,6 +907,16 @@ class AdminController extends Controller {
             'edit_url'   => '/admin/article/edit/' . $articleId,
         ], JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    private function getRecentArticleTitles(int $sourceTaskId, int $limit = 50): array {
+        $db = \App\Core\Database::getInstance();
+        $limit = max(1, (int)$limit);
+        $rows = $db->fetchAll(
+            "SELECT title FROM articles WHERE source_task_id = ? ORDER BY id DESC LIMIT $limit",
+            [$sourceTaskId]
+        );
+        return array_column($rows, 'title');
     }
 
     // ── AI Review Generation ──────────────────────────────
@@ -1027,5 +1112,145 @@ class AdminController extends Controller {
         file_put_contents($configFile, $export);
 
         $this->redirect('/admin/ai-article?config_saved=1');
+    }
+
+    // ── Vocabulary Management ────────────────────────────
+
+    public function aiVocabulary() {
+        $this->requireLogin();
+        $groupModel = new AiVocabularyGroup();
+        $vocabModel = new AiVocabulary();
+        $groups = $groupModel->getAllWithCount();
+
+        $groupId = (int)($_GET['group_id'] ?? 0);
+        $keyword = $_GET['keyword'] ?? '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+
+        if ($groupId > 0) {
+            $vocabs = $vocabModel->paginateByGroup($groupId, $page, 50, $keyword);
+        } elseif ($keyword !== '') {
+            $vocabs = $vocabModel->paginate($page, 50, 'word LIKE ?', ['%' . $keyword . '%'], 'id DESC');
+        } else {
+            $vocabs = $vocabModel->paginate($page, 50, '1=1', [], 'id DESC');
+        }
+
+        echo View::renderWithLayout('admin/layout', 'admin/ai_vocabularies', [
+            'pageTitle' => '词汇管理',
+            'groups' => $groups,
+            'vocabs' => $vocabs,
+        ]);
+    }
+
+    public function aiVocabularyGroupSave() {
+        $this->requireLogin();
+        $groupModel = new AiVocabularyGroup();
+        $id = $_POST['id'] ?? '';
+        $data = [
+            'name'        => $_POST['name'] ?? '',
+            'description' => $_POST['description'] ?? '',
+        ];
+        if ($id) {
+            $groupModel->update($id, $data);
+        } else {
+            $groupModel->create($data);
+        }
+        $this->redirect('/admin/ai-vocabulary?msg=' . urlencode('分组保存成功'));
+    }
+
+    public function aiVocabularyGroupDelete($id) {
+        $this->requireLogin();
+        $groupModel = new AiVocabularyGroup();
+        $groupModel->delete($id);
+        $this->redirect('/admin/ai-vocabulary?msg=' . urlencode('分组已删除'));
+    }
+
+    public function aiVocabularySave() {
+        $this->requireLogin();
+        $vocabModel = new AiVocabulary();
+        $id = $_POST['id'] ?? '';
+        $data = [
+            'group_id' => (int)($_POST['group_id'] ?? 0),
+            'word'     => $_POST['word'] ?? '',
+            'url'      => $_POST['url'] ?? '',
+        ];
+        if ($id) {
+            $vocabModel->update($id, $data);
+        } else {
+            $vocabModel->create($data);
+        }
+        $gid = $_POST['current_group_id'] ?? 0;
+        $this->redirect('/admin/ai-vocabulary?group_id=' . $gid . '&msg=' . urlencode('词汇保存成功'));
+    }
+
+    public function aiVocabularyBatchImport() {
+        $this->requireLogin();
+        $groupId = (int)($_POST['group_id'] ?? 0);
+        if ($groupId <= 0 || empty($_FILES['csv_file']['tmp_name'])) {
+            $this->redirect('/admin/ai-vocabulary?msg=' . urlencode('请选择分组和文件'));
+            return;
+        }
+
+        $content = file_get_contents($_FILES['csv_file']['tmp_name']);
+        $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8,GBK,GB2312');
+        $lines = preg_split('/\r?\n/', $content);
+        $items = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+            $parts = str_getcsv($line);
+            $word = trim($parts[0] ?? '');
+            $url = trim($parts[1] ?? '');
+            if ($word === '') continue;
+            $items[] = ['word' => $word, 'url' => $url];
+        }
+
+        $vocabModel = new AiVocabulary();
+        $count = $vocabModel->batchCreate($groupId, $items);
+        $this->redirect('/admin/ai-vocabulary?group_id=' . $groupId . '&msg=' . urlencode("成功导入 {$count} 个词汇"));
+    }
+
+    public function aiVocabularyDelete($id) {
+        $this->requireLogin();
+        $vocabModel = new AiVocabulary();
+        $vocabModel->delete($id);
+        $gid = $_GET['group_id'] ?? 0;
+        $this->redirect('/admin/ai-vocabulary?group_id=' . $gid . '&msg=' . urlencode('词汇已删除'));
+    }
+
+    public function aiVocabularyBatchDelete() {
+        $this->requireLogin();
+        $ids = array_filter(array_map('intval', explode(',', $_POST['ids'] ?? '')));
+        if (!empty($ids)) {
+            $vocabModel = new AiVocabulary();
+            $vocabModel->batchDelete($ids);
+        }
+        $gid = $_POST['group_id'] ?? 0;
+        $this->redirect('/admin/ai-vocabulary?group_id=' . $gid . '&msg=' . urlencode('批量删除成功'));
+    }
+
+    public function aiVocabularySearch() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+        $keyword = $_GET['keyword'] ?? '';
+        $groupId = (int)($_GET['group_id'] ?? 0);
+        $all = isset($_GET['all']);
+
+        $vocabModel = new AiVocabulary();
+        if ($groupId > 0) {
+            $results = $vocabModel->getByGroup($groupId);
+            if ($keyword !== '') {
+                $results = array_filter($results, function($v) use ($keyword) {
+                    return mb_stripos($v['word'], $keyword) !== false;
+                });
+                $results = array_values($results);
+            }
+        } elseif ($keyword !== '') {
+            $results = $vocabModel->searchByKeyword($keyword);
+        } else {
+            $results = $vocabModel->getAllGrouped();
+        }
+
+        echo json_encode(['success' => true, 'items' => $results], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 }

@@ -7,6 +7,27 @@ class AiService {
 
     private static $defaultSystemPrompt = '你是一个专业的内容创作者。请根据用户要求生成高质量内容。';
 
+    private static $stylePrompts = [
+        'seo' => '你是一个专业的SEO内容创作者，擅长撰写搜索引擎优化的高质量文章。'
+            . '要求：1)标题包含核心关键词，控制在30字以内；2)使用H2/H3标题层级结构；'
+            . '3)关键词自然分布在首段、小标题和正文中，密度2-5%；4)段落简短（3-5句），使用列表增强可读性；'
+            . '5)结尾有总结或行动号召。'
+            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+
+        'media' => '你是一个自媒体爆款内容创作者，擅长撰写有吸引力、高阅读量的文章。'
+            . '要求：1)标题要有吸引力，善用数字、疑问、反差等技巧；2)开头用故事、场景或痛点引入，抓住读者注意力；'
+            . '3)语言口语化、有温度、有情感共鸣；4)段落短小，多用短句；5)适当使用排比、对比、悬念等修辞手法；'
+            . '6)结尾引导互动（提问或分享）。'
+            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+
+        'geo' => '你是一个GEO（Generative Engine Optimization）内容专家，擅长撰写被AI搜索引擎引用的权威内容。'
+            . '要求：1)文章结构化清晰，用H2/H3组织明确的问答式段落；2)每个要点开头用加粗关键句总结；'
+            . '3)使用事实、数据、引用来增强E-E-A-T信号（专业性、权威性、可信度）；'
+            . '4)回答要直接、精确，适合被AI摘要引用；5)包含定义性语句（"X是指…"格式）；'
+            . '6)使用有序/无序列表便于结构化提取。'
+            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+    ];
+
     public function __construct() {
         $this->config = require BASE_PATH . '/config/ai.php';
     }
@@ -42,10 +63,28 @@ class AiService {
             'max_tokens'      => $options['max_tokens'] ?? 4096,
             'response_format' => $options['response_format'] ?? 'text',
         ];
+        $debugContext = $options['debug_context'] ?? [];
+        unset($options['debug_context']);
 
         try {
+            self::writeDebugLog('ai_request', [
+                'provider' => $provider,
+                'params' => [
+                    'temperature' => $params['temperature'],
+                    'max_tokens' => $params['max_tokens'],
+                    'response_format' => $params['response_format'],
+                ],
+                'system_prompt' => $params['system_prompt'],
+                'user_prompt' => $prompt,
+                'context' => $debugContext,
+            ]);
             return $this->$method($cfg, $apiKey, $prompt, $params);
         } catch (\Exception $e) {
+            self::writeDebugLog('ai_exception', [
+                'provider' => $provider,
+                'error' => $e->getMessage(),
+                'context' => $debugContext,
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -53,13 +92,32 @@ class AiService {
     // ── Preset prompt builders ─────────────────────────────
 
     /**
-     * Generate an article. Convenience wrapper with an article-optimised system prompt.
+     * Generate an article with optional style and vocabulary injection.
+     *
+     * @param string $style  seo | media | geo
+     * @param array  $vocabInstructions  Pre-built vocab instruction string (appended to prompt)
+     * @param string $titleDedup  Pre-built dedup instruction (appended to prompt)
      */
     public function generateArticle(string $provider, string $prompt, array $options = []): array {
-        $options['system_prompt'] = $options['system_prompt']
-            ?? '你是一个专业的内容创作者，擅长撰写高质量、SEO友好的文章。'
-             . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。'
-             . '文章应包含适当的标题标签(h2,h3)、段落和列表。';
+        $style = $options['article_style'] ?? 'seo';
+        $debugContext = $options['debug_context'] ?? [];
+        $debugContext['article_style'] = $style;
+        $options['debug_context'] = $debugContext;
+        $options['system_prompt'] = $options['system_prompt'] ?? (self::$stylePrompts[$style] ?? self::$stylePrompts['seo']);
+        unset($options['article_style']);
+
+        if (!empty($options['vocab_instructions'])) {
+            $prompt .= "\n\n" . $options['vocab_instructions']
+                . "\n\n严格限制：只允许使用上面明确给出的关键词和URL来生成超链接；不要新增任何未给出的<a href>链接。";
+            unset($options['vocab_instructions']);
+        } else {
+            $prompt .= "\n\n严格限制：本次未指定关键词链接，请不要输出任何<a href>超链接标签。";
+        }
+        if (!empty($options['title_dedup'])) {
+            $prompt .= "\n\n" . $options['title_dedup'];
+            unset($options['title_dedup']);
+        }
+
         return $this->generate($provider, $prompt, $options);
     }
 
@@ -122,6 +180,40 @@ class AiService {
         // 强制只取前 count 条，保证「生成条数」生效
         $reviews = array_slice($data['reviews'], 0, $count);
         return ['success' => true, 'reviews' => $reviews];
+    }
+
+    /**
+     * Build vocabulary instructions for article generation prompt.
+     */
+    public static function buildVocabInstructions(array $vocabs): string {
+        if (empty($vocabs)) return '';
+
+        $lines = ["请在文章中自然地融入以下关键词，每个关键词需要以超链接形式出现，格式为 <a href=\"URL\">关键词</a>："];
+        foreach ($vocabs as $v) {
+            $word = $v['word'] ?? '';
+            $url = $v['url'] ?? '';
+            $must = !empty($v['must']);
+            $repeat = (int)($v['repeat'] ?? 1);
+            $tag = $must ? '【必须出现】' : '';
+            $linkNote = $url ? "（链接: {$url}）" : '（无链接，以纯文本出现）';
+            $lines[] = "- \"{$word}\"{$linkNote} {$tag}在文章中出现 {$repeat} 次";
+        }
+
+        $lines[] = "\n注意：同一个关键词在文章中的每次出现都应尽量分散在不同段落。";
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Build title deduplication instructions.
+     */
+    public static function buildTitleDedup(array $existingTitles): string {
+        if (empty($existingTitles)) return '';
+        $lines = ["请确保文章标题不要与以下已有文章标题重复或过于相似："];
+        foreach (array_slice($existingTitles, 0, 50) as $t) {
+            $lines[] = "- " . $t;
+        }
+        return implode("\n", $lines);
     }
 
     // ── Provider implementations ───────────────────────────
@@ -230,12 +322,37 @@ class AiService {
         curl_close($ch);
 
         if ($error) {
+            self::writeDebugLog('ai_http_error', [
+                'url' => $url,
+                'error' => $error,
+                'http_code' => $httpCode,
+            ]);
             return ['success' => false, 'error' => "cURL 错误: $error"];
         }
         if ($httpCode < 200 || $httpCode >= 300) {
+            self::writeDebugLog('ai_http_non_2xx', [
+                'url' => $url,
+                'http_code' => $httpCode,
+                'response' => $response,
+            ]);
             return ['success' => false, 'error' => "HTTP $httpCode: $response"];
         }
         return ['success' => true, 'body' => $response];
+    }
+
+    private static function writeDebugLog(string $type, array $payload): void {
+        if (!defined('BASE_PATH')) return;
+        $dir = BASE_PATH . '/storage/logs';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        $file = $dir . '/ai_debug.log';
+        $record = [
+            'time' => date('Y-m-d H:i:s'),
+            'type' => $type,
+            'payload' => $payload,
+        ];
+        @file_put_contents($file, json_encode($record, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
     }
 
     // ── Content parsers ────────────────────────────────────
