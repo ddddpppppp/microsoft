@@ -81,6 +81,7 @@ if (empty($dueTasks)) {
 
 // ── Review Tasks ─────────────────────────────────────
 echo "[" . date('Y-m-d H:i:s') . "] Checking review tasks...\n";
+\App\Core\Database::getInstance(true);
 
 $reviewTaskModel = new AiReviewTask();
 $dueReviewTasks = $reviewTaskModel->getDueTasks();

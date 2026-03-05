@@ -4,11 +4,11 @@ namespace App\Core;
 class Database {
     private static $instance = null;
     private $pdo;
+    private $config;
 
     private function __construct() {
-        $config = require __DIR__ . '/../../config/database.php';
-        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['dbname']};charset={$config['charset']}";
-        $this->pdo = new \PDO($dsn, $config['username'], $config['password'], $config['options']);
+        $this->config = require __DIR__ . '/../../config/database.php';
+        $this->connect();
     }
 
     public static function getInstance(bool $forceNew = false) {
@@ -23,9 +23,21 @@ class Database {
     }
 
     public function query($sql, $params = []) {
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (\PDOException $e) {
+            if (!$this->isGoneAway($e)) {
+                throw $e;
+            }
+
+            // Long-running cron jobs may hit MySQL wait_timeout; reconnect and retry once.
+            $this->connect();
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        }
     }
 
     public function fetchAll($sql, $params = []) {
@@ -54,5 +66,21 @@ class Database {
     public function delete($table, $where, $params = []) {
         $sql = "DELETE FROM `$table` WHERE $where";
         $this->query($sql, $params);
+    }
+
+    private function connect(): void {
+        $dsn = "mysql:host={$this->config['host']};port={$this->config['port']};dbname={$this->config['dbname']};charset={$this->config['charset']}";
+        $this->pdo = new \PDO($dsn, $this->config['username'], $this->config['password'], $this->config['options']);
+    }
+
+    private function isGoneAway(\PDOException $e): bool {
+        $code = (int)$e->getCode();
+        if ($code === 2006 || $code === 2013) {
+            return true;
+        }
+
+        $message = strtolower($e->getMessage());
+        return str_contains($message, 'server has gone away')
+            || str_contains($message, 'lost connection');
     }
 }
