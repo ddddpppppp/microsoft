@@ -18,11 +18,15 @@ if (!empty($task['vocabulary_config'])) {
 }
 .vocab-picker .vocab-tag:hover { border-color: #93c5fd; background: #eff6ff; }
 .vocab-picker .vocab-tag.selected { border-color: #2563eb; background: #dbeafe; color: #1e3a8a; }
+.selected-vocabs-area { min-height: 48px; max-height: 200px; overflow-y: auto; }
 .selected-vocab-item {
-    display: flex; align-items: center; gap: 8px; padding: 6px 12px;
-    border: 1px solid var(--border); border-radius: 8px; background: #fff; margin-bottom: 6px;
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+    border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; margin: 2px; font-size: 12px;
 }
-.selected-vocab-item .vocab-name { font-weight: 600; min-width: 80px; }
+.selected-vocab-item .vocab-name { font-weight: 600; }
+.selected-vocab-item .form-check-input { margin: 0; width: 12px; height: 12px; }
+.selected-vocab-item input[type="number"] { width: 40px !important; padding: 1px 4px; font-size: 11px; }
+.selected-vocab-item .btn { padding: 0 4px; font-size: 10px; }
 </style>
 
 <div class="card">
@@ -70,16 +74,21 @@ if (!empty($task['vocabulary_config'])) {
                                 <div class="col-md-3"></div>
                             </div>
 
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllVocabs()">全选</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllVocabs()">取消全选</button>
+                            </div>
                             <div class="vocab-picker mb-3" id="vocabPool">
                                 <div class="text-muted text-center py-2">请先选择词汇分组</div>
                             </div>
 
                             <h6 class="mb-2">已选词汇 <span class="badge bg-primary" id="selectedCount">0</span></h6>
-                            <div id="selectedVocabs">
+                            <div id="selectedVocabs" class="selected-vocabs-area">
                                 <div class="text-muted text-center py-2" id="noSelectedHint">点击上方词汇标签选择</div>
                             </div>
-                            <small class="text-muted d-block mt-2" id="vocabUsageHint">
-                                预计关键词总出现次数：0（必选词 + 随机词）
+                            <small class="text-muted d-block mt-2">
+                                <span id="vocabUsageHint">预计关键词总出现次数：0（必选词 + 随机词）</span>
+                                <span class="ms-3"><i class="bi bi-info-circle"></i> 勾选后必定会出现在文章中</span>
                             </small>
                         </div>
                     </div>
@@ -117,9 +126,18 @@ if (!empty($task['vocabulary_config'])) {
                         <label class="form-label">执行方式</label>
                         <select name="schedule_type" class="form-select" id="scheduleType">
                             <option value="once" <?= ($task['schedule_type'] ?? '') === 'once' ? 'selected' : '' ?>>一次性（手动执行）</option>
+                            <option value="hourly" <?= ($task['schedule_type'] ?? '') === 'hourly' ? 'selected' : '' ?>>按间隔小时</option>
                             <option value="interval" <?= ($task['schedule_type'] ?? '') === 'interval' ? 'selected' : '' ?>>按间隔天数</option>
                             <option value="daily" <?= ($task['schedule_type'] ?? '') === 'daily' ? 'selected' : '' ?>>每天定时</option>
                         </select>
+                    </div>
+                    <div class="mb-3 schedule-option" id="hourlyOption" style="display:none">
+                        <label class="form-label">间隔小时</label>
+                        <div class="input-group">
+                            <span class="input-group-text">每</span>
+                            <input type="number" name="interval_hours" class="form-control" value="<?= $task['interval_hours'] ?? 1 ?>" min="1" max="168">
+                            <span class="input-group-text">小时</span>
+                        </div>
                     </div>
                     <div class="mb-3 schedule-option" id="intervalOption" style="display:none">
                         <label class="form-label">间隔天数</label>
@@ -236,6 +254,7 @@ document.getElementById('btnTestRun').addEventListener('click', function() {
 (function() {
     var sel = document.getElementById('scheduleType');
     function toggleOptions() {
+        document.getElementById('hourlyOption').style.display = sel.value === 'hourly' ? '' : 'none';
         document.getElementById('intervalOption').style.display = sel.value === 'interval' ? '' : 'none';
         document.getElementById('dailyOption').style.display = sel.value === 'daily' ? '' : 'none';
     }
@@ -292,12 +311,40 @@ function loadVocabs(groupId, keyword) {
             return;
         }
         var html = '';
+        var defRepeat = 1;
         data.items.forEach(function(v) {
-            var sel = selectedVocabs[v.id] ? ' selected' : '';
-            html += '<span class="vocab-tag' + sel + '" data-id="' + v.id + '" data-word="' + escAttr(v.word) + '" data-url="' + escAttr(v.url || '') + '" onclick="toggleVocab(this)">' + escHtml(v.word) + '</span>';
+            if (!selectedVocabs[v.id]) {
+                selectedVocabs[v.id] = { id: v.id, word: v.word, url: v.url || '', must: false, repeat: defRepeat };
+            }
+            html += '<span class="vocab-tag selected" data-id="' + v.id + '" data-word="' + escAttr(v.word) + '" data-url="' + escAttr(v.url || '') + '" onclick="toggleVocab(this)">' + escHtml(v.word) + '</span>';
         });
         pool.innerHTML = html;
+        renderSelected();
+        syncConfig();
     });
+}
+
+function selectAllVocabs() {
+    var defRepeat = 1;
+    document.querySelectorAll('#vocabPool .vocab-tag').forEach(function(el) {
+        var id = el.dataset.id;
+        if (!selectedVocabs[id]) {
+            selectedVocabs[id] = { id: id, word: el.dataset.word, url: el.dataset.url || '', must: false, repeat: defRepeat };
+        }
+        el.classList.add('selected');
+    });
+    renderSelected();
+    syncConfig();
+}
+
+function deselectAllVocabs() {
+    document.querySelectorAll('#vocabPool .vocab-tag').forEach(function(el) {
+        var id = el.dataset.id;
+        delete selectedVocabs[id];
+        el.classList.remove('selected');
+    });
+    renderSelected();
+    syncConfig();
 }
 
 function toggleVocab(el) {
@@ -328,12 +375,13 @@ function renderSelected() {
     var html = '';
     keys.forEach(function(id) {
         var v = selectedVocabs[id];
-        html += '<div class="selected-vocab-item">'
+        html += '<span class="selected-vocab-item">'
             + '<span class="vocab-name">' + escHtml(v.word) + '</span>'
-            + '<label class="form-check-label ms-auto" style="font-size:13px"><input type="checkbox" class="form-check-input me-1" ' + (v.must ? 'checked' : '') + ' onchange="selectedVocabs[\'' + id + '\'].must=this.checked;syncConfig();updateVocabUsageHint()"> 必选</label>'
-            + '<label style="font-size:13px">目标出现<input type="number" class="form-control form-control-sm d-inline-block mx-1" style="width:60px" value="' + v.repeat + '" min="1" max="20" onchange="selectedVocabs[\'' + id + '\'].repeat=parseInt(this.value)||1;syncConfig();updateVocabUsageHint()">次</label>'
-            + '<button type="button" class="btn btn-sm btn-outline-danger p-0 px-1" onclick="delete selectedVocabs[\'' + id + '\'];renderSelected();syncConfig();refreshPoolTags()"><i class="bi bi-x"></i></button>'
-            + '</div>';
+            + (v.url ? '<i class="bi bi-link-45deg text-muted"></i>' : '')
+            + '<input type="checkbox" class="form-check-input" title="必选" ' + (v.must ? 'checked' : '') + ' onchange="selectedVocabs[\'' + id + '\'].must=this.checked;syncConfig();updateVocabUsageHint()">'
+            + '<input type="number" class="form-control form-control-sm" value="' + v.repeat + '" min="1" max="20" title="出现次数" onchange="selectedVocabs[\'' + id + '\'].repeat=parseInt(this.value)||1;syncConfig();updateVocabUsageHint()">'
+            + '<button type="button" class="btn btn-outline-danger" onclick="delete selectedVocabs[\'' + id + '\'];renderSelected();syncConfig();refreshPoolTags()">×</button>'
+            + '</span>';
     });
     area.innerHTML = html;
     updateVocabUsageHint();

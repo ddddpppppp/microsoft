@@ -11,8 +11,8 @@ class Database {
         $this->pdo = new \PDO($dsn, $config['username'], $config['password'], $config['options']);
     }
 
-    public static function getInstance() {
-        if (self::$instance === null) {
+    public static function getInstance(bool $forceNew = false) {
+        if ($forceNew || self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;

@@ -29,18 +29,14 @@ $page = max(1, (int)($_GET['page'] ?? 1));
                 </a>
                 <?php foreach ($groups as $g): ?>
                 <a href="/admin/ai-vocabulary?group_id=<?= $g['id'] ?>"
-                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?= $currentGroupId === (int)$g['id'] ? 'active' : '' ?>">
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?= $currentGroupId === (int)$g['id'] ? 'active' : '' ?>"
+                   oncontextmenu="showGroupContextMenu(event, <?= $g['id'] ?>, '<?= htmlspecialchars(addslashes($g['name']), ENT_QUOTES) ?>', <?= $g['vocab_count'] ?>)">
                     <span><?= htmlspecialchars($g['name']) ?></span>
                     <span class="d-flex align-items-center gap-1">
                         <span class="badge bg-primary rounded-pill"><?= $g['vocab_count'] ?></span>
                         <button class="btn btn-sm p-0 border-0 bg-transparent" onclick="event.preventDefault();event.stopPropagation();editGroup(<?= $g['id'] ?>,'<?= htmlspecialchars(addslashes($g['name']), ENT_QUOTES) ?>','<?= htmlspecialchars(addslashes($g['description'] ?? ''), ENT_QUOTES) ?>')" title="编辑">
                             <i class="bi bi-pencil text-muted" style="font-size:12px"></i>
                         </button>
-                        <?php if ($g['vocab_count'] == 0): ?>
-                        <a href="/admin/ai-vocabulary-group/delete/<?= $g['id'] ?>" class="text-danger" onclick="return confirm('确定删除分组「<?= htmlspecialchars($g['name']) ?>」？')" title="删除">
-                            <i class="bi bi-trash" style="font-size:12px"></i>
-                        </a>
-                        <?php endif; ?>
                     </span>
                 </a>
                 <?php endforeach; ?>
@@ -69,6 +65,9 @@ $page = max(1, (int)($_GET['page'] ?? 1));
                     </button>
                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#vocabModal" onclick="editVocab(0,'','',<?= $currentGroupId ?>)">
                         <i class="bi bi-plus"></i> 添加词汇
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#aiGenModal">
+                        <i class="bi bi-robot"></i> AI添加
                     </button>
                     <button class="btn btn-sm btn-outline-danger" id="btnBatchDelete" style="display:none" onclick="batchDeleteVocabs()">
                         <i class="bi bi-trash"></i> 批量删除
@@ -256,10 +255,80 @@ $page = max(1, (int)($_GET['page'] ?? 1));
     </div>
 </div>
 
+<!-- Group Context Menu -->
+<div id="groupContextMenu" class="dropdown-menu" style="position:fixed;z-index:9999"></div>
+
+<!-- AI Generate Modal -->
+<div class="modal fade" id="aiGenModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-robot"></i> AI 智能生成词汇</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">目标分组 <span class="text-danger">*</span></label>
+                        <select id="aiGenGroupId" class="form-select" required>
+                            <option value="">-- 选择分组 --</option>
+                            <?php foreach ($groups as $g): ?>
+                            <option value="<?= $g['id'] ?>"><?= htmlspecialchars($g['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">生成数量</label>
+                        <input type="number" id="aiGenCount" class="form-control" value="20" min="5" max="100">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">关联产品（搜索选择）</label>
+                    <div class="position-relative">
+                        <input type="text" id="aiGenProductSearch" class="form-control" placeholder="输入产品名称搜索...">
+                        <div id="aiGenProductDropdown" class="dropdown-menu w-100" style="max-height:200px;overflow-y:auto"></div>
+                    </div>
+                    <div id="aiGenSelectedProduct" class="mt-2"></div>
+                    <input type="hidden" id="aiGenProductId" value="">
+                    <input type="hidden" id="aiGenProductUrl" value="">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">补充说明（可选）</label>
+                    <input type="text" id="aiGenHint" class="form-control" placeholder="如：侧重功能特点、面向企业用户等">
+                </div>
+                <div class="d-flex gap-2 mb-3">
+                    <button type="button" class="btn btn-primary" id="btnAiGenerate" onclick="doAiGenerateVocabs()">
+                        <i class="bi bi-magic"></i> 生成关键词
+                    </button>
+                    <span id="aiGenLoading" class="text-muted align-self-center d-none">
+                        <span class="spinner-border spinner-border-sm"></span> AI 生成中...
+                    </span>
+                </div>
+                <div id="aiGenResult" class="d-none">
+                    <h6>生成结果预览 <small class="text-muted">(可取消勾选不需要的词汇)</small></h6>
+                    <div class="table-responsive" style="max-height:300px;overflow-y:auto">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead><tr><th width="40"><input type="checkbox" id="aiGenCheckAll" checked></th><th>词汇</th><th>链接</th></tr></thead>
+                            <tbody id="aiGenResultBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="mt-2 text-muted" id="aiGenResultCount"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="btnAiGenConfirm" onclick="confirmAiGenVocabs()" disabled>
+                    <i class="bi bi-check-lg"></i> 确认添加
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // 确保关闭模态框时阴影（backdrop）被移除
 (function() {
-    ['#vocabModal', '#groupModal', '#importModal'].forEach(function(id) {
+    ['#vocabModal', '#groupModal', '#importModal', '#aiGenModal'].forEach(function(id) {
         var el = document.querySelector(id);
         if (!el) return;
         el.addEventListener('hidden.bs.modal', function() {
@@ -363,5 +432,213 @@ function escHtml(s) {
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+}
+
+// ── AI Generate Vocabs ──────────────────────────────
+var aiGenProductSearchTimer = null;
+var aiGenProductSearchInput = document.getElementById('aiGenProductSearch');
+var aiGenProductDropdown = document.getElementById('aiGenProductDropdown');
+var aiGenGeneratedVocabs = [];
+
+if (aiGenProductSearchInput) {
+    aiGenProductSearchInput.addEventListener('input', function() {
+        clearTimeout(aiGenProductSearchTimer);
+        var kw = this.value.trim();
+        if (kw.length < 2) {
+            aiGenProductDropdown.classList.remove('show');
+            return;
+        }
+        aiGenProductSearchTimer = setTimeout(function() {
+            fetch('/admin/api/product-search?keyword=' + encodeURIComponent(kw))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.items || data.items.length === 0) {
+                    aiGenProductDropdown.innerHTML = '<div class="dropdown-item text-muted">无匹配产品</div>';
+                } else {
+                    var html = '';
+                    var siteOrigin = window.location.origin;
+                    data.items.forEach(function(p) {
+                        var path = p.is_own_product && p.custom_url ? p.custom_url : '/apps/' + p.ms_id;
+                        var url = siteOrigin + path;
+                        html += '<a class="dropdown-item d-flex align-items-center gap-2" href="javascript:void(0)" onclick="selectAiGenProduct(' + p.id + ',\'' + escAttr(p.title) + '\',\'' + escAttr(url) + '\')">'
+                            + '<img src="' + escAttr(p.local_icon || p.icon_url || '') + '" style="width:24px;height:24px;border-radius:4px">'
+                            + '<span>' + escHtml(p.title) + '</span>'
+                            + '</a>';
+                    });
+                    aiGenProductDropdown.innerHTML = html;
+                }
+                aiGenProductDropdown.classList.add('show');
+            });
+        }, 300);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!aiGenProductDropdown.contains(e.target) && e.target !== aiGenProductSearchInput) {
+            aiGenProductDropdown.classList.remove('show');
+        }
+    });
+}
+
+function selectAiGenProduct(id, title, url) {
+    document.getElementById('aiGenProductId').value = id;
+    document.getElementById('aiGenProductUrl').value = url;
+    document.getElementById('aiGenSelectedProduct').innerHTML = '<span class="badge bg-primary">' + escHtml(title) + '</span> <small class="text-muted">' + escHtml(url) + '</small> <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="clearAiGenProduct()">×</button>';
+    document.getElementById('aiGenProductSearch').value = '';
+    aiGenProductDropdown.classList.remove('show');
+}
+
+function clearAiGenProduct() {
+    document.getElementById('aiGenProductId').value = '';
+    document.getElementById('aiGenProductUrl').value = '';
+    document.getElementById('aiGenSelectedProduct').innerHTML = '';
+}
+
+function doAiGenerateVocabs() {
+    var groupId = document.getElementById('aiGenGroupId').value;
+    var productId = document.getElementById('aiGenProductId').value;
+    var productUrl = document.getElementById('aiGenProductUrl').value;
+    var count = parseInt(document.getElementById('aiGenCount').value) || 20;
+    var hint = document.getElementById('aiGenHint').value.trim();
+
+    if (!groupId) {
+        alert('请选择目标分组');
+        return;
+    }
+    if (!productId) {
+        alert('请选择关联产品');
+        return;
+    }
+
+    document.getElementById('btnAiGenerate').disabled = true;
+    document.getElementById('aiGenLoading').classList.remove('d-none');
+    document.getElementById('aiGenResult').classList.add('d-none');
+    document.getElementById('btnAiGenConfirm').disabled = true;
+
+    var formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('product_url', productUrl);
+    formData.append('count', count);
+    formData.append('hint', hint);
+
+    fetch('/admin/ai-vocabulary/generate', { method: 'POST', body: formData })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        document.getElementById('btnAiGenerate').disabled = false;
+        document.getElementById('aiGenLoading').classList.add('d-none');
+
+        if (!data.success) {
+            alert('生成失败: ' + (data.error || '未知错误'));
+            return;
+        }
+
+        aiGenGeneratedVocabs = data.vocabs || [];
+        renderAiGenResult();
+    })
+    .catch(function(err) {
+        document.getElementById('btnAiGenerate').disabled = false;
+        document.getElementById('aiGenLoading').classList.add('d-none');
+        alert('请求失败: ' + err.message);
+    });
+}
+
+function renderAiGenResult() {
+    var tbody = document.getElementById('aiGenResultBody');
+    var productUrl = document.getElementById('aiGenProductUrl').value;
+    var html = '';
+    aiGenGeneratedVocabs.forEach(function(word, idx) {
+        html += '<tr><td><input type="checkbox" class="form-check-input ai-gen-check" data-idx="' + idx + '" checked></td>'
+            + '<td>' + escHtml(word) + '</td>'
+            + '<td>' + escHtml(productUrl) + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+    document.getElementById('aiGenResultCount').textContent = '共 ' + aiGenGeneratedVocabs.length + ' 个词汇';
+    document.getElementById('aiGenResult').classList.remove('d-none');
+    document.getElementById('btnAiGenConfirm').disabled = aiGenGeneratedVocabs.length === 0;
+
+    // Check all
+    document.getElementById('aiGenCheckAll').checked = true;
+    document.getElementById('aiGenCheckAll').addEventListener('change', function() {
+        document.querySelectorAll('.ai-gen-check').forEach(function(cb) { cb.checked = this.checked; }.bind(this));
+    });
+}
+
+function confirmAiGenVocabs() {
+    var groupId = document.getElementById('aiGenGroupId').value;
+    var productUrl = document.getElementById('aiGenProductUrl').value;
+    var selected = [];
+    document.querySelectorAll('.ai-gen-check:checked').forEach(function(cb) {
+        var idx = parseInt(cb.dataset.idx);
+        selected.push({ word: aiGenGeneratedVocabs[idx], url: productUrl });
+    });
+
+    if (selected.length === 0) {
+        alert('请至少选择一个词汇');
+        return;
+    }
+
+    document.getElementById('btnAiGenConfirm').disabled = true;
+
+    var formData = new FormData();
+    formData.append('group_id', groupId);
+    formData.append('vocabs', JSON.stringify(selected));
+
+    fetch('/admin/ai-vocabulary/batch-add', { method: 'POST', body: formData })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            location.href = '/admin/ai-vocabulary?group_id=' + groupId + '&msg=' + encodeURIComponent('成功添加 ' + data.count + ' 个词汇');
+        } else {
+            alert('添加失败: ' + (data.error || '未知错误'));
+            document.getElementById('btnAiGenConfirm').disabled = false;
+        }
+    })
+    .catch(function(err) {
+        alert('请求失败: ' + err.message);
+        document.getElementById('btnAiGenConfirm').disabled = false;
+    });
+}
+
+function escAttr(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Group Context Menu (Right Click) ────────────────
+var groupContextMenu = document.getElementById('groupContextMenu');
+var currentContextGroupId = 0;
+var currentContextGroupName = '';
+var currentContextGroupCount = 0;
+
+function showGroupContextMenu(e, groupId, groupName, vocabCount) {
+    e.preventDefault();
+    e.stopPropagation();
+    currentContextGroupId = groupId;
+    currentContextGroupName = groupName;
+    currentContextGroupCount = vocabCount;
+
+    var html = '<a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroupWithVocabs()">'
+        + '<i class="bi bi-trash"></i> 删除分组';
+    if (vocabCount > 0) {
+        html += ' <small class="text-muted">(含 ' + vocabCount + ' 个词汇)</small>';
+    }
+    html += '</a>';
+
+    groupContextMenu.innerHTML = html;
+    groupContextMenu.style.left = e.clientX + 'px';
+    groupContextMenu.style.top = e.clientY + 'px';
+    groupContextMenu.classList.add('show');
+}
+
+document.addEventListener('click', function() {
+    groupContextMenu.classList.remove('show');
+});
+
+function deleteGroupWithVocabs() {
+    var msg = '确定删除分组「' + currentContextGroupName + '」？';
+    if (currentContextGroupCount > 0) {
+        msg += '\n\n 该分组下有 ' + currentContextGroupCount + ' 个词汇，将一并删除！';
+    }
+    if (!confirm(msg)) return;
+
+    location.href = '/admin/ai-vocabulary-group/delete/' + currentContextGroupId + '?force=1';
 }
 </script>

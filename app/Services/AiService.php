@@ -183,6 +183,52 @@ class AiService {
     }
 
     /**
+     * Generate SEO keywords/vocabularies for a product.
+     */
+    public function generateVocabularies(string $productName, int $count = 20, string $hint = ''): array {
+        $provider = 'deepseek';
+        $options = [
+            'system_prompt' => '你是一个SEO关键词专家，擅长为软件产品生成有价值的搜索关键词。',
+            'response_format' => 'json',
+            'max_tokens' => 2048,
+            'debug_context' => ['entry' => 'generate_vocabularies', 'product' => $productName],
+        ];
+
+        $prompt = "请为软件产品「{$productName}」生成 {$count} 个SEO关键词/搜索词。\n\n"
+            . "要求：\n"
+            . "1. 关键词要与该产品相关，覆盖功能、使用场景、目标用户等维度\n"
+            . "2. 包含长尾词（如「XX软件怎么用」「XX下载安装教程」）\n"
+            . "3. 包含品牌词变体（如简称、英文名、常见拼写）\n"
+            . "4. 包含竞品对比词（如「XX vs YY」「XX替代品」）\n"
+            . "5. 词汇不要重复\n"
+            . "6. 每个词汇长度2-15个字符\n";
+
+        if ($hint) {
+            $prompt .= "\n补充说明：{$hint}\n";
+        }
+
+        $prompt .= "\n请严格按照以下JSON格式输出：\n"
+            . "{\n"
+            . "  \"keywords\": [\"关键词1\", \"关键词2\", ...]\n"
+            . "}\n\n"
+            . "注意：keywords 数组必须包含恰好 {$count} 个不重复的关键词。";
+
+        $result = $this->generate($provider, $prompt, $options);
+        if (!$result['success']) return $result;
+
+        $content = $this->stripCodeFences($result['content']);
+        $data = json_decode($content, true);
+        if (!$data || !isset($data['keywords']) || !is_array($data['keywords'])) {
+            return ['success' => false, 'error' => 'AI 返回的JSON格式无法解析', 'raw' => $result['content']];
+        }
+
+        $keywords = array_slice($data['keywords'], 0, $count);
+        $keywords = array_unique(array_filter(array_map('trim', $keywords)));
+
+        return ['success' => true, 'vocabs' => array_values($keywords)];
+    }
+
+    /**
      * Build vocabulary instructions for article generation prompt.
      */
     public static function buildVocabInstructions(array $vocabs): string {

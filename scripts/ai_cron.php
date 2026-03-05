@@ -1,12 +1,13 @@
 <?php
 /**
- * AI Article Generation Cron Script
+ * AI Article Generation Cron Script (Multi-Process)
  *
- * Processes scheduled AI generation tasks (interval / daily).
+ * Processes scheduled AI generation tasks in parallel using pcntl_fork.
  * Set up a system cron job to run this every hour (or more frequently):
  *
  *   Linux:   0 * * * * php /path/to/microsoft/scripts/ai_cron.php >> /path/to/ai_cron.log 2>&1
- *   Windows: schtasks /create /sc hourly /tn "AI Article Cron" /tr "php c:\www\microsoft\scripts\ai_cron.php"
+ *
+ * Note: pcntl_fork is Linux only. On Windows, tasks run serially as fallback.
  */
 
 define('BASE_PATH', dirname(__DIR__));
@@ -27,26 +28,122 @@ use App\Models\Article;
 use App\Models\AiReviewTask;
 use App\Models\ProductReview;
 
-echo "[" . date('Y-m-d H:i:s') . "] AI Cron started\n";
+$canFork = function_exists('pcntl_fork');
 
+echo "[" . date('Y-m-d H:i:s') . "] AI Cron started" . ($canFork ? " (parallel mode)" : " (serial mode - pcntl not available)") . "\n";
+
+// ── Article Tasks ─────────────────────────────────────
 $taskModel = new AiArticleTask();
 $dueTasks = $taskModel->getDueTasks();
 
 if (empty($dueTasks)) {
-    echo "[" . date('Y-m-d H:i:s') . "] No due tasks found.\n";
-    exit(0);
+    echo "[" . date('Y-m-d H:i:s') . "] No due article tasks found.\n";
+} else {
+    echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueTasks) . " due article task(s)\n";
+
+    $childPids = [];
+
+    foreach ($dueTasks as $task) {
+        if ($canFork) {
+            $pid = pcntl_fork();
+            if ($pid == -1) {
+                echo "[" . date('Y-m-d H:i:s') . "] ERROR: Failed to fork for task #{$task['id']}\n";
+                continue;
+            } elseif ($pid == 0) {
+                // Child process
+                processArticleTask($task);
+                exit(0);
+            } else {
+                // Parent process
+                $childPids[$pid] = $task['id'];
+                echo "[" . date('Y-m-d H:i:s') . "] Forked child PID $pid for task #{$task['id']}\n";
+            }
+        } else {
+            // No fork support, run serially
+            processArticleTask($task);
+        }
+    }
+
+    // Wait for all children to finish
+    if ($canFork && !empty($childPids)) {
+        echo "[" . date('Y-m-d H:i:s') . "] Waiting for " . count($childPids) . " child processes...\n";
+        while (count($childPids) > 0) {
+            $pid = pcntl_wait($status);
+            if ($pid > 0) {
+                $taskId = $childPids[$pid] ?? '?';
+                $exitCode = pcntl_wexitstatus($status);
+                echo "[" . date('Y-m-d H:i:s') . "] Child PID $pid (task #$taskId) finished with exit code $exitCode\n";
+                unset($childPids[$pid]);
+            }
+        }
+    }
 }
 
-echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueTasks) . " due task(s)\n";
+// ── Review Tasks ─────────────────────────────────────
+echo "[" . date('Y-m-d H:i:s') . "] Checking review tasks...\n";
 
-$aiService = new AiService();
-$articleModel = new Article();
-$db = \App\Core\Database::getInstance();
+$reviewTaskModel = new AiReviewTask();
+$dueReviewTasks = $reviewTaskModel->getDueTasks();
 
-foreach ($dueTasks as $task) {
-    echo "[" . date('Y-m-d H:i:s') . "] Processing task #{$task['id']}: {$task['name']}\n";
+if (empty($dueReviewTasks)) {
+    echo "[" . date('Y-m-d H:i:s') . "] No due review tasks found.\n";
+} else {
+    echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueReviewTasks) . " due review task(s)\n";
+
+    $childPids = [];
+
+    foreach ($dueReviewTasks as $task) {
+        if ($canFork) {
+            $pid = pcntl_fork();
+            if ($pid == -1) {
+                echo "[" . date('Y-m-d H:i:s') . "] ERROR: Failed to fork for review task #{$task['id']}\n";
+                continue;
+            } elseif ($pid == 0) {
+                // Child process
+                processReviewTask($task);
+                exit(0);
+            } else {
+                // Parent process
+                $childPids[$pid] = $task['id'];
+                echo "[" . date('Y-m-d H:i:s') . "] Forked child PID $pid for review task #{$task['id']}\n";
+            }
+        } else {
+            // No fork support, run serially
+            processReviewTask($task);
+        }
+    }
+
+    // Wait for all children to finish
+    if ($canFork && !empty($childPids)) {
+        echo "[" . date('Y-m-d H:i:s') . "] Waiting for " . count($childPids) . " review child processes...\n";
+        while (count($childPids) > 0) {
+            $pid = pcntl_wait($status);
+            if ($pid > 0) {
+                $taskId = $childPids[$pid] ?? '?';
+                $exitCode = pcntl_wexitstatus($status);
+                echo "[" . date('Y-m-d H:i:s') . "] Review child PID $pid (task #$taskId) finished with exit code $exitCode\n";
+                unset($childPids[$pid]);
+            }
+        }
+    }
+}
+
+echo "[" . date('Y-m-d H:i:s') . "] AI Cron finished\n";
+
+// ══════════════════════════════════════════════════════
+// Task Processing Functions
+// ══════════════════════════════════════════════════════
+
+function processArticleTask(array $task): void {
+    // Each child needs its own DB connection
+    $db = \App\Core\Database::getInstance(true);
+    $aiService = new AiService();
+    $articleModel = new Article();
+    $taskModel = new AiArticleTask();
 
     $taskId = (int)$task['id'];
+    echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] Processing: {$task['name']}\n";
+
     $options = [
         'article_style' => $task['article_style'] ?? 'seo',
         'debug_context' => [
@@ -93,14 +190,14 @@ foreach ($dueTasks as $task) {
     $result = $aiService->generateArticle($task['ai_provider'], $task['prompt'], $options);
 
     if (!$result['success']) {
-        echo "[" . date('Y-m-d H:i:s') . "] ERROR: {$result['error']}\n";
-        continue;
+        echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] ERROR: {$result['error']}\n";
+        return;
     }
 
     $parsed = $aiService->parseArticle($result['content']);
     $title = $parsed['title'] ?: '未命名文章';
     $content = $parsed['content'];
-    $slug = 'ai-' . time() . '-' . mt_rand(100000, 999999);
+    $slug = time() . mt_rand(1000, 9999);
     $summary = mb_substr(strip_tags($content), 0, 200);
 
     $coverImage = 'https://picsum.photos/seed/' . urlencode($slug) . '/800/450';
@@ -118,60 +215,48 @@ foreach ($dueTasks as $task) {
 
     $taskModel->markRun($task['id']);
 
-    echo "[" . date('Y-m-d H:i:s') . "] OK - Article #{$articleId} '{$title}' created\n";
-
-    sleep(2);
+    echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] OK - Article #{$articleId} '{$title}' created\n";
 }
 
-// ── Review Tasks ─────────────────────────────────────
-echo "[" . date('Y-m-d H:i:s') . "] Checking review tasks...\n";
-
-$reviewTaskModel = new AiReviewTask();
-$dueReviewTasks = $reviewTaskModel->getDueTasks();
-
-if (!empty($dueReviewTasks)) {
-    echo "[" . date('Y-m-d H:i:s') . "] Found " . count($dueReviewTasks) . " due review task(s)\n";
+function processReviewTask(array $task): void {
+    // Each child needs its own DB connection
+    $db = \App\Core\Database::getInstance(true);
+    $aiService = new AiService();
     $reviewModel = new ProductReview();
+    $reviewTaskModel = new AiReviewTask();
 
-    foreach ($dueReviewTasks as $task) {
-        echo "[" . date('Y-m-d H:i:s') . "] Processing review task #{$task['id']}: {$task['name']}\n";
+    $taskId = (int)$task['id'];
+    echo "[" . date('Y-m-d H:i:s') . "] [Review #$taskId] Processing: {$task['name']}\n";
 
-        $productName = $task['product_title'] ?? 'Unknown Product';
-        $options = [];
-        if (!empty($task['prompt'])) {
-            $options['custom_prompt'] = $task['prompt'];
-        }
-
-        $result = $aiService->generateProductReviews($task['ai_provider'], $productName, (int)$task['num_reviews'], $options);
-
-        if (!$result['success']) {
-            echo "[" . date('Y-m-d H:i:s') . "] ERROR: {$result['error']}\n";
-            continue;
-        }
-
-        $created = 0;
-        foreach ($result['reviews'] as $r) {
-            $reviewModel->create([
-                'product_id'  => $task['product_id'],
-                'author_name' => $r['author_name'] ?? '匿名用户',
-                'rating'      => max(1, min(5, (float)($r['rating'] ?? 5))),
-                'title'       => $r['title'] ?? '',
-                'content'     => $r['content'] ?? '',
-                'pros'        => $r['pros'] ?? '',
-                'cons'        => $r['cons'] ?? '',
-                'summary'     => $r['summary'] ?? '',
-                'status'      => $task['auto_publish'] ? 'published' : 'draft',
-            ]);
-            $created++;
-        }
-
-        $reviewTaskModel->markRun($task['id']);
-        echo "[" . date('Y-m-d H:i:s') . "] OK - {$created} reviews created for '{$productName}'\n";
-
-        sleep(2);
+    $productName = $task['product_title'] ?? 'Unknown Product';
+    $options = [];
+    if (!empty($task['prompt'])) {
+        $options['custom_prompt'] = $task['prompt'];
     }
-} else {
-    echo "[" . date('Y-m-d H:i:s') . "] No due review tasks found.\n";
-}
 
-echo "[" . date('Y-m-d H:i:s') . "] AI Cron finished\n";
+    $result = $aiService->generateProductReviews($task['ai_provider'], $productName, (int)$task['num_reviews'], $options);
+
+    if (!$result['success']) {
+        echo "[" . date('Y-m-d H:i:s') . "] [Review #$taskId] ERROR: {$result['error']}\n";
+        return;
+    }
+
+    $created = 0;
+    foreach ($result['reviews'] as $r) {
+        $reviewModel->create([
+            'product_id'  => $task['product_id'],
+            'author_name' => $r['author_name'] ?? '匿名用户',
+            'rating'      => max(1, min(5, (float)($r['rating'] ?? 5))),
+            'title'       => $r['title'] ?? '',
+            'content'     => $r['content'] ?? '',
+            'pros'        => $r['pros'] ?? '',
+            'cons'        => $r['cons'] ?? '',
+            'summary'     => $r['summary'] ?? '',
+            'status'      => $task['auto_publish'] ? 'published' : 'draft',
+        ]);
+        $created++;
+    }
+
+    $reviewTaskModel->markRun($task['id']);
+    echo "[" . date('Y-m-d H:i:s') . "] [Review #$taskId] OK - {$created} reviews created for '{$productName}'\n";
+}

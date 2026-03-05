@@ -12,6 +12,10 @@
 .vocab-sidebar .vocab-item:hover { background: #dbeafe; }
 .vocab-sidebar .vocab-item:last-child { border-bottom: none; }
 .vocab-sidebar .vocab-item .vocab-url { font-size: 11px; color: #64748b; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.article-editor-wrap { position: relative; z-index: 1; }
+#editor.ql-container { height: auto; min-height: 400px; }
+#editor .ql-editor { min-height: 340px; max-height: 560px; overflow-y: auto; }
+.article-form-actions { position: relative; z-index: 2; margin-top: 14px; }
 </style>
 
 <div class="card">
@@ -40,7 +44,9 @@
                         <input type="hidden" name="content" id="content-input">
                         <div class="row g-2">
                             <div class="<?= !empty($vocabGroups) ? 'col-md-9' : 'col-12' ?>">
+                                <div class="article-editor-wrap">
                                 <div id="editor" class="border rounded" style="min-height:400px;background:#fff;"><?= isset($article['content']) ? $article['content'] : '' ?></div>
+                                </div>
                             </div>
                             <?php if (!empty($vocabGroups)): ?>
                             <div class="col-md-3">
@@ -110,7 +116,7 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 article-form-actions">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> 保存</button>
                 <a href="/admin/articles" class="btn btn-secondary">返回列表</a>
                 <?php if (!empty($article['id'])): ?>

@@ -31,7 +31,9 @@ class AiReviewTask extends Model {
         if (!$task) return;
 
         $nextRun = null;
-        if ($task['schedule_type'] === 'interval') {
+        if ($task['schedule_type'] === 'hourly') {
+            $nextRun = date('Y-m-d H:i:s', strtotime('+' . (int)$task['interval_hours'] . ' hours'));
+        } elseif ($task['schedule_type'] === 'interval') {
             $nextRun = date('Y-m-d H:i:s', strtotime('+' . (int)$task['interval_days'] . ' days'));
         } elseif ($task['schedule_type'] === 'daily') {
             $time = $task['daily_time'] ?: '09:00';

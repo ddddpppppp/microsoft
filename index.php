@@ -136,6 +136,9 @@ $router->group('/admin', function($r) {
     $r->get('/ai-vocabulary/delete/{id}', [\App\Controllers\AdminController::class, 'aiVocabularyDelete']);
     $r->post('/ai-vocabulary/batch-delete', [\App\Controllers\AdminController::class, 'aiVocabularyBatchDelete']);
     $r->get('/ai-vocabulary/search', [\App\Controllers\AdminController::class, 'aiVocabularySearch']);
+    $r->post('/ai-vocabulary/generate', [\App\Controllers\AdminController::class, 'aiVocabularyGenerate']);
+    $r->post('/ai-vocabulary/batch-add', [\App\Controllers\AdminController::class, 'aiVocabularyBatchAdd']);
+    $r->get('/api/product-search', [\App\Controllers\AdminController::class, 'apiProductSearch']);
     // AI review generation
     $r->get('/ai-review', [\App\Controllers\AdminController::class, 'aiReview']);
     $r->get('/ai-review-task/create', [\App\Controllers\AdminController::class, 'aiReviewTaskCreate']);

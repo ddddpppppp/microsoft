@@ -51,9 +51,18 @@
                         <label class="form-label">执行方式</label>
                         <select name="schedule_type" class="form-select" id="scheduleType">
                             <option value="once" <?= ($task['schedule_type'] ?? '') === 'once' ? 'selected' : '' ?>>一次性（手动执行）</option>
+                            <option value="hourly" <?= ($task['schedule_type'] ?? '') === 'hourly' ? 'selected' : '' ?>>按间隔小时</option>
                             <option value="interval" <?= ($task['schedule_type'] ?? '') === 'interval' ? 'selected' : '' ?>>按间隔天数</option>
                             <option value="daily" <?= ($task['schedule_type'] ?? '') === 'daily' ? 'selected' : '' ?>>每天定时</option>
                         </select>
+                    </div>
+                    <div class="mb-3 schedule-option" id="hourlyOption" style="display:none">
+                        <label class="form-label">间隔小时</label>
+                        <div class="input-group">
+                            <span class="input-group-text">每</span>
+                            <input type="number" name="interval_hours" class="form-control" value="<?= $task['interval_hours'] ?? 1 ?>" min="1" max="168">
+                            <span class="input-group-text">小时</span>
+                        </div>
                     </div>
                     <div class="mb-3 schedule-option" id="intervalOption" style="display:none">
                         <label class="form-label">间隔天数</label>
@@ -175,6 +184,7 @@ document.getElementById('btnTestRun').addEventListener('click', function() {
 (function() {
     var sel = document.getElementById('scheduleType');
     function toggleOptions() {
+        document.getElementById('hourlyOption').style.display = sel.value === 'hourly' ? '' : 'none';
         document.getElementById('intervalOption').style.display = sel.value === 'interval' ? '' : 'none';
         document.getElementById('dailyOption').style.display = sel.value === 'daily' ? '' : 'none';
     }

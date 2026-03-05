@@ -755,7 +755,10 @@ class AdminController extends Controller {
             'is_active'         => isset($_POST['is_active']) ? 1 : 0,
         ];
 
-        if ($data['schedule_type'] === 'interval') {
+        if ($data['schedule_type'] === 'hourly') {
+            $data['interval_hours'] = max(1, (int)($_POST['interval_hours'] ?? 1));
+            $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_hours'] . ' hours'));
+        } elseif ($data['schedule_type'] === 'interval') {
             $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_days'] . ' days'));
         } elseif ($data['schedule_type'] === 'daily') {
             $time = $data['daily_time'] ?: '09:00';
@@ -794,6 +797,7 @@ class AdminController extends Controller {
 
     public function aiTaskRun() {
         $this->requireLogin();
+        set_time_limit(180);
         header('Content-Type: application/json; charset=utf-8');
 
         $taskId = (int)($_POST['task_id'] ?? 0);
@@ -864,6 +868,9 @@ class AdminController extends Controller {
         if (!empty($recentTitles)) {
             $options['title_dedup'] = AiService::buildTitleDedup($recentTitles);
         }
+
+        // Release session lock before long AI call to avoid blocking other requests
+        session_write_close();
 
         $aiService = new AiService();
         $result = $aiService->generateArticle($provider, $prompt, $options);
@@ -983,7 +990,10 @@ class AdminController extends Controller {
             'is_active'     => isset($_POST['is_active']) ? 1 : 0,
         ];
 
-        if ($data['schedule_type'] === 'interval') {
+        if ($data['schedule_type'] === 'hourly') {
+            $data['interval_hours'] = max(1, (int)($_POST['interval_hours'] ?? 1));
+            $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_hours'] . ' hours'));
+        } elseif ($data['schedule_type'] === 'interval') {
             $data['next_run_at'] = date('Y-m-d H:i:s', strtotime('+' . $data['interval_days'] . ' days'));
         } elseif ($data['schedule_type'] === 'daily') {
             $time = $data['daily_time'] ?: '09:00';
@@ -1022,6 +1032,7 @@ class AdminController extends Controller {
 
     public function aiReviewTaskRun() {
         $this->requireLogin();
+        set_time_limit(180);
         header('Content-Type: application/json; charset=utf-8');
 
         $taskId = $_POST['task_id'] ?? '';
@@ -1048,6 +1059,9 @@ class AdminController extends Controller {
         if (!empty($prompt)) {
             $options['custom_prompt'] = $prompt;
         }
+
+        // Release session lock before long AI call to avoid blocking other requests
+        session_write_close();
 
         $result = $aiService->generateProductReviews($provider, $product['title'], $numReviews, $options);
 
@@ -1251,6 +1265,95 @@ class AdminController extends Controller {
         }
 
         echo json_encode(['success' => true, 'items' => $results], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function apiProductSearch() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+        $keyword = $_GET['keyword'] ?? '';
+        if (mb_strlen($keyword) < 2) {
+            echo json_encode(['success' => true, 'items' => []], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $productModel = new Product();
+        $results = $productModel->searchLite($keyword, 15);
+        echo json_encode(['success' => true, 'items' => $results], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function aiVocabularyGenerate() {
+        $this->requireLogin();
+        set_time_limit(180);
+        header('Content-Type: application/json; charset=utf-8');
+
+        $productId = (int)($_POST['product_id'] ?? 0);
+        $productUrl = $_POST['product_url'] ?? '';
+        $count = max(5, min(100, (int)($_POST['count'] ?? 20)));
+        $hint = $_POST['hint'] ?? '';
+
+        if ($productId <= 0) {
+            echo json_encode(['success' => false, 'error' => '请选择产品']);
+            exit;
+        }
+
+        $productModel = new Product();
+        $product = $productModel->find($productId);
+        if (!$product) {
+            echo json_encode(['success' => false, 'error' => '产品不存在']);
+            exit;
+        }
+
+        // Release session lock before AI call
+        session_write_close();
+
+        $aiService = new AiService();
+        $result = $aiService->generateVocabularies($product['title'], $count, $hint);
+
+        if (!$result['success']) {
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'vocabs' => $result['vocabs'],
+            'product_url' => $productUrl,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function aiVocabularyBatchAdd() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $groupId = (int)($_POST['group_id'] ?? 0);
+        $vocabsJson = $_POST['vocabs'] ?? '';
+
+        if ($groupId <= 0) {
+            echo json_encode(['success' => false, 'error' => '请选择分组']);
+            exit;
+        }
+
+        $vocabs = json_decode($vocabsJson, true);
+        if (empty($vocabs) || !is_array($vocabs)) {
+            echo json_encode(['success' => false, 'error' => '词汇列表为空']);
+            exit;
+        }
+
+        $items = [];
+        foreach ($vocabs as $v) {
+            $word = trim($v['word'] ?? '');
+            $url = trim($v['url'] ?? '');
+            if ($word !== '') {
+                $items[] = ['word' => $word, 'url' => $url];
+            }
+        }
+
+        $vocabModel = new AiVocabulary();
+        $created = $vocabModel->batchCreate($groupId, $items);
+
+        echo json_encode(['success' => true, 'count' => $created], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
