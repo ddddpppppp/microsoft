@@ -273,12 +273,23 @@ class AiService {
     public static function validateVocabUsage(string $content, array $vocabs): array {
         $plain = html_entity_decode(strip_tags($content), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $mismatches = [];
+        $words = [];
+        $rawCounts = [];
+
+        foreach ($vocabs as $v) {
+            $word = trim((string)($v['word'] ?? ''));
+            if ($word === '') {
+                continue;
+            }
+            $words[] = $word;
+            $rawCounts[$word] = self::countLiteralOccurrences($plain, $word);
+        }
 
         foreach ($vocabs as $v) {
             $word = trim((string)($v['word'] ?? ''));
             if ($word === '') continue;
             $expected = max(1, (int)($v['repeat'] ?? 1));
-            $actual = self::countWholeWordOccurrences($plain, $word);
+            $actual = self::countNonOverlappedKeywordOccurrences($word, $words, $rawCounts);
             if ($actual !== $expected) {
                 $mismatches[] = [
                     'word' => $word,
@@ -295,16 +306,29 @@ class AiService {
     }
 
     /**
-     * Count complete keyword occurrences, excluding substring matches in longer words.
+     * Count literal occurrences (substring based).
      */
-    private static function countWholeWordOccurrences(string $text, string $word): int {
-        $quoted = preg_quote($word, '/');
-        $pattern = '/(?<![\p{L}\p{N}_])' . $quoted . '(?![\p{L}\p{N}_])/u';
-        $matched = preg_match_all($pattern, $text, $matches);
-        if ($matched === false) {
-            return 0;
+    private static function countLiteralOccurrences(string $text, string $word): int {
+        return mb_substr_count($text, $word);
+    }
+
+    /**
+     * Count keyword occurrences after removing overlaps from longer selected keywords.
+     */
+    private static function countNonOverlappedKeywordOccurrences(string $word, array $allWords, array $rawCounts): int {
+        $actual = (int)($rawCounts[$word] ?? 0);
+        foreach ($allWords as $other) {
+            if ($other === $word) {
+                continue;
+            }
+            // If the current keyword is contained in a longer selected keyword,
+            // subtract those overlaps to avoid short-word over-counting.
+            $containsTimes = mb_substr_count($other, $word);
+            if ($containsTimes > 0 && mb_strlen($other) > mb_strlen($word)) {
+                $actual -= (int)($rawCounts[$other] ?? 0) * $containsTimes;
+            }
         }
-        return (int)$matched;
+        return max(0, $actual);
     }
 
     /**
