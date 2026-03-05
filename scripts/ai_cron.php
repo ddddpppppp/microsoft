@@ -192,38 +192,38 @@ function processArticleTask(array $task): void {
 
     $result = null;
     $parsed = null;
-    $maxAttempts = !empty($selectedVocabsForValidation) ? 3 : 1;
+    $maxAttempts = 1; // 关键词次数校验已注释，不再重试
     $retryPrompt = $task['prompt'];
-    $lastMismatch = [];
     for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
         $result = $aiService->generateArticle($task['ai_provider'], $retryPrompt, $options);
         if (!$result['success']) {
             break;
         }
         $parsed = $aiService->parseArticle($result['content']);
-        if (empty($selectedVocabsForValidation)) {
-            break;
-        }
-        $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
-        if (!empty($validation['ok'])) {
-            break;
-        }
-        $lastMismatch = $validation['mismatches'] ?? [];
-        if ($attempt < $maxAttempts) {
-            $retryPrompt = $task['prompt'] . "\n\n上一次输出未满足关键词次数约束，请严格修正后重写全文：\n"
-                . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
-        } else {
-            $result = [
-                'success' => false,
-                'error' => '关键词次数约束未满足，请重试',
-                'mismatches' => $lastMismatch,
-            ];
-        }
+        break; // 不再做关键词次数校验与重试
+        // --- 关键词次数校验功能（已注释）---
+        // if (empty($selectedVocabsForValidation)) {
+        //     break;
+        // }
+        // $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
+        // if (!empty($validation['ok'])) {
+        //     break;
+        // }
+        // $lastMismatch = $validation['mismatches'] ?? [];
+        // if ($attempt < $maxAttempts) {
+        //     $retryPrompt = $task['prompt'] . "\n\n上一次输出未满足关键词次数约束，请严格修正后重写全文：\n"
+        //         . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
+        // } else {
+        //     $result = [
+        //         'success' => false,
+        //         'error' => '关键词次数约束未满足，请重试',
+        //         'mismatches' => $lastMismatch,
+        //     ];
+        // }
     }
 
     if (!$result['success']) {
-        $extra = !empty($result['mismatches']) ? (' mismatches=' . json_encode($result['mismatches'], JSON_UNESCAPED_UNICODE)) : '';
-        echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] ERROR: {$result['error']}{$extra}\n";
+        echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] ERROR: " . ($result['error'] ?? '') . "\n";
         return;
     }
 
