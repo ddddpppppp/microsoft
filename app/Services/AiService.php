@@ -278,7 +278,7 @@ class AiService {
             $word = trim((string)($v['word'] ?? ''));
             if ($word === '') continue;
             $expected = max(1, (int)($v['repeat'] ?? 1));
-            $actual = mb_substr_count($plain, $word);
+            $actual = self::countWholeWordOccurrences($plain, $word);
             if ($actual !== $expected) {
                 $mismatches[] = [
                     'word' => $word,
@@ -292,6 +292,19 @@ class AiService {
             'ok' => empty($mismatches),
             'mismatches' => $mismatches,
         ];
+    }
+
+    /**
+     * Count complete keyword occurrences, excluding substring matches in longer words.
+     */
+    private static function countWholeWordOccurrences(string $text, string $word): int {
+        $quoted = preg_quote($word, '/');
+        $pattern = '/(?<![\p{L}\p{N}_])' . $quoted . '(?![\p{L}\p{N}_])/u';
+        $matched = preg_match_all($pattern, $text, $matches);
+        if ($matched === false) {
+            return 0;
+        }
+        return (int)$matched;
     }
 
     /**

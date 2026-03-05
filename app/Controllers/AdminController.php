@@ -566,8 +566,9 @@ class AdminController extends Controller {
         $settingModel = new Setting();
         $pages = ['home', 'apps', 'games', 'about', 'articles'];
         $settings = [];
+        $settingsMap = $settingModel->getByPages($pages);
         foreach ($pages as $p) {
-            $settings[$p] = $settingModel->getByPage($p) ?: ['title' => '', 'keywords' => '', 'description' => ''];
+            $settings[$p] = $settingsMap[$p] ?? ['title' => '', 'keywords' => '', 'description' => ''];
         }
         echo View::renderWithLayout('admin/layout', 'admin/settings', [
             'pageTitle' => 'SEO 设置',
@@ -579,13 +580,15 @@ class AdminController extends Controller {
         $this->requireLogin();
         $settingModel = new Setting();
         $pages = ['home', 'apps', 'games', 'about', 'articles'];
+        $dataByPage = [];
         foreach ($pages as $p) {
-            $settingModel->updateByPage($p, [
+            $dataByPage[$p] = [
                 'title' => $_POST["title_$p"] ?? '',
                 'keywords' => $_POST["keywords_$p"] ?? '',
                 'description' => $_POST["description_$p"] ?? ''
-            ]);
+            ];
         }
+        $settingModel->saveByPages($dataByPage);
         $pageUris = ['/' => 'home', '/home' => 'home', '/apps' => 'apps', '/games' => 'games', '/about' => 'about', '/articles' => 'articles'];
         foreach (array_keys($pageUris) as $uri) {
             HtmlCache::forget($uri);
