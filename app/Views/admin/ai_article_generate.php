@@ -217,12 +217,14 @@
                         </td>
                         <td>
                             <?php
-                            $typeLabels = ['once' => '一次性', 'interval' => '间隔', 'daily' => '每天'];
+                            $typeLabels = ['once' => '一次性', 'hourly' => '小时', 'interval' => '间隔', 'daily' => '每天'];
                             echo $typeLabels[$t['schedule_type']] ?? $t['schedule_type'];
                             ?>
                         </td>
                         <td>
-                            <?php if ($t['schedule_type'] === 'interval'): ?>
+                            <?php if ($t['schedule_type'] === 'hourly'): ?>
+                                每 <?= max(1, (int)($t['interval_hours'] ?? 1)) ?> 小时
+                            <?php elseif ($t['schedule_type'] === 'interval'): ?>
                                 每 <?= $t['interval_days'] ?> 天
                             <?php elseif ($t['schedule_type'] === 'daily'): ?>
                                 每天 <?= htmlspecialchars($t['daily_time']) ?>

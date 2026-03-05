@@ -902,6 +902,14 @@ ALTER TABLE `articles`
   ADD COLUMN `source_task_id` int(11) NOT NULL DEFAULT '0' AFTER `author`,
   ADD KEY `idx_source_task_id` (`source_task_id`);
 
+ALTER TABLE ai_generate_article_tasks
+  MODIFY COLUMN schedule_type ENUM('once','interval','daily','hourly') DEFAULT 'once',
+  ADD COLUMN interval_hours INT(11) DEFAULT 1 AFTER interval_days;
+
+ALTER TABLE ai_generate_review_tasks
+  MODIFY COLUMN schedule_type ENUM('once','interval','daily','hourly') DEFAULT 'once',
+  ADD COLUMN interval_hours INT(11) DEFAULT 1 AFTER interval_days;
+  
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

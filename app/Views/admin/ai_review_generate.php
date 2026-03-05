@@ -114,7 +114,7 @@
                         <td><?= $t['num_reviews'] ?> 条</td>
                         <td>
                             <?php
-                            $typeLabels = ['once' => '一次性', 'interval' => '间隔', 'daily' => '每天'];
+                            $typeLabels = ['once' => '一次性', 'hourly' => '小时', 'interval' => '间隔', 'daily' => '每天'];
                             echo $typeLabels[$t['schedule_type']] ?? $t['schedule_type'];
                             ?>
                         </td>
