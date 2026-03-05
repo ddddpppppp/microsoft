@@ -67,7 +67,7 @@ class AiService {
         unset($options['debug_context']);
 
         try {
-            self::writeDebugLog('ai_request', [
+            $requestPayload = [
                 'provider' => $provider,
                 'params' => [
                     'temperature' => $params['temperature'],
@@ -77,8 +77,19 @@ class AiService {
                 'system_prompt' => $params['system_prompt'],
                 'user_prompt' => $prompt,
                 'context' => $debugContext,
+            ];
+            self::writeDebugLog('ai_request', $requestPayload);
+
+            $result = $this->$method($cfg, $apiKey, $prompt, $params);
+            self::writeDebugLog('ai_response', [
+                'provider' => $provider,
+                'success' => !empty($result['success']),
+                'content' => $result['content'] ?? '',
+                'raw' => $result['raw'] ?? '',
+                'error' => $result['error'] ?? '',
+                'context' => $debugContext,
             ]);
-            return $this->$method($cfg, $apiKey, $prompt, $params);
+            return $result;
         } catch (\Exception $e) {
             self::writeDebugLog('ai_exception', [
                 'provider' => $provider,
@@ -234,7 +245,13 @@ class AiService {
     public static function buildVocabInstructions(array $vocabs): string {
         if (empty($vocabs)) return '';
 
-        $lines = ["请在文章中自然地融入以下关键词，每个关键词需要以超链接形式出现，格式为 <a href=\"URL\">关键词</a>："];
+        $lines = [
+            "请严格按以下关键词约束写作：",
+            "1) 只允许使用下方给出的关键词，不得新增其他关键词；",
+            "2) 每个关键词出现次数必须与要求完全一致（不多不少）；",
+            "3) 若关键词配置了URL，则该关键词每次出现都使用<a href=\"URL\">关键词</a>；未配置URL则用纯文本；",
+            "4) 未被选中的词汇禁止出现。"
+        ];
         foreach ($vocabs as $v) {
             $word = $v['word'] ?? '';
             $url = $v['url'] ?? '';
@@ -242,12 +259,39 @@ class AiService {
             $repeat = (int)($v['repeat'] ?? 1);
             $tag = $must ? '【必须出现】' : '';
             $linkNote = $url ? "（链接: {$url}）" : '（无链接，以纯文本出现）';
-            $lines[] = "- \"{$word}\"{$linkNote} {$tag}在文章中出现 {$repeat} 次";
+            $lines[] = "- \"{$word}\"{$linkNote} {$tag}在文章中必须恰好出现 {$repeat} 次";
         }
 
-        $lines[] = "\n注意：同一个关键词在文章中的每次出现都应尽量分散在不同段落。";
+        $lines[] = "\n注意：如无法满足次数约束，请重写全文后再输出，禁止先输出不合规结果。";
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Validate whether vocab occurrence constraints are satisfied.
+     */
+    public static function validateVocabUsage(string $content, array $vocabs): array {
+        $plain = html_entity_decode(strip_tags($content), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $mismatches = [];
+
+        foreach ($vocabs as $v) {
+            $word = trim((string)($v['word'] ?? ''));
+            if ($word === '') continue;
+            $expected = max(1, (int)($v['repeat'] ?? 1));
+            $actual = mb_substr_count($plain, $word);
+            if ($actual !== $expected) {
+                $mismatches[] = [
+                    'word' => $word,
+                    'expected' => $expected,
+                    'actual' => $actual,
+                ];
+            }
+        }
+
+        return [
+            'ok' => empty($mismatches),
+            'mismatches' => $mismatches,
+        ];
     }
 
     /**
@@ -393,12 +437,32 @@ class AiService {
             @mkdir($dir, 0777, true);
         }
         $file = $dir . '/ai_debug.log';
-        $record = [
-            'time' => date('Y-m-d H:i:s'),
-            'type' => $type,
-            'payload' => $payload,
-        ];
-        @file_put_contents($file, json_encode($record, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
+        $time = date('Y-m-d H:i:s');
+        $lines = [];
+        $lines[] = str_repeat('=', 96);
+        $lines[] = "[{$time}] {$type}";
+        $lines[] = str_repeat('-', 96);
+
+        foreach ($payload as $key => $value) {
+            $lines[] = strtoupper((string)$key) . ':';
+            if (is_string($value)) {
+                $lines[] = $value === '' ? '(empty)' : $value;
+            } elseif (is_bool($value)) {
+                $lines[] = $value ? 'true' : 'false';
+            } elseif (is_null($value)) {
+                $lines[] = 'null';
+            } elseif (is_scalar($value)) {
+                $lines[] = (string)$value;
+            } else {
+                $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                $lines[] = $json === false ? '(unserializable)' : $json;
+            }
+            $lines[] = '';
+        }
+
+        $lines[] = str_repeat('=', 96);
+        $lines[] = '';
+        @file_put_contents($file, implode(PHP_EOL, $lines), FILE_APPEND);
     }
 
     // ── Content parsers ────────────────────────────────────

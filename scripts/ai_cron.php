@@ -154,6 +154,7 @@ function processArticleTask(array $task): void {
             'source_task_id' => $taskId,
         ],
     ];
+    $selectedVocabsForValidation = [];
 
     // Build vocabulary instructions
     $vocabConfigRaw = $task['vocabulary_config'] ?? '';
@@ -175,6 +176,7 @@ function processArticleTask(array $task): void {
             $randomPool = array_slice($randomPool, 0, $randomCount);
         }
         $finalVocabs = array_merge($mustVocabs, $randomPool);
+        $selectedVocabsForValidation = $finalVocabs;
         $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
     }
 
@@ -188,14 +190,46 @@ function processArticleTask(array $task): void {
         $options['title_dedup'] = AiService::buildTitleDedup($recentTitles);
     }
 
-    $result = $aiService->generateArticle($task['ai_provider'], $task['prompt'], $options);
+    $result = null;
+    $parsed = null;
+    $maxAttempts = !empty($selectedVocabsForValidation) ? 3 : 1;
+    $retryPrompt = $task['prompt'];
+    $lastMismatch = [];
+    for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+        $result = $aiService->generateArticle($task['ai_provider'], $retryPrompt, $options);
+        if (!$result['success']) {
+            break;
+        }
+        $parsed = $aiService->parseArticle($result['content']);
+        if (empty($selectedVocabsForValidation)) {
+            break;
+        }
+        $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
+        if (!empty($validation['ok'])) {
+            break;
+        }
+        $lastMismatch = $validation['mismatches'] ?? [];
+        if ($attempt < $maxAttempts) {
+            $retryPrompt = $task['prompt'] . "\n\n上一次输出未满足关键词次数约束，请严格修正后重写全文：\n"
+                . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
+        } else {
+            $result = [
+                'success' => false,
+                'error' => '关键词次数约束未满足，请重试',
+                'mismatches' => $lastMismatch,
+            ];
+        }
+    }
 
     if (!$result['success']) {
-        echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] ERROR: {$result['error']}\n";
+        $extra = !empty($result['mismatches']) ? (' mismatches=' . json_encode($result['mismatches'], JSON_UNESCAPED_UNICODE)) : '';
+        echo "[" . date('Y-m-d H:i:s') . "] [Task #$taskId] ERROR: {$result['error']}{$extra}\n";
         return;
     }
 
-    $parsed = $aiService->parseArticle($result['content']);
+    if (!$parsed) {
+        $parsed = $aiService->parseArticle($result['content']);
+    }
     $title = $parsed['title'] ?: '未命名文章';
     $content = $parsed['content'];
     $slug = time() . mt_rand(1000, 9999);

@@ -836,6 +836,7 @@ class AdminController extends Controller {
                 'source_task_id' => $taskId > 0 ? $taskId : 0,
             ],
         ];
+        $selectedVocabsForValidation = [];
 
         // Build vocabulary instructions
         $vocabConfig = $vocabConfigRaw ? json_decode($vocabConfigRaw, true) : null;
@@ -858,6 +859,7 @@ class AdminController extends Controller {
             }
 
             $finalVocabs = array_merge($mustIds, $randomPool);
+            $selectedVocabsForValidation = $finalVocabs;
             $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
         }
 
@@ -873,18 +875,48 @@ class AdminController extends Controller {
         session_write_close();
 
         $aiService = new AiService();
-        $result = $aiService->generateArticle($provider, $prompt, $options);
+        $result = null;
+        $parsed = null;
+        $maxAttempts = !empty($selectedVocabsForValidation) ? 3 : 1;
+        $retryPrompt = $prompt;
+        $lastMismatch = [];
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $result = $aiService->generateArticle($provider, $retryPrompt, $options);
+            if (!$result['success']) {
+                break;
+            }
+            $parsed = $aiService->parseArticle($result['content']);
+            if (empty($selectedVocabsForValidation)) {
+                break;
+            }
+            $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
+            if (!empty($validation['ok'])) {
+                break;
+            }
+            $lastMismatch = $validation['mismatches'] ?? [];
+            if ($attempt < $maxAttempts) {
+                $retryPrompt = $prompt . "\n\n上一次输出未满足关键词次数约束，请严格修正后重写全文：\n"
+                    . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
+            } else {
+                $result = [
+                    'success' => false,
+                    'error' => '关键词次数约束未满足，请重试',
+                    'mismatches' => $lastMismatch,
+                ];
+            }
+        }
 
         if (!$result['success']) {
             echo json_encode($result, JSON_UNESCAPED_UNICODE);
             exit;
         }
-
-        $parsed = $aiService->parseArticle($result['content']);
+        if (!$parsed) {
+            $parsed = $aiService->parseArticle($result['content']);
+        }
         $title = $parsed['title'] ?: '未命名文章';
         $content = $parsed['content'];
 
-        $slug = 'ai-' . time() . '-' . mt_rand(100000, 999999);
+        $slug =  time() . mt_rand(100000, 999999);
         $coverImage = 'https://picsum.photos/seed/ai-' . mt_rand(100000, 999999) . '/1200/675';
 
         $summary = mb_substr(strip_tags($content), 0, 200);
