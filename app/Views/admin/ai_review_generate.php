@@ -102,7 +102,6 @@
                         <td><?= $t['id'] ?></td>
                         <td>
                             <div><?= htmlspecialchars($t['name'] ?: '未命名') ?></div>
-                            <small class="text-muted"><?= htmlspecialchars(mb_substr($t['prompt'] ?: '默认提示词', 0, 40)) ?></small>
                         </td>
                         <td>
                             <?php if ($t['product_icon']): ?>

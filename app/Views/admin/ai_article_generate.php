@@ -205,7 +205,6 @@
                         <td><?= $t['id'] ?></td>
                         <td>
                             <div><?= htmlspecialchars($t['name'] ?: '未命名') ?></div>
-                            <small class="text-muted"><?= htmlspecialchars(mb_substr($t['prompt'], 0, 60)) ?>...</small>
                         </td>
                         <td><span class="badge bg-info"><?= htmlspecialchars($t['ai_provider']) ?></span></td>
                         <td>
