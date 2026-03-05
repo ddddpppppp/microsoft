@@ -14,7 +14,8 @@ class MsCollectionRow extends LitElement {
     variant: { type: String },
     sectionType: { type: String },
     _showLeftArrow: { type: Boolean, state: true },
-    _showRightArrow: { type: Boolean, state: true }
+    _showRightArrow: { type: Boolean, state: true },
+    _pageIndex: { type: Number, state: true }
   };
 
   static styles = css`
@@ -249,12 +250,18 @@ class MsCollectionRow extends LitElement {
     this.sectionType = '';
     this._showLeftArrow = false;
     this._showRightArrow = true;
+    this._pageIndex = 0;
   }
+
+  static get PAGE_SIZE_TWO_COL() { return 6; }
 
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has('variant')) {
       this.classList.toggle('variant-two-col', this.variant === 'twoColGrid');
+    }
+    if (this.variant === 'twoColGrid' && changedProperties.has('products')) {
+      this._pageIndex = 0;
     }
   }
 
@@ -275,6 +282,15 @@ class MsCollectionRow extends LitElement {
   }
 
   _scroll(direction) {
+    if (this.variant === 'twoColGrid') {
+      const totalPages = Math.max(1, Math.ceil((this.products || []).length / MsCollectionRow.PAGE_SIZE_TWO_COL));
+      if (direction === 'left' && this._pageIndex > 0) {
+        this._pageIndex = this._pageIndex - 1;
+      } else if (direction === 'right' && this._pageIndex < totalPages - 1) {
+        this._pageIndex = this._pageIndex + 1;
+      }
+      return;
+    }
     const el = this._getScrollContainer();
     if (!el) return;
     const amount = el.clientWidth * 0.75;
@@ -342,7 +358,9 @@ class MsCollectionRow extends LitElement {
     `;
   }
 
-  _renderHeader(useTwoColGrid) {
+  _renderHeader(useTwoColGrid, twoColCanGoLeft, twoColCanGoRight) {
+    const leftDisabled = useTwoColGrid ? !twoColCanGoLeft : !this._showLeftArrow;
+    const rightDisabled = useTwoColGrid ? !twoColCanGoRight : !this._showRightArrow;
     return html`
       <div class="section-header">
         <div class="section-title-area">
@@ -353,10 +371,10 @@ class MsCollectionRow extends LitElement {
         </div>
         <div class="header-right">
           <div class="nav-arrows">
-            <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showLeftArrow} @click=${() => this._scroll('left')} aria-label="向左滚动">
+            <button class="scroll-btn" ?disabled=${leftDisabled} @click=${() => this._scroll('left')} aria-label="向左滚动">
               <svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg>
             </button>
-            <button class="scroll-btn" ?disabled=${useTwoColGrid ? true : !this._showRightArrow} @click=${() => this._scroll('right')} aria-label="向右滚动">
+            <button class="scroll-btn" ?disabled=${rightDisabled} @click=${() => this._scroll('right')} aria-label="向右滚动">
               <svg viewBox="0 0 16 16"><polyline points="6 3 11 8 6 13"/></svg>
             </button>
           </div>
@@ -368,13 +386,19 @@ class MsCollectionRow extends LitElement {
   render() {
     const useTwoColGrid = this.variant === 'twoColGrid';
     const list = this.products || [];
-    const gridProducts = useTwoColGrid ? list.slice(0, 6) : list;
+    const pageSize = MsCollectionRow.PAGE_SIZE_TWO_COL;
+    const totalPages = useTwoColGrid ? Math.max(1, Math.ceil(list.length / pageSize)) : 1;
+    const gridProducts = useTwoColGrid
+      ? list.slice(this._pageIndex * pageSize, (this._pageIndex + 1) * pageSize)
+      : list;
+    const twoColCanGoLeft = useTwoColGrid && this._pageIndex > 0;
+    const twoColCanGoRight = useTwoColGrid && this._pageIndex < totalPages - 1;
 
     if (useTwoColGrid) {
       return html`
         <div class="section">
           <div class="two-col-card">
-            ${this._renderHeader(true)}
+            ${this._renderHeader(true, twoColCanGoLeft, twoColCanGoRight)}
             <div class="two-col-divider"></div>
             <div class="two-col-grid">${gridProducts.map(p => this._renderRowItem(p))}</div>
           </div>
@@ -384,7 +408,7 @@ class MsCollectionRow extends LitElement {
 
     return html`
       <div class="section">
-        ${this._renderHeader(false)}
+        ${this._renderHeader(false, this._showLeftArrow, this._showRightArrow)}
         <div class="scroll-wrapper">
           <div class="scroll-container" @scroll=${this._onScroll}>
             ${list.map(p => this._renderCard(p))}

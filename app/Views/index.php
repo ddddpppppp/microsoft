@@ -18,6 +18,12 @@ if ($seoKeywords) {
 if ($seoDescription) {
     $metaTags .= '<meta name="description" content="' . $seoDescription . '">' . "\n";
 }
+$canonicalUrl = $canonical_url ?? '';
+if ($canonicalUrl !== '') {
+    $canonicalUrl = htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8');
+    $metaTags .= '<link rel="canonical" href="' . $canonicalUrl . '">' . "\n";
+    $metaTags .= '<meta property="og:url" content="' . $canonicalUrl . '">' . "\n";
+}
 $distHtml = str_replace('</head>', $metaTags . '</head>', $distHtml);
 
 $seoContent = $seo_content ?? '';

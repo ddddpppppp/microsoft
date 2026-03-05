@@ -5,6 +5,7 @@ use App\Core\Controller;
 use App\Models\Article;
 use App\Models\Product;
 use App\Services\SitemapCache;
+use App\Services\SiteUrl;
 
 class SitemapController extends Controller {
     private function escapeXml($text) {
@@ -19,10 +20,7 @@ class SitemapController extends Controller {
     }
 
     private function getBaseUrl() {
-        $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-        $scheme = $isHttps ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        return $scheme . '://' . $host;
+        return SiteUrl::getBaseUrl();
     }
 
     private function addUrl(&$urls, $loc, $lastmod = null, $changefreq = null, $priority = null) {
@@ -52,6 +50,14 @@ class SitemapController extends Controller {
         $this->addUrl($urls, $base . '/about', null, 'monthly', '0.6');
         $this->addUrl($urls, $base . '/articles', null, 'daily', '0.9');
 
+        // Articles list pagination
+        $articleModel = new Article();
+        $firstPage = $articleModel->paginatePublished(1, 12, '');
+        $totalPages = (int)($firstPage['total_pages'] ?? 1);
+        for ($p = 2; $p <= $totalPages; $p++) {
+            $this->addUrl($urls, $base . '/articles/' . $p, null, 'daily', '0.8');
+        }
+
         // Products
         $productModel = new Product();
         $products = $productModel->all('id DESC');
@@ -75,7 +81,6 @@ class SitemapController extends Controller {
         }
 
         // Articles (published only)
-        $articleModel = new Article();
         $articles = $articleModel->getPublished();
         foreach ($articles as $a) {
             $slug = trim((string)($a['slug'] ?? ''));

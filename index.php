@@ -113,6 +113,7 @@ $router->group('/admin', function($r) {
     $r->get('/product/search-api', [\App\Controllers\AdminController::class, 'productSearchApi']);
     $r->get('/settings', [\App\Controllers\AdminController::class, 'settings']);
     $r->post('/settings/save', [\App\Controllers\AdminController::class, 'settingsSave']);
+    $r->get('/settings/flush-cache', [\App\Controllers\AdminController::class, 'settingsFlushCache']);
     $r->get('/articles', [\App\Controllers\AdminController::class, 'articles']);
     $r->get('/article/create', [\App\Controllers\AdminController::class, 'articleCreate']);
     $r->get('/article/edit/{id}', [\App\Controllers\AdminController::class, 'articleEdit']);
@@ -150,10 +151,12 @@ $router->group('/admin', function($r) {
 });
 
 // SPA frontend routes
-$spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/articles', '/desk.html'];
+$spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/desk.html'];
 foreach ($spaRoutes as $route) {
     $router->get($route, [\App\Controllers\HomeController::class, 'index']);
 }
+$router->get('/articles', [\App\Controllers\HomeController::class, 'articlesList']);
+$router->get('/articles/{page}', [\App\Controllers\HomeController::class, 'articlesListPage']);
 $router->get('/detail/{id}', [\App\Controllers\HomeController::class, 'productDetail']);
 $router->get('/article/{slug}', [\App\Controllers\HomeController::class, 'articleDetail']);
 

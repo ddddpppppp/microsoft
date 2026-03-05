@@ -48,26 +48,37 @@ class MsApp extends LitElement {
     const path = window.location.pathname;
     if (path === '/' || path === '/home') {
       this.currentRoute = 'home';
+      this.routeParams = {};
     } else if (path === '/apps') {
       this.currentRoute = 'apps';
+      this.routeParams = {};
     } else if (path === '/games') {
       this.currentRoute = 'games';
+      this.routeParams = {};
     } else if (path === '/about') {
       this.currentRoute = 'about';
+      this.routeParams = {};
     } else if (path === '/articles') {
       this.currentRoute = 'articles';
-    } else if (path.startsWith('/article/')) {
-      this.currentRoute = 'article-detail';
-      this.routeParams = { slug: path.split('/article/')[1] };
-    } else if (path.startsWith('/detail/')) {
-      this.currentRoute = 'detail';
-      this.routeParams = { id: path.split('/detail/')[1] };
-    } else if (path === '/desk.html') {
-      this.currentRoute = 'detail';
-      this.routeParams = { id: 'xpdlt6q62bfqkz' };
+      this.routeParams = { page: 1 };
     } else {
-      this.currentRoute = 'custom-product';
-      this.routeParams = { customUrl: path };
+      const m = path.match(/^\/articles\/(\d+)$/);
+      if (m) {
+        this.currentRoute = 'articles';
+        this.routeParams = { page: parseInt(m[1], 10) };
+      } else if (path.startsWith('/article/')) {
+        this.currentRoute = 'article-detail';
+        this.routeParams = { slug: path.split('/article/')[1] };
+      } else if (path.startsWith('/detail/')) {
+        this.currentRoute = 'detail';
+        this.routeParams = { id: path.split('/detail/')[1] };
+      } else if (path === '/desk.html') {
+        this.currentRoute = 'detail';
+        this.routeParams = { id: 'xpdlt6q62bfqkz' };
+      } else {
+        this.currentRoute = 'custom-product';
+        this.routeParams = { customUrl: path };
+      }
     }
     if (CACHED_ROUTES.has(this.currentRoute)) {
       this._activatedRoutes.add(this.currentRoute);
@@ -122,7 +133,7 @@ class MsApp extends LitElement {
         <div class="page-slot ${this._isActive('apps') ? 'active' : ''}">${this._shouldRender('apps') ? html`<apps-page></apps-page>` : ''}</div>
         <div class="page-slot ${this._isActive('games') ? 'active' : ''}">${this._shouldRender('games') ? html`<games-page></games-page>` : ''}</div>
         <div class="page-slot ${this._isActive('about') ? 'active' : ''}">${this._shouldRender('about') ? html`<about-page></about-page>` : ''}</div>
-        <div class="page-slot ${this._isActive('articles') ? 'active' : ''}">${this._shouldRender('articles') ? html`<articles-page></articles-page>` : ''}</div>
+        <div class="page-slot ${this._isActive('articles') ? 'active' : ''}">${this._shouldRender('articles') ? html`<articles-page .currentPage=${this.routeParams.page ?? 1}></articles-page>` : ''}</div>
         <div class="page-slot ${!CACHED_ROUTES.has(this.currentRoute) ? 'active' : ''}">${this._renderDynamicPage()}</div>
       </main>
       <ms-footer></ms-footer>

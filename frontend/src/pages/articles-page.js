@@ -149,6 +149,9 @@ class ArticlesPage extends LitElement {
       background: #0078d4; color: #fff; border-color: #0078d4;
     }
     .page-btn:disabled { opacity: 0.5; cursor: default; }
+    .page-btn.page-link {
+      text-decoration: none; display: inline-block; box-sizing: border-box;
+    }
 
     @media (max-width: 900px) {
       .container { grid-template-columns: 1fr; }
@@ -173,6 +176,12 @@ class ArticlesPage extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._loadData();
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has('currentPage')) {
+      this._loadData();
+    }
   }
 
   async _loadData() {
@@ -204,12 +213,19 @@ class ArticlesPage extends LitElement {
   _changeCategory(cat) {
     this.currentCategory = cat;
     this.currentPage = 1;
+    if (window.msApp) {
+      window.msApp.navigate('/articles');
+    }
     this._loadData();
   }
 
-  _changePage(page) {
-    this.currentPage = page;
-    this._loadData();
+  _goToPage(page) {
+    if (page < 1) return;
+    if (window.msApp) {
+      window.msApp.navigate(page === 1 ? '/articles' : '/articles/' + page);
+    } else {
+      window.location.href = page === 1 ? '/articles' : '/articles/' + page;
+    }
     this.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -290,13 +306,15 @@ class ArticlesPage extends LitElement {
           ${pagination && pagination.total_pages > 1 ? html`
             <div class="pagination">
               <button class="page-btn" ?disabled=${pagination.page <= 1}
-                @click=${() => this._changePage(pagination.page - 1)}>上一页</button>
+                @click=${() => this._goToPage(pagination.page - 1)}>上一页</button>
               ${Array.from({length: pagination.total_pages}, (_, i) => i + 1).map(p => html`
-                <button class="page-btn ${p === pagination.page ? 'active' : ''}"
-                  @click=${() => this._changePage(p)}>${p}</button>
+                ${p === 1
+                  ? html`<a class="page-btn page-link ${p === pagination.page ? 'active' : ''}" href="/articles" data-nav>${p}</a>`
+                  : html`<a class="page-btn page-link ${p === pagination.page ? 'active' : ''}" href="/articles/${p}" data-nav>${p}</a>`
+                }
               `)}
               <button class="page-btn" ?disabled=${pagination.page >= pagination.total_pages}
-                @click=${() => this._changePage(pagination.page + 1)}>下一页</button>
+                @click=${() => this._goToPage(pagination.page + 1)}>下一页</button>
             </div>
           ` : ''}
         </div>

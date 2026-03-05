@@ -28,6 +28,14 @@ class AdminController extends Controller {
         }
     }
 
+    /** Clear article list HTML cache (all paginated list pages, 10-min TTL). */
+    private function forgetArticlesListCache() {
+        HtmlCache::forget('/articles');
+        for ($p = 2; $p <= 50; $p++) {
+            HtmlCache::forget('/articles/' . $p);
+        }
+    }
+
     private function normalizeScreenshotMeta($rawScreenshots, $fallbackLogoAlt = '') {
         $logoAlt = trim((string)$fallbackLogoAlt);
         $items = [];
@@ -526,7 +534,7 @@ class AdminController extends Controller {
         $product = $productModel->find($id);
         if ($product) {
             if ($product['ms_id']) HtmlCache::forget('/detail/' . $product['ms_id']);
-            if ($product['custom_url']) HtmlCache::forget($product['custom_url']);
+            if (!empty($product['custom_url'])) HtmlCache::forget('/' . ltrim($product['custom_url'], '/'));
         }
         SitemapCache::clear();
 
@@ -555,7 +563,7 @@ class AdminController extends Controller {
         $product = $productModel->find($id);
         if ($product) {
             if ($product['ms_id']) HtmlCache::forget('/detail/' . $product['ms_id']);
-            if ($product['custom_url']) HtmlCache::forget($product['custom_url']);
+            if (!empty($product['custom_url'])) HtmlCache::forget('/' . ltrim($product['custom_url'], '/'));
         }
         SitemapCache::clear();
         $this->redirect('/admin/product/edit/' . $id . '?cache_cleared=1');
@@ -596,6 +604,14 @@ class AdminController extends Controller {
         SitemapCache::clear();
 
         $this->redirect('/admin/settings?saved=1');
+    }
+
+    /** 清空全站页面缓存（片段 .json + 旧 .html）与 sitemap 缓存 */
+    public function settingsFlushCache() {
+        $this->requireLogin();
+        HtmlCache::flush();
+        SitemapCache::clear();
+        $this->redirect('/admin/settings?cache_flushed=1');
     }
 
     public function articles() {
@@ -665,12 +681,12 @@ class AdminController extends Controller {
             if ($data['slug'] && $data['slug'] !== ($old['slug'] ?? '')) {
                 HtmlCache::forget('/article/' . $data['slug']);
             }
-            HtmlCache::forget('/articles');
+            $this->forgetArticlesListCache();
             SitemapCache::clear();
             $this->redirect('/admin/article/edit/' . $id . '?saved=1');
         } else {
             $newId = $articleModel->create($data);
-            HtmlCache::forget('/articles');
+            $this->forgetArticlesListCache();
             SitemapCache::clear();
             $this->redirect('/admin/article/edit/' . $newId . '?saved=1');
         }
@@ -683,7 +699,7 @@ class AdminController extends Controller {
         if ($article && $article['slug']) {
             HtmlCache::forget('/article/' . $article['slug']);
         }
-        HtmlCache::forget('/articles');
+        $this->forgetArticlesListCache();
         SitemapCache::clear();
         $articleModel->delete($id);
         $this->redirect('/admin/articles');

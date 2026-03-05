@@ -23,6 +23,7 @@ class ApiController extends Controller {
             'featuredBanners' => $bannerModel->getFeaturedBanners('home'),
             'collections' => $collectionModel->getPageData('home')
         ];
+        $this->deduplicateCreativeAppsByTrendingApps($data['collections']);
         $this->json($data);
     }
 
@@ -249,5 +250,57 @@ class ApiController extends Controller {
             'related' => $related,
             'popular' => $popular
         ]);
+    }
+
+    /**
+     * 先获取「新潮应用」的产品 id/ms_id，再从「創意應用程式」中去掉这些产品，实现去重（同一产品不重复出现在两处）。
+     * @param array $collections
+     */
+    private function deduplicateCreativeAppsByTrendingApps(array &$collections): void {
+        $trendingProductIds = [];
+        $trendingProductMsIds = [];
+        foreach ($collections as $col) {
+            $slug = isset($col['slug']) ? (string) $col['slug'] : '';
+            $name = isset($col['name']) ? (string) $col['name'] : '';
+            $isTrendingApps = ($slug === 'trending-apps' || $slug === 'top-trending-apps' || $name === '新潮应用');
+            if (!$isTrendingApps) {
+                continue;
+            }
+            $products = isset($col['products']) && is_array($col['products']) ? $col['products'] : [];
+            foreach ($products as $p) {
+                if (isset($p['id'])) {
+                    $trendingProductIds[(int) $p['id']] = true;
+                }
+                if (!empty($p['ms_id'])) {
+                    $trendingProductMsIds[(string) $p['ms_id']] = true;
+                }
+            }
+            break;
+        }
+
+        if (empty($trendingProductIds) && empty($trendingProductMsIds)) {
+            return;
+        }
+
+        foreach ($collections as &$col) {
+            $slug = isset($col['slug']) ? (string) $col['slug'] : '';
+            $sectionType = isset($col['section_type']) ? (string) $col['section_type'] : '';
+            if ($slug !== 'creative-apps' || $sectionType !== 'hero_cards') {
+                continue;
+            }
+            $products = isset($col['products']) && is_array($col['products']) ? $col['products'] : [];
+            $col['products'] = array_values(array_filter($products, function ($p) use ($trendingProductIds, $trendingProductMsIds) {
+                if (isset($p['id']) && isset($trendingProductIds[(int) $p['id']])) {
+                    return false;
+                }
+                $msId = isset($p['ms_id']) ? (string) $p['ms_id'] : '';
+                if ($msId !== '' && isset($trendingProductMsIds[$msId])) {
+                    return false;
+                }
+                return true;
+            }));
+            break;
+        }
+        unset($col);
     }
 }

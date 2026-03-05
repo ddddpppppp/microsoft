@@ -506,23 +506,59 @@ class AiService {
 
     /**
      * Parse AI output into title + HTML content (for articles).
+     * Title is taken from first <h1>/<h2>/<h3>, or Markdown # line, or first non-empty text line as fallback.
      */
     public function parseArticle(string $raw): array {
         $content = $this->stripCodeFences($raw);
 
-        $title = '';
-        if (preg_match('/<h[12][^>]*>(.*?)<\/h[12]>/i', $content, $m)) {
-            $title = strip_tags($m[1]);
-        }
+        $title = $this->extractArticleTitle($content, $raw);
 
         if (strpos($content, '<p>') === false && strpos($content, '<h') === false) {
             $content = $this->markdownToHtml($content);
-            if (empty($title) && preg_match('/^#\s+(.+)$/m', $raw, $m)) {
+            if ($title === '' && preg_match('/^#\s+(.+)$/m', $raw, $m)) {
                 $title = trim($m[1]);
             }
         }
 
+        // 若仍无标题，从正文取首段或首行非空文本作为兜底（避免「未命名文章」）
+        if ($title === '') {
+            $title = $this->extractFirstLineAsTitle($content);
+        }
+
         return ['title' => $title, 'content' => $content];
+    }
+
+    /**
+     * Extract title from HTML: first h1/h2/h3 (supports multiline); then Markdown # in raw.
+     */
+    private function extractArticleTitle(string $content, string $raw): string {
+        // 使用 s 修饰符使 . 匹配换行，避免多行标题被漏掉
+        if (preg_match('/<h[123][^>]*>\s*(.*?)\s*<\/h[123]>/is', $content, $m)) {
+            $t = trim(strip_tags($m[1]));
+            if ($t !== '') {
+                return $t;
+            }
+        }
+        if (preg_match('/^#\s+(.+)$/m', $raw, $m)) {
+            $t = trim($m[1]);
+            if ($t !== '') {
+                return $t;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Fallback: first non-empty paragraph or first line of text (max length for title).
+     */
+    private function extractFirstLineAsTitle(string $html): string {
+        $plain = trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $plain = preg_replace('/\s+/u', ' ', $plain);
+        $maxLen = 60;
+        if (mb_strlen($plain) > $maxLen) {
+            return mb_substr($plain, 0, $maxLen) . '…';
+        }
+        return $plain !== '' ? $plain : '';
     }
 
     /**
@@ -532,14 +568,11 @@ class AiService {
     public function parseReview(string $raw): array {
         $content = $this->stripCodeFences($raw);
 
-        $title = '';
-        if (preg_match('/<h[12][^>]*>(.*?)<\/h[12]>/i', $content, $m)) {
-            $title = strip_tags($m[1]);
-        }
+        $title = $this->extractArticleTitle($content, $raw);
 
         if (strpos($content, '<p>') === false && strpos($content, '<h') === false) {
             $content = $this->markdownToHtml($content);
-            if (empty($title) && preg_match('/^#\s+(.+)$/m', $raw, $m)) {
+            if ($title === '' && preg_match('/^#\s+(.+)$/m', $raw, $m)) {
                 $title = trim($m[1]);
             }
         }
@@ -573,12 +606,7 @@ class AiService {
     public function parseContent(string $raw): array {
         $content = $this->stripCodeFences($raw);
 
-        $title = '';
-        if (preg_match('/<h[12][^>]*>(.*?)<\/h[12]>/i', $content, $m)) {
-            $title = strip_tags($m[1]);
-        } elseif (preg_match('/^#\s+(.+)$/m', $raw, $m)) {
-            $title = trim($m[1]);
-        }
+        $title = $this->extractArticleTitle($content, $raw);
 
         if (strpos($content, '<p>') === false && strpos($content, '<h') === false) {
             $content = $this->markdownToHtml($content);
