@@ -11348,7 +11348,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       .product-title { font-size: 22px; }
       .related-grid { grid-template-columns: 1fr 1fr; }
     }
-  `);customElements.define("detail-page",Mo);class Fo extends G{constructor(){super(),this.data=null,this.loading=!0,this.currentPage=1,this.currentCategory=""}connectedCallback(){super.connectedCallback(),this._loadData()}updated(t){t.has("currentPage")&&this._loadData()}async _loadData(){var t;this.loading=!0;try{const i=new URLSearchParams;i.set("page",this.currentPage),this.currentCategory&&i.set("category",this.currentCategory);const o=await fetch(`/api/articles?${i}`);if(this.data=await o.json(),(t=this.data)!=null&&t.seo){const s=this.data.seo;ze({title:s.title,keywords:s.keywords,description:s.description})}}catch(i){console.error("Failed to load articles:",i)}this.loading=!1}_navigate(t){window.msApp?window.msApp.navigate(`/article/${t}`):window.location.href=`/article/${t}`}_changeCategory(t){this.currentCategory=t,this.currentPage=1,window.msApp&&window.msApp.navigate("/articles"),this._loadData()}_goToPage(t){t<1||(window.msApp?window.msApp.navigate(t===1?"/articles":"/articles/"+t):window.location.href=t===1?"/articles":"/articles/"+t,this.scrollIntoView({behavior:"smooth"}))}_formatDate(t){if(!t)return"";const i=new Date(t),s=Math.floor((new Date-i)/864e5);return s===0?"今天":s===1?"昨天":s<7?`${s}天前`:i.toLocaleDateString("zh-CN")}_renderArticleCard(t){return h`
+  `);customElements.define("detail-page",Mo);class Fo extends G{constructor(){super(),this.data=null,this.loading=!0,this.currentPage=1,this.currentCategory=""}connectedCallback(){super.connectedCallback(),this._loadData()}updated(t){t.has("currentPage")&&this._loadData()}async _loadData(){var t;this.loading=!0;try{const i=new URLSearchParams;i.set("page",this.currentPage),this.currentCategory&&i.set("category",this.currentCategory);const o=await fetch(`/api/articles?${i}`);if(this.data=await o.json(),(t=this.data)!=null&&t.seo){const s=this.data.seo;ze({title:s.title,keywords:s.keywords,description:s.description})}}catch(i){console.error("Failed to load articles:",i)}this.loading=!1}_navigate(t){window.msApp?window.msApp.navigate(`/article/${t}`):window.location.href=`/article/${t}`}_changeCategory(t){this.currentCategory=t,this.currentPage=1,window.msApp&&window.msApp.navigate("/articles"),this._loadData()}_goToPage(t){t<1||(window.msApp?window.msApp.navigate(t===1?"/articles":"/articles/"+t):window.location.href=t===1?"/articles":"/articles/"+t,this.scrollIntoView({behavior:"smooth"}))}_formatDate(t){if(!t)return"";const i=new Date(t),s=Math.floor((new Date-i)/864e5);return s===0?"今天":s===1?"昨天":s<7?`${s}天前`:i.toLocaleDateString("zh-CN")}_renderPageNumbers(t,i){const o=[],r=Math.max(2,t-2),n=Math.min(i-1,t+2);o.push(1),r>2&&o.push("...");for(let l=r;l<=n;l++)o.push(l);return n<i-1&&o.push("..."),i>1&&o.push(i),o.map((l,d)=>{if(l==="...")return h`<span class="page-ellipsis" key="ellipsis-${d}">...</span>`;const p=l===1?"/articles":`/articles/${l}`;return h`<a class="page-btn page-link ${l===t?"active":""}" href="${p}" data-nav>${l}</a>`})}_renderArticleCard(t){return h`
       <a class="article-card" @click=${i=>{i.preventDefault(),this._navigate(t.slug)}}>
         ${t.cover_image?h`<img class="article-cover" src="${t.cover_image}" alt="${t.title}" loading="lazy">`:h`<div class="article-cover placeholder"><svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H14a1 1 0 01-1-1V3.5zM8 12h8v1.5H8V12zm0 4h5v1.5H8V16z"/></svg></div>`}
         <div class="article-body">
@@ -11395,9 +11395,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
             <div class="pagination">
               <button class="page-btn" ?disabled=${i.page<=1}
                 @click=${()=>this._goToPage(i.page-1)}>上一页</button>
-              ${Array.from({length:i.total_pages},(r,n)=>n+1).map(r=>h`
-                ${r===1?h`<a class="page-btn page-link ${r===i.page?"active":""}" href="/articles" data-nav>${r}</a>`:h`<a class="page-btn page-link ${r===i.page?"active":""}" href="/articles/${r}" data-nav>${r}</a>`}
-              `)}
+              ${this._renderPageNumbers(i.page,i.total_pages)}
               <button class="page-btn" ?disabled=${i.page>=i.total_pages}
                 @click=${()=>this._goToPage(i.page+1)}>下一页</button>
             </div>
@@ -11521,6 +11519,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       font-size: 14px; color: #666; line-height: 1.6; flex: 1;
       display: -webkit-box; -webkit-line-clamp: 3;
       -webkit-box-orient: vertical; overflow: hidden;
+      word-break: break-word;
     }
     .article-footer {
       display: flex; align-items: center; gap: 16px;
@@ -11566,13 +11565,16 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
     .rec-cover-item:hover .rec-text { color: #0078d4; }
 
     .pagination {
-      display: flex; justify-content: center; gap: 8px;
-      margin-top: 32px;
+      display: flex; justify-content: center; align-items: center; gap: 6px;
+      margin-top: 32px; flex-wrap: wrap;
     }
     .page-btn {
-      padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd;
+      padding: 8px 14px; border-radius: 8px; border: 1px solid #ddd;
       background: #fff; color: #333; cursor: pointer; font-size: 14px;
-      transition: all 0.2s; font-family: inherit;
+      transition: all 0.2s; font-family: inherit; min-width: 40px; text-align: center;
+    }
+    .page-ellipsis {
+      padding: 8px 4px; color: #999; font-size: 14px;
     }
     .page-btn:hover { border-color: #0078d4; color: #0078d4; }
     .page-btn.active {
