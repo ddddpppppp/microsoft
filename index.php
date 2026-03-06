@@ -1,6 +1,7 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
+// 只显示重要错误（排除 Notice / Deprecated / Strict），避免 session_start 等提示刷屏
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+ini_set('display_errors', 1);
 
 define('BASE_PATH', __DIR__);
 // 确保 session 目录可写
@@ -150,8 +151,14 @@ $router->group('/admin', function($r) {
     $r->post('/ai-review-task/run', [\App\Controllers\AdminController::class, 'aiReviewTaskRun']);
 });
 
+// 301 redirect /home to / to consolidate canonical URL
+$router->get('/home', function() {
+    header('Location: /', true, 301);
+    exit;
+});
+
 // SPA frontend routes
-$spaRoutes = ['/', '/home', '/apps', '/games', '/about', '/desk.html'];
+$spaRoutes = ['/', '/apps', '/games', '/about', '/desk.html'];
 foreach ($spaRoutes as $route) {
     $router->get($route, [\App\Controllers\HomeController::class, 'index']);
 }

@@ -121,6 +121,7 @@ class MsProductCard extends LitElement {
     if (!p) return '#';
     if (p.is_own_product && p.custom_url) return p.custom_url;
     if (p.original_url) return p.original_url;
+    if (p.product_id || p.ms_id || p.id) return '/detail/' + (p.product_id || p.ms_id || p.id);
     return '#';
   }
 

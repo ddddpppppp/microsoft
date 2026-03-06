@@ -9,19 +9,19 @@ class AiService {
 
     private static $stylePrompts = [
         'seo' => '你是一个专业的SEO内容创作者，擅长撰写搜索引擎优化的高质量文章。'
-            . '要求：1)标题包含核心关键词，控制在30字以内；2)使用H2/H3标题层级结构；'
+            . '要求：1)标题包含核心关键词，控制在30字以内；2)使用H2/H3标题层级结构，且正文第一个标题必须是文章主标题（不要先输出一段描述再写标题）；'
             . '3)关键词自然分布在首段、小标题和正文中，密度2-5%；4)段落简短（3-5句），使用列表增强可读性；'
             . '5)结尾有总结或行动号召。'
             . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
 
         'media' => '你是一个自媒体爆款内容创作者，擅长撰写有吸引力、高阅读量的文章。'
-            . '要求：1)标题要有吸引力，善用数字、疑问、反差等技巧；2)开头用故事、场景或痛点引入，抓住读者注意力；'
+            . '要求：1)标题要有吸引力，善用数字、疑问、反差等技巧；2)正文第一个标题必须是文章主标题（不要先输出一段描述再写标题），开头可用故事、场景或痛点引入；'
             . '3)语言口语化、有温度、有情感共鸣；4)段落短小，多用短句；5)适当使用排比、对比、悬念等修辞手法；'
             . '6)结尾引导互动（提问或分享）。'
             . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
 
         'geo' => '你是一个GEO（Generative Engine Optimization）内容专家，擅长撰写被AI搜索引擎引用的权威内容。'
-            . '要求：1)文章结构化清晰，用H2/H3组织明确的问答式段落；2)每个要点开头用加粗关键句总结；'
+            . '要求：1)文章结构化清晰，用H2/H3组织明确的问答式段落，正文第一个标题必须是文章主标题（不要先输出一段描述再写标题）；2)每个要点开头用加粗关键句总结；'
             . '3)使用事实、数据、引用来增强E-E-A-T信号（专业性、权威性、可信度）；'
             . '4)回答要直接、精确，适合被AI摘要引用；5)包含定义性语句（"X是指…"格式）；'
             . '6)使用有序/无序列表便于结构化提取。'
@@ -549,16 +549,21 @@ class AiService {
     }
 
     /**
-     * Fallback: first non-empty paragraph or first line of text (max length for title).
+     * Fallback: first sentence or first line only (avoid using intro/description as title).
+     * Prefer short fragment so 开篇描述 doesn't end up in the title field.
      */
     private function extractFirstLineAsTitle(string $html): string {
         $plain = trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $plain = preg_replace('/\s+/u', ' ', $plain);
-        $maxLen = 60;
-        if (mb_strlen($plain) > $maxLen) {
-            return mb_substr($plain, 0, $maxLen) . '…';
+        if ($plain === '') return '';
+
+        // 只取第一句（。.!?!）或第一行，避免整段描述被当标题
+        $maxTitleLen = 40;
+        if (preg_match('/^(.+?[。.!?！？])/u', $plain, $m)) {
+            $first = trim($m[1]);
+            return mb_strlen($first) > $maxTitleLen ? mb_substr($first, 0, $maxTitleLen) . '…' : $first;
         }
-        return $plain !== '' ? $plain : '';
+        return mb_strlen($plain) > $maxTitleLen ? mb_substr($plain, 0, $maxTitleLen) . '…' : $plain;
     }
 
     /**

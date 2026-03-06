@@ -1,7 +1,16 @@
-<div class="mb-3 d-flex justify-content-between align-items-center">
-    <a href="/admin/article/create" class="btn btn-primary"><i class="bi bi-plus"></i> 新建资讯</a>
-    <span class="text-muted">共 <?= $pagination['total'] ?? 0 ?> 篇</span>
-</div>
+<form class="row g-3 mb-3 align-items-center" method="GET" action="/admin/articles">
+    <div class="col-auto">
+        <input type="text" name="search" class="form-control" placeholder="搜索标题..." value="<?= htmlspecialchars($search ?? '') ?>">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">搜索</button>
+        <?php if (!empty($search)): ?><a href="/admin/articles" class="btn btn-secondary">清除</a><?php endif; ?>
+    </div>
+    <div class="col-auto ms-auto d-flex align-items-center gap-2">
+        <span class="text-muted">共 <?= $pagination['total'] ?? 0 ?> 篇</span>
+        <a href="/admin/article/create" class="btn btn-primary"><i class="bi bi-plus"></i> 新建资讯</a>
+    </div>
+</form>
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -56,7 +65,7 @@
             <ul class="pagination justify-content-center mb-0">
                 <?php for ($p = 1; $p <= $pagination['total_pages']; $p++): ?>
                 <li class="page-item <?= $p == $pagination['page'] ? 'active' : '' ?>">
-                    <a class="page-link" href="/admin/articles?page=<?= $p ?>"><?= $p ?></a>
+                    <a class="page-link" href="/admin/articles?page=<?= $p ?>&search=<?= urlencode($search ?? '') ?>"><?= $p ?></a>
                 </li>
                 <?php endfor; ?>
             </ul>

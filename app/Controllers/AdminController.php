@@ -22,7 +22,6 @@ use App\Services\CaptchaService;
 class AdminController extends Controller {
 
     private function requireLogin() {
-        session_start();
         if (empty($_SESSION['admin_id'])) {
             $this->redirect('/admin/login');
         }
@@ -131,7 +130,6 @@ class AdminController extends Controller {
     }
 
     public function loginForm() {
-        session_start();
         if (!empty($_SESSION['admin_id'])) {
             $this->redirect('/admin');
         }
@@ -155,8 +153,6 @@ class AdminController extends Controller {
     }
 
     public function login() {
-        session_start();
-        
         $loginAttempt = new LoginAttemptService();
         $ip = $loginAttempt->getClientIp();
         
@@ -220,7 +216,6 @@ class AdminController extends Controller {
     }
     
     public function captchaRefresh() {
-        session_start();
         header('Content-Type: application/json');
         $captcha = new CaptchaService();
         echo json_encode(['image' => $captcha->render()]);
@@ -228,7 +223,6 @@ class AdminController extends Controller {
     }
 
     public function logout() {
-        session_start();
         session_destroy();
         $this->redirect('/admin/login');
     }
@@ -617,12 +611,20 @@ class AdminController extends Controller {
     public function articles() {
         $this->requireLogin();
         $articleModel = new Article();
-        $page = (int)($_GET['page'] ?? 1);
-        $result = $articleModel->paginate($page, 20);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $search = trim((string)($_GET['search'] ?? ''));
+
+        if ($search !== '') {
+            $result = $articleModel->paginate($page, 20, 'title LIKE ?', ['%' . $search . '%']);
+        } else {
+            $result = $articleModel->paginate($page, 20);
+        }
+
         echo View::renderWithLayout('admin/layout', 'admin/articles', [
             'pageTitle' => '资讯管理',
             'articles' => $result['items'],
-            'pagination' => $result
+            'pagination' => $result,
+            'search' => $search
         ]);
     }
 

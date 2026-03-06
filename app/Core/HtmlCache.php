@@ -171,7 +171,7 @@ class HtmlCache {
             }
         }
 
-        $other = ['/', '/home', '/apps', '/games', '/about'];
+        $other = ['/', '/apps', '/games', '/about'];
         foreach ((new \App\Models\Product())->all('id ASC') as $p) {
             $msId = trim((string)($p['ms_id'] ?? ''));
             $id = (int)($p['id'] ?? 0);
