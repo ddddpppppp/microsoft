@@ -941,7 +941,7 @@ class AdminController extends Controller {
         $title = $parsed['title'] ?: '未命名文章';
         $content = $parsed['content'];
 
-        $slug =  time() . mt_rand(100000, 999999);
+        $slug = AiService::titleToSlug($title);
         $coverImage = 'https://picsum.photos/seed/ai-' . mt_rand(100000, 999999) . '/1200/675';
 
         $summary = mb_substr(strip_tags($content), 0, 200);
@@ -953,7 +953,7 @@ class AdminController extends Controller {
             'cover_image' => $coverImage,
             'summary'     => $summary,
             'category'    => $category,
-            'author'      => '小编',
+            'author'      => AiService::randomAuthor(),
             'keywords'    => $parsed['keywords'] ?? '',
             'meta_description' => $parsed['meta_description'] ?? '',
             'source_task_id' => $sourceTaskId,

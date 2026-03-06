@@ -566,7 +566,9 @@ class HomeController extends Controller {
             $html .= '<img src="' . $h($a['cover_image']) . '" alt="' . $h($a['title']) . '">';
         }
         $html .= '<h1>' . $h($a['title']) . '</h1>';
-        if ($a['author'] ?? '') $html .= '<p>Author: ' . $h($a['author']) . '</p>';
+        if ($a['author'] ?? '') {
+            $html .= '<p>Author: ' . $h($a['author']) . '</p>';
+        }
         if ($a['category'] ?? '') $html .= '<p>Category: ' . $h($a['category']) . '</p>';
         if ($a['created_at'] ?? '') $html .= '<time datetime="' . $h($a['created_at']) . '">' . $h($a['created_at']) . '</time>';
         $html .= '<div>' . ($a['content'] ?? '') . '</div>';

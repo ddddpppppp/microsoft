@@ -211,7 +211,7 @@ class HomePage extends LitElement {
 
     const trendingGames = collections.find(c => c.slug === 'trending-games' || c.name === '热门游戏');
     const trendingApps = collections.find(c => c.slug === 'trending-apps' || c.name === '新潮应用');
-    const remainingCollections = collections.filter(c => c !== trendingGames && c !== trendingApps);
+    const remainingCollections = collections.filter(c => c !== trendingGames && c !== trendingApps && c.slug !== 'creative-apps');
 
     return html`
       <ms-hero-carousel .banners=${heroBanners} .sideCards=${sideCards}></ms-hero-carousel>

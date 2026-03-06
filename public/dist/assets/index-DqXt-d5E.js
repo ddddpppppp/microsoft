@@ -8017,7 +8017,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       margin-left: 1px;
       line-height: 1;
     }
-  `);customElements.define("ms-rating",Co);class zo extends G{constructor(){super(),this.product={}}_getHref(){const t=this.product;return t?t.is_own_product&&t.custom_url?t.custom_url:t.original_url?t.original_url:"#":"#"}_onClick(t){var o;const i=this._getHref();i.startsWith("/")&&(t.preventDefault(),(o=window.msApp)==null||o.navigate(i))}_getIconSrc(){const t=this.product;return t.local_icon?t.local_icon:t.icon_url?t.icon_url:""}_renderPrice(){const t=this.product;if(!t)return"";if(t.price_type==="free"||t.price==="免费"||t.price==="Free"||t.price==="免费下载")return h`<span class="price-free">免费下载</span>`;if(t.price_type==="owned")return h`<span class="owned-badge">已拥有</span>`;if(t.discount_percent&&t.original_price){const i=t.price||t.original_price;return h`
+  `);customElements.define("ms-rating",Co);class zo extends G{constructor(){super(),this.product={}}_getHref(){const t=this.product;return t?t.is_own_product&&t.custom_url?t.custom_url:t.original_url?t.original_url:t.product_id||t.ms_id||t.id?"/detail/"+(t.product_id||t.ms_id||t.id):"#":"#"}_onClick(t){var o;const i=this._getHref();i.startsWith("/")&&(t.preventDefault(),(o=window.msApp)==null||o.navigate(i))}_getIconSrc(){const t=this.product;return t.local_icon?t.local_icon:t.icon_url?t.icon_url:""}_renderPrice(){const t=this.product;if(!t)return"";if(t.price_type==="free"||t.price==="免费"||t.price==="Free"||t.price==="免费下载")return h`<span class="price-free">免费下载</span>`;if(t.price_type==="owned")return h`<span class="owned-badge">已拥有</span>`;if(t.discount_percent&&t.original_price){const i=t.price||t.original_price;return h`
         <span class="price-original">${t.original_price}</span>
         <span class="price-discounted">${i}</span>
         <span class="discount-badge">-${t.discount_percent}%</span>
@@ -9230,7 +9230,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
             .viewAllUrl=${t.view_all_url||""}
             .products=${i}
           ></ms-collection-row>
-        `}}_buildHeroSideCards(t){return t!=null&&t.length?t.length>=3?[t[0],{type:"split",left:t[1],right:t[2]}]:t.slice(0,2):[]}_getCollectionCards(){var i;return(i=this.data)!=null&&i.collections?this.data.collections.filter(o=>o.section_type==="collection_cards"&&o.slug!=="collections"&&o.display_order>10).map(o=>({name:o.name,subtitle:"",link_url:o.view_all_url||"#",image_url:o.hero_image||""})):[]}render(){if(this.loading)return h`<div class="loading"><div class="loading-spinner"></div><br>正在加载...</div>`;if(!this.data)return h`<div class="loading">加载失败，请刷新重试</div>`;const t=this.data.heroBanners||[],i=this.data.featuredBanners||[],o=this._buildHeroSideCards(i),s=(this.data.collections||[]).filter(p=>p.section_type!=="collection_cards").sort((p,g)=>p.display_order-g.display_order),r=this._getCollectionCards(),n=s.find(p=>p.slug==="trending-games"||p.name==="热门游戏"),l=s.find(p=>p.slug==="trending-apps"||p.name==="新潮应用"),d=s.filter(p=>p!==n&&p!==l);return h`
+        `}}_buildHeroSideCards(t){return t!=null&&t.length?t.length>=3?[t[0],{type:"split",left:t[1],right:t[2]}]:t.slice(0,2):[]}_getCollectionCards(){var i;return(i=this.data)!=null&&i.collections?this.data.collections.filter(o=>o.section_type==="collection_cards"&&o.slug!=="collections"&&o.display_order>10).map(o=>({name:o.name,subtitle:"",link_url:o.view_all_url||"#",image_url:o.hero_image||""})):[]}render(){if(this.loading)return h`<div class="loading"><div class="loading-spinner"></div><br>正在加载...</div>`;if(!this.data)return h`<div class="loading">加载失败，请刷新重试</div>`;const t=this.data.heroBanners||[],i=this.data.featuredBanners||[],o=this._buildHeroSideCards(i),s=(this.data.collections||[]).filter(p=>p.section_type!=="collection_cards").sort((p,g)=>p.display_order-g.display_order),r=this._getCollectionCards(),n=s.find(p=>p.slug==="trending-games"||p.name==="热门游戏"),l=s.find(p=>p.slug==="trending-apps"||p.name==="新潮应用"),d=s.filter(p=>p!==n&&p!==l&&p.slug!=="creative-apps");return h`
       <ms-hero-carousel .banners=${t} .sideCards=${o}></ms-hero-carousel>
 
       <div class="section-spacer"></div>
@@ -11502,7 +11502,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       display: flex; align-items: center; justify-content: center;
       color: #bbb; font-size: 40px; background: linear-gradient(135deg, #e8f4fd, #f0f0f0);
     }
-    .article-body { padding: 20px 20px 20px 0; flex: 1; display: flex; flex-direction: column; }
+    .article-body { padding: 20px 20px 20px 0; flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .article-meta {
       display: flex; align-items: center; gap: 12px;
       font-size: 12px; color: #999; margin-bottom: 10px;
@@ -11606,7 +11606,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
             <h1>${t.title}</h1>
             <div class="article-meta">
               ${t.category?h`<span class="cat">${t.category}</span>`:""}
-              ${t.author?h`<span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 110 8 4 4 0 010-8zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM4.25 16.5a5.75 5.75 0 0111.5 0 .75.75 0 01-1.5 0 4.25 4.25 0 00-8.5 0 .75.75 0 01-1.5 0z"/></svg>${t.author}</span>`:""}
+              ${t.author?h`<span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 110 8 4 4 0 010-8zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM4.25 16.5a5.75 5.75 0 0111.5 0 .75.75 0 01-1.5 0 4.25 4.25 0 00-8.5 0 .75.75 0 01-1.5 0z"/></svg>${t.author_url?h`<a href="${t.author_url}" class="author-link">${t.author}</a>`:t.author}</span>`:""}
               <span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a1 1 0 011 1v1h4V3a1 1 0 112 0v1h1.5A2.5 2.5 0 0118 6.5v9a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 012 15.5v-9A2.5 2.5 0 014.5 4H6V3a1 1 0 011-1zm-2.5 6v7.5a1 1 0 001 1h9a1 1 0 001-1V8h-11z"/></svg>${this._formatDate(t.created_at)}</span>
               <span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 4.5C5.813 4.5 2.257 7.473 1.088 9.667a.75.75 0 000 .666C2.257 12.527 5.813 15.5 10 15.5s7.743-2.973 8.912-5.167a.75.75 0 000-.666C17.743 7.473 14.187 4.5 10 4.5zM10 13a3 3 0 110-6 3 3 0 010 6z"/></svg>${t.views||0} 阅读</span>
             </div>
@@ -11702,6 +11702,8 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
     }
     .article-meta span { display: flex; align-items: center; gap: 4px; }
     .meta-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.6; }
+    .author-link { color: #0078d4; text-decoration: none; }
+    .author-link:hover { text-decoration: underline; }
 
     .cover-img {
       width: 100%; border-radius: 12px; margin-bottom: 28px;

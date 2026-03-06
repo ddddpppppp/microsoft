@@ -51,6 +51,8 @@ class ArticleDetailPage extends LitElement {
     }
     .article-meta span { display: flex; align-items: center; gap: 4px; }
     .meta-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.6; }
+    .author-link { color: #0078d4; text-decoration: none; }
+    .author-link:hover { text-decoration: underline; }
 
     .cover-img {
       width: 100%; border-radius: 12px; margin-bottom: 28px;
@@ -254,7 +256,7 @@ class ArticleDetailPage extends LitElement {
             <h1>${article.title}</h1>
             <div class="article-meta">
               ${article.category ? html`<span class="cat">${article.category}</span>` : ''}
-              ${article.author ? html`<span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 110 8 4 4 0 010-8zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM4.25 16.5a5.75 5.75 0 0111.5 0 .75.75 0 01-1.5 0 4.25 4.25 0 00-8.5 0 .75.75 0 01-1.5 0z"/></svg>${article.author}</span>` : ''}
+              ${article.author ? html`<span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 110 8 4 4 0 010-8zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM4.25 16.5a5.75 5.75 0 0111.5 0 .75.75 0 01-1.5 0 4.25 4.25 0 00-8.5 0 .75.75 0 01-1.5 0z"/></svg>${article.author_url ? html`<a href="${article.author_url}" class="author-link">${article.author}</a>` : article.author}</span>` : ''}
               <span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a1 1 0 011 1v1h4V3a1 1 0 112 0v1h1.5A2.5 2.5 0 0118 6.5v9a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 012 15.5v-9A2.5 2.5 0 014.5 4H6V3a1 1 0 011-1zm-2.5 6v7.5a1 1 0 001 1h9a1 1 0 001-1V8h-11z"/></svg>${this._formatDate(article.created_at)}</span>
               <span><svg class="meta-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 4.5C5.813 4.5 2.257 7.473 1.088 9.667a.75.75 0 000 .666C2.257 12.527 5.813 15.5 10 15.5s7.743-2.973 8.912-5.167a.75.75 0 000-.666C17.743 7.473 14.187 4.5 10 4.5zM10 13a3 3 0 110-6 3 3 0 010 6z"/></svg>${article.views || 0} 阅读</span>
             </div>

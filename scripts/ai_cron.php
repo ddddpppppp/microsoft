@@ -235,7 +235,7 @@ function processArticleTask(array $task): void {
     }
     $title = $parsed['title'] ?: '未命名文章';
     $content = $parsed['content'];
-    $slug = time() . mt_rand(1000, 9999);
+    $slug = AiService::titleToSlug($title);
     $summary = mb_substr(strip_tags($content), 0, 200);
 
     $coverImage = 'https://picsum.photos/seed/' . urlencode($slug) . '/800/450';
@@ -246,7 +246,7 @@ function processArticleTask(array $task): void {
         'status'       => $task['auto_publish'] ? 'published' : 'draft',
         'summary'      => $summary,
         'category'     => $task['category'],
-        'author'       => '小编',
+        'author'       => AiService::randomAuthor(),
         'keywords'     => $parsed['keywords'] ?? '',
         'meta_description' => $parsed['meta_description'] ?? '',
         'cover_image'  => $coverImage,

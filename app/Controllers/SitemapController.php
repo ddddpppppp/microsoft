@@ -50,38 +50,39 @@ class SitemapController extends Controller {
         $this->addUrl($urls, $base . '/about', null, 'monthly', '0.6');
         $this->addUrl($urls, $base . '/articles', null, 'daily', '0.9');
 
-        // Articles list pagination
+        // Articles list pagination (only first 5 pages)
         $articleModel = new Article();
         $firstPage = $articleModel->paginatePublished(1, 12, '');
-        $totalPages = (int)($firstPage['total_pages'] ?? 1);
+        $totalPages = min((int)($firstPage['total_pages'] ?? 1), 5);
         for ($p = 2; $p <= $totalPages; $p++) {
             $this->addUrl($urls, $base . '/articles/' . $p, null, 'daily', '0.8');
         }
 
-        // Products
+        // Products — own products only, use friendly alias URL
         $productModel = new Product();
         $products = $productModel->all('id DESC');
         foreach ($products as $p) {
-            $msId = trim((string)($p['ms_id'] ?? ''));
-            $id = (int)($p['id'] ?? 0);
+            if (empty($p['is_own_product'])) continue;
+
             $lastmod = $this->normalizeDate($p['updated_at'] ?? $p['created_at'] ?? null);
-
-            if ($msId !== '') {
-                $this->addUrl($urls, $base . '/detail/' . rawurlencode($msId), $lastmod, 'weekly', '0.8');
-            } elseif ($id > 0) {
-                $this->addUrl($urls, $base . '/detail/' . $id, $lastmod, 'weekly', '0.8');
-            }
-
-            $isOwn = !empty($p['is_own_product']);
             $customUrl = trim((string)($p['custom_url'] ?? ''));
-            if ($isOwn && $customUrl !== '') {
+
+            if ($customUrl !== '') {
                 if ($customUrl[0] !== '/') $customUrl = '/' . $customUrl;
                 $this->addUrl($urls, $base . $customUrl, $lastmod, 'weekly', '0.9');
+            } else {
+                $msId = trim((string)($p['ms_id'] ?? ''));
+                $id = (int)($p['id'] ?? 0);
+                if ($msId !== '') {
+                    $this->addUrl($urls, $base . '/detail/' . rawurlencode($msId), $lastmod, 'weekly', '0.8');
+                } elseif ($id > 0) {
+                    $this->addUrl($urls, $base . '/detail/' . $id, $lastmod, 'weekly', '0.8');
+                }
             }
         }
 
-        // Articles (published only)
-        $articles = $articleModel->getPublished();
+        // Articles — published, newest 1000 only
+        $articles = $articleModel->getPublished(1000);
         foreach ($articles as $a) {
             $slug = trim((string)($a['slug'] ?? ''));
             if ($slug === '') continue;

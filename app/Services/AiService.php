@@ -8,14 +8,32 @@ class AiService {
     private static $defaultSystemPrompt = '你是一个专业的内容创作者。请根据用户要求生成高质量内容。';
 
     private static $stylePrompts = [
-        'seo' => '你是专业SEO作者。用HTML输出（不含<html><body>标签）。'
-            . '正文以H2主标题开头，用H2/H3分层，段落3-5句，善用列表，结尾有总结。',
+        'seo' => '你是一个有多年经验的软件评测博主，文风自然真实，像在跟朋友聊天。用HTML输出（不含<html><body>标签）。'
+            . "\n严格遵守以下写作要求："
+            . "\n1. 正文以H2主标题开头，用H2/H3自然分层。"
+            . "\n2. 禁止模板化开头——不要写「在当今XX时代」「随着XX的发展」「在数字化浪潮中」之类的废话。直接切入主题。"
+            . "\n3. 段落要有信息量：包含具体功能名称、版本号、操作步骤、对比数据等实质内容。禁止写正确但空洞的万金油句子。"
+            . "\n4. 语气自然口语化，可以用第一人称「我」，像真人写的博客文章。允许表达主观好恶。"
+            . "\n5. 每篇文章的结构必须不同——不要每次都是「为什么选官方→怎么下载→功能介绍→总结号召」这一套。根据主题自由组织。"
+            . "\n6. 善用列表和加粗，但不要滥用。结尾不需要「行动号召」，自然收尾即可。"
+            . "\n7. 标题要具体有吸引力，包含产品名或关键信息，不要泛泛而谈。",
 
-        'media' => '你是自媒体爆款作者。用HTML输出（不含<html><body>标签）。'
-            . '正文以H2主标题开头，标题用数字/疑问/反差吸引点击，语言口语化有温度，段落短小，结尾引导互动。',
+        'media' => '你是一个说话直接、有个性的自媒体作者，擅长用犀利观点吸引读者。用HTML输出（不含<html><body>标签）。'
+            . "\n严格遵守以下写作要求："
+            . "\n1. 正文以H2主标题开头，标题用数字/疑问/反差吸引点击。"
+            . "\n2. 禁止AI套话——不要写「在当今XX时代」「不可或缺」「至关重要」。"
+            . "\n3. 开门见山，第一段就抛出核心观点或争议点。"
+            . "\n4. 语言口语化有温度，段落短小（2-3句），像朋友间安利。"
+            . "\n5. 必须包含具体细节：功能名、价格、与竞品的对比等。"
+            . "\n6. 结尾引导互动但要自然，不要生硬地喊「立即下载」。",
 
-        'geo' => '你是GEO内容专家，写被AI搜索引擎引用的权威内容。用HTML输出（不含<html><body>标签）。'
-            . '正文以H2主标题开头，用H2/H3组织问答段落，要点加粗，包含定义性语句和数据，善用列表。',
+        'geo' => '你是一个技术领域的权威知识贡献者，你的内容会被AI搜索引擎引用。用HTML输出（不含<html><body>标签）。'
+            . "\n严格遵守以下写作要求："
+            . "\n1. 正文以H2主标题开头，用H2/H3组织清晰的知识结构。"
+            . "\n2. 每个段落必须包含可引用的事实性陈述：定义、数据、步骤、对比。"
+            . "\n3. 禁止空话套话，每句话都要有信息增量。"
+            . "\n4. 用加粗标注关键概念和数据，善用编号列表。"
+            . "\n5. 语气专业客观但不死板，像百科全书与技术博客的结合。",
     ];
 
     public function __construct() {
@@ -644,6 +662,109 @@ class AiService {
         }
 
         return ['title' => $title, 'content' => $content];
+    }
+
+    // ── Slug & Author generators ────────────────────────────
+
+    private static $authorPool = [
+        '张小磊', '林一凡', '王思远', '陈知行', '李默然',
+        '周文韬', '赵楠楠', '杨晓峰', '刘思源', '吴子涵',
+    ];
+
+    /**
+     * Pick a random author name from the pool.
+     */
+    public static function randomAuthor(): string
+    {
+        return self::$authorPool[array_rand(self::$authorPool)];
+    }
+
+    /**
+     * Generate a URL-friendly slug from a Chinese/English title.
+     * Uses pinyin transliteration for Chinese chars, falls back to timestamp if empty.
+     */
+    public static function titleToSlug(string $title): string
+    {
+        $title = trim(strip_tags($title));
+        if ($title === '') {
+            return time() . '-' . mt_rand(1000, 9999);
+        }
+
+        $base = self::pinyinSlugify($title);
+
+        if ($base === '' || strlen($base) < 3) {
+            $base = time() . '-' . mt_rand(1000, 9999);
+        }
+
+        $base = substr($base, 0, 120);
+
+        $db = \App\Core\Database::getInstance();
+        $slug = $base;
+        $suffix = 0;
+
+        while (true) {
+            $exists = $db->fetch(
+                "SELECT id FROM articles WHERE slug = ? LIMIT 1",
+                [$slug]
+            );
+            if (!$exists) {
+                break;
+            }
+            $suffix++;
+            $slug = $base . '-' . $suffix;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Convert Chinese text to pinyin slug. Simple built-in conversion
+     * covering common chars; no external library needed.
+     */
+    private static function pinyinSlugify(string $text): string
+    {
+        $text = mb_strtolower($text, 'UTF-8');
+
+        $text = preg_replace('/[\x{ff01}-\x{ff5e}]/u', '', $text);
+        $text = preg_replace('/[\x{3000}-\x{303F}\x{2014}\x{2026}\x{00B7}\x{201C}\x{201D}\x{2018}\x{2019}\x{300A}\x{300B}]/u', ' ', $text);
+
+        $result = '';
+        $len = mb_strlen($text, 'UTF-8');
+        for ($i = 0; $i < $len; $i++) {
+            $char = mb_substr($text, $i, 1, 'UTF-8');
+            $ord = mb_ord($char, 'UTF-8');
+
+            if (($ord >= 0x41 && $ord <= 0x7A) || ($ord >= 0x30 && $ord <= 0x39)) {
+                $result .= $char;
+            } elseif ($char === ' ' || $char === '-' || $char === '_') {
+                $result .= '-';
+            } elseif ($ord >= 0x4E00 && $ord <= 0x9FFF) {
+                $py = self::charToPinyin($char);
+                $result .= ($result !== '' && substr($result, -1) !== '-' ? '-' : '') . $py;
+            }
+        }
+
+        $result = preg_replace('/-{2,}/', '-', $result);
+        $result = trim($result, '-');
+
+        return $result;
+    }
+
+    /**
+     * Single Chinese character to pinyin (covers ~3000 most common chars).
+     */
+    private static function charToPinyin(string $char): string
+    {
+        static $map = null;
+        if ($map === null) {
+            $mapFile = defined('BASE_PATH') ? BASE_PATH . '/config/pinyin_map.php' : '';
+            if ($mapFile && file_exists($mapFile)) {
+                $map = require $mapFile;
+            } else {
+                $map = [];
+            }
+        }
+        return isset($map[$char]) ? $map[$char] : 'x';
     }
 
     // ── Internal utilities ─────────────────────────────────

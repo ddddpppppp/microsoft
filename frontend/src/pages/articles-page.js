@@ -91,6 +91,7 @@ class ArticlesPage extends LitElement {
       font-size: 14px; color: #666; line-height: 1.6; flex: 1;
       display: -webkit-box; -webkit-line-clamp: 3;
       -webkit-box-orient: vertical; overflow: hidden;
+      word-break: break-word;
     }
     .article-footer {
       display: flex; align-items: center; gap: 16px;
@@ -136,13 +137,16 @@ class ArticlesPage extends LitElement {
     .rec-cover-item:hover .rec-text { color: #0078d4; }
 
     .pagination {
-      display: flex; justify-content: center; gap: 8px;
-      margin-top: 32px;
+      display: flex; justify-content: center; align-items: center; gap: 6px;
+      margin-top: 32px; flex-wrap: wrap;
     }
     .page-btn {
-      padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd;
+      padding: 8px 14px; border-radius: 8px; border: 1px solid #ddd;
       background: #fff; color: #333; cursor: pointer; font-size: 14px;
-      transition: all 0.2s; font-family: inherit;
+      transition: all 0.2s; font-family: inherit; min-width: 40px; text-align: center;
+    }
+    .page-ellipsis {
+      padding: 8px 4px; color: #999; font-size: 14px;
     }
     .page-btn:hover { border-color: #0078d4; color: #0078d4; }
     .page-btn.active {
@@ -240,6 +244,27 @@ class ArticlesPage extends LitElement {
     return d.toLocaleDateString('zh-CN');
   }
 
+  _renderPageNumbers(current, total) {
+    const pages = [];
+    const delta = 2;
+    const left = Math.max(2, current - delta);
+    const right = Math.min(total - 1, current + delta);
+
+    pages.push(1);
+    if (left > 2) pages.push('...');
+    for (let i = left; i <= right; i++) pages.push(i);
+    if (right < total - 1) pages.push('...');
+    if (total > 1) pages.push(total);
+
+    return pages.map((p, idx) => {
+      if (p === '...') {
+        return html`<span class="page-ellipsis" key="ellipsis-${idx}">...</span>`;
+      }
+      const href = p === 1 ? '/articles' : `/articles/${p}`;
+      return html`<a class="page-btn page-link ${p === current ? 'active' : ''}" href="${href}" data-nav>${p}</a>`;
+    });
+  }
+
   _renderArticleCard(article) {
     return html`
       <a class="article-card" @click=${(e) => { e.preventDefault(); this._navigate(article.slug); }}>
@@ -307,12 +332,7 @@ class ArticlesPage extends LitElement {
             <div class="pagination">
               <button class="page-btn" ?disabled=${pagination.page <= 1}
                 @click=${() => this._goToPage(pagination.page - 1)}>上一页</button>
-              ${Array.from({length: pagination.total_pages}, (_, i) => i + 1).map(p => html`
-                ${p === 1
-                  ? html`<a class="page-btn page-link ${p === pagination.page ? 'active' : ''}" href="/articles" data-nav>${p}</a>`
-                  : html`<a class="page-btn page-link ${p === pagination.page ? 'active' : ''}" href="/articles/${p}" data-nav>${p}</a>`
-                }
-              `)}
+              ${this._renderPageNumbers(pagination.page, pagination.total_pages)}
               <button class="page-btn" ?disabled=${pagination.page >= pagination.total_pages}
                 @click=${() => this._goToPage(pagination.page + 1)}>下一页</button>
             </div>
