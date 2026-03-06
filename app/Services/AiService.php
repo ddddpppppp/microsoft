@@ -505,12 +505,10 @@ class AiService {
     // ── Content parsers ────────────────────────────────────
 
     /**
-     * Parse AI output into title + HTML content (for articles).
-     * Title is taken from first <h1>/<h2>/<h3>, or Markdown # line, or first non-empty text line as fallback.
-     */
-    /**
-     * @param string $raw       AI raw output
-     * @param array  $seoKeywords  Plain-text keywords to populate keywords & meta_description
+     * Parse AI output into title + HTML content + SEO fields.
+     *
+     * @param string $raw          AI raw output
+     * @param array  $seoKeywords  Plain-text keywords for keywords & meta_description fields
      */
     public function parseArticle(string $raw, array $seoKeywords = []): array {
         $content = $this->stripCodeFences($raw);
@@ -519,7 +517,7 @@ class AiService {
 
         if (strpos($content, '<p>') === false && strpos($content, '<h') === false) {
             $content = $this->markdownToHtml($content);
-            if ($title === '' && preg_match('/^#\s+(.+)$/m', $raw, $m)) {
+            if ($title === '' && preg_match('/^#{1,3}\s+(.+)$/m', $raw, $m)) {
                 $title = trim($m[1]);
             }
         }
@@ -530,8 +528,7 @@ class AiService {
 
         $keywords = !empty($seoKeywords) ? implode(',', $seoKeywords) : '';
 
-        $plain = trim(strip_tags($content));
-        $metaDesc = mb_substr($plain, 0, 160);
+        $metaDesc = $this->extractMetaDescription($content, $title);
 
         return [
             'title' => $title,
@@ -545,14 +542,13 @@ class AiService {
      * Extract title from HTML: first h1/h2/h3 (supports multiline); then Markdown # in raw.
      */
     private function extractArticleTitle(string $content, string $raw): string {
-        // 使用 s 修饰符使 . 匹配换行，避免多行标题被漏掉
         if (preg_match('/<h[123][^>]*>\s*(.*?)\s*<\/h[123]>/is', $content, $m)) {
             $t = trim(strip_tags($m[1]));
             if ($t !== '') {
                 return $t;
             }
         }
-        if (preg_match('/^#\s+(.+)$/m', $raw, $m)) {
+        if (preg_match('/^#{1,3}\s+(.+)$/m', $raw, $m)) {
             $t = trim($m[1]);
             if ($t !== '') {
                 return $t;
@@ -577,6 +573,23 @@ class AiService {
             return mb_strlen($first) > $maxTitleLen ? mb_substr($first, 0, $maxTitleLen) . '…' : $first;
         }
         return mb_strlen($plain) > $maxTitleLen ? mb_substr($plain, 0, $maxTitleLen) . '…' : $plain;
+    }
+
+    /**
+     * Extract meta description from HTML content, skipping h1-h3 headings.
+     * Takes the first paragraph of body text, trimmed to 160 chars.
+     */
+    private function extractMetaDescription(string $html, string $title): string {
+        $stripped = preg_replace('/<h[1-3][^>]*>.*?<\/h[1-3]>/is', '', $html);
+        $plain = trim(html_entity_decode(strip_tags($stripped), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $plain = preg_replace('/\s+/u', ' ', $plain);
+        if ($title !== '') {
+            $plain = trim(str_replace($title, '', $plain));
+        }
+        if ($plain === '') {
+            return '';
+        }
+        return mb_substr($plain, 0, 160);
     }
 
     /**
