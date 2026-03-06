@@ -72,7 +72,7 @@ class ArticlesPage extends LitElement {
       display: flex; align-items: center; justify-content: center;
       color: #bbb; font-size: 40px; background: linear-gradient(135deg, #e8f4fd, #f0f0f0);
     }
-    .article-body { padding: 20px 20px 20px 0; flex: 1; display: flex; flex-direction: column; }
+    .article-body { padding: 20px 20px 20px 0; flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .article-meta {
       display: flex; align-items: center; gap: 12px;
       font-size: 12px; color: #999; margin-bottom: 10px;

@@ -858,6 +858,7 @@ class AdminController extends Controller {
             ],
         ];
         $selectedVocabsForValidation = [];
+        $seoKeywords = [];
 
         // Build vocabulary instructions
         $vocabConfig = $vocabConfigRaw ? json_decode($vocabConfigRaw, true) : null;
@@ -882,6 +883,8 @@ class AdminController extends Controller {
             $finalVocabs = array_merge($mustIds, $randomPool);
             $selectedVocabsForValidation = $finalVocabs;
             $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
+            $seoKeywords = AiService::extractSeoKeywords($finalVocabs);
+            $options['seo_keywords'] = $seoKeywords;
         }
 
         // Build title dedup
@@ -905,8 +908,8 @@ class AdminController extends Controller {
             if (!$result['success']) {
                 break;
             }
-            $parsed = $aiService->parseArticle($result['content']);
-            break; // 不再做关键词次数校验与重试
+            $parsed = $aiService->parseArticle($result['content'], $seoKeywords);
+            break;
             // --- 关键词次数校验功能（已注释）---
             // if (empty($selectedVocabsForValidation)) {
             //     break;
@@ -933,7 +936,7 @@ class AdminController extends Controller {
             exit;
         }
         if (!$parsed) {
-            $parsed = $aiService->parseArticle($result['content']);
+            $parsed = $aiService->parseArticle($result['content'], $seoKeywords);
         }
         $title = $parsed['title'] ?: '未命名文章';
         $content = $parsed['content'];
@@ -951,6 +954,8 @@ class AdminController extends Controller {
             'summary'     => $summary,
             'category'    => $category,
             'author'      => '小编',
+            'keywords'    => $parsed['keywords'] ?? '',
+            'meta_description' => $parsed['meta_description'] ?? '',
             'source_task_id' => $sourceTaskId,
         ]);
 

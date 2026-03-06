@@ -155,6 +155,7 @@ function processArticleTask(array $task): void {
         ],
     ];
     $selectedVocabsForValidation = [];
+    $seoKeywords = [];
 
     // Build vocabulary instructions
     $vocabConfigRaw = $task['vocabulary_config'] ?? '';
@@ -178,6 +179,8 @@ function processArticleTask(array $task): void {
         $finalVocabs = array_merge($mustVocabs, $randomPool);
         $selectedVocabsForValidation = $finalVocabs;
         $options['vocab_instructions'] = AiService::buildVocabInstructions($finalVocabs);
+        $seoKeywords = AiService::extractSeoKeywords($finalVocabs);
+        $options['seo_keywords'] = $seoKeywords;
     }
 
     // Title dedup by task id
@@ -199,8 +202,8 @@ function processArticleTask(array $task): void {
         if (!$result['success']) {
             break;
         }
-        $parsed = $aiService->parseArticle($result['content']);
-        break; // 不再做关键词次数校验与重试
+        $parsed = $aiService->parseArticle($result['content'], $seoKeywords);
+        break;
         // --- 关键词次数校验功能（已注释）---
         // if (empty($selectedVocabsForValidation)) {
         //     break;
@@ -228,7 +231,7 @@ function processArticleTask(array $task): void {
     }
 
     if (!$parsed) {
-        $parsed = $aiService->parseArticle($result['content']);
+        $parsed = $aiService->parseArticle($result['content'], $seoKeywords);
     }
     $title = $parsed['title'] ?: '未命名文章';
     $content = $parsed['content'];
@@ -244,6 +247,8 @@ function processArticleTask(array $task): void {
         'summary'      => $summary,
         'category'     => $task['category'],
         'author'       => '小编',
+        'keywords'     => $parsed['keywords'] ?? '',
+        'meta_description' => $parsed['meta_description'] ?? '',
         'cover_image'  => $coverImage,
         'source_task_id' => $taskId,
     ]);

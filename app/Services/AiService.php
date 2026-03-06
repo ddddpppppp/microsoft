@@ -8,24 +8,14 @@ class AiService {
     private static $defaultSystemPrompt = '你是一个专业的内容创作者。请根据用户要求生成高质量内容。';
 
     private static $stylePrompts = [
-        'seo' => '你是一个专业的SEO内容创作者，擅长撰写搜索引擎优化的高质量文章。'
-            . '要求：1)标题包含核心关键词，控制在30字以内；2)使用H2/H3标题层级结构，且正文第一个标题必须是文章主标题（不要先输出一段描述再写标题）；'
-            . '3)关键词自然分布在首段、小标题和正文中，密度2-5%；4)段落简短（3-5句），使用列表增强可读性；'
-            . '5)结尾有总结或行动号召。'
-            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+        'seo' => '你是专业SEO作者。用HTML输出（不含<html><body>标签）。'
+            . '正文以H2主标题开头，用H2/H3分层，段落3-5句，善用列表，结尾有总结。',
 
-        'media' => '你是一个自媒体爆款内容创作者，擅长撰写有吸引力、高阅读量的文章。'
-            . '要求：1)标题要有吸引力，善用数字、疑问、反差等技巧；2)正文第一个标题必须是文章主标题（不要先输出一段描述再写标题），开头可用故事、场景或痛点引入；'
-            . '3)语言口语化、有温度、有情感共鸣；4)段落短小，多用短句；5)适当使用排比、对比、悬念等修辞手法；'
-            . '6)结尾引导互动（提问或分享）。'
-            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+        'media' => '你是自媒体爆款作者。用HTML输出（不含<html><body>标签）。'
+            . '正文以H2主标题开头，标题用数字/疑问/反差吸引点击，语言口语化有温度，段落短小，结尾引导互动。',
 
-        'geo' => '你是一个GEO（Generative Engine Optimization）内容专家，擅长撰写被AI搜索引擎引用的权威内容。'
-            . '要求：1)文章结构化清晰，用H2/H3组织明确的问答式段落，正文第一个标题必须是文章主标题（不要先输出一段描述再写标题）；2)每个要点开头用加粗关键句总结；'
-            . '3)使用事实、数据、引用来增强E-E-A-T信号（专业性、权威性、可信度）；'
-            . '4)回答要直接、精确，适合被AI摘要引用；5)包含定义性语句（"X是指…"格式）；'
-            . '6)使用有序/无序列表便于结构化提取。'
-            . '请用HTML格式输出文章正文（不需要包含<html><body>等外层标签）。',
+        'geo' => '你是GEO内容专家，写被AI搜索引擎引用的权威内容。用HTML输出（不含<html><body>标签）。'
+            . '正文以H2主标题开头，用H2/H3组织问答段落，要点加粗，包含定义性语句和数据，善用列表。',
     ];
 
     public function __construct() {
@@ -118,12 +108,18 @@ class AiService {
         unset($options['article_style']);
 
         if (!empty($options['vocab_instructions'])) {
-            $prompt .= "\n\n" . $options['vocab_instructions']
-                . "\n\n严格限制：只允许使用上面明确给出的关键词和URL来生成超链接；不要新增任何未给出的<a href>链接。";
+            $prompt .= "\n\n" . $options['vocab_instructions'];
             unset($options['vocab_instructions']);
         } else {
-            $prompt .= "\n\n严格限制：本次未指定关键词链接，请不要输出任何<a href>超链接标签。";
+            $prompt .= "\n\n不要输出任何<a href>超链接标签。";
         }
+
+        if (!empty($options['seo_keywords'])) {
+            $kwList = implode('、', $options['seo_keywords']);
+            $prompt .= "\n\nSEO要求：文章标题和正文需自然融入以下关键词：{$kwList}";
+            unset($options['seo_keywords']);
+        }
+
         if (!empty($options['title_dedup'])) {
             $prompt .= "\n\n" . $options['title_dedup'];
             unset($options['title_dedup']);
@@ -245,26 +241,30 @@ class AiService {
     public static function buildVocabInstructions(array $vocabs): string {
         if (empty($vocabs)) return '';
 
-        $lines = [
-            "请严格按以下关键词约束写作：",
-            "1) 只允许使用下方给出的关键词，不得新增其他关键词；",
-            "2) 每个关键词出现次数必须与要求完全一致（不多不少）；",
-            "3) 若关键词配置了URL，则该关键词每次出现都使用<a href=\"URL\">关键词</a>；未配置URL则用纯文本；",
-            "4) 未被选中的词汇禁止出现。"
-        ];
+        $lines = ["关键词约束（只用下方给出的词，有URL的用<a href>，无URL用纯文本，不要新增链接）："];
         foreach ($vocabs as $v) {
             $word = $v['word'] ?? '';
             $url = $v['url'] ?? '';
-            $must = !empty($v['must']);
             $repeat = (int)($v['repeat'] ?? 1);
-            $tag = $must ? '【必须出现】' : '';
-            $linkNote = $url ? "（链接: {$url}）" : '（无链接，以纯文本出现）';
-            $lines[] = "- \"{$word}\"{$linkNote} {$tag}在文章中必须恰好出现 {$repeat} 次";
+            $link = $url ? " -> {$url}" : '';
+            $lines[] = "- \"{$word}\"{$link} ×{$repeat}";
         }
 
-        $lines[] = "\n注意：如无法满足次数约束，请重写全文后再输出，禁止先输出不合规结果。";
-
         return implode("\n", $lines);
+    }
+
+    /**
+     * Extract plain-text keywords (without URL) from vocab list for SEO title/description.
+     */
+    public static function extractSeoKeywords(array $vocabs): array {
+        $keywords = [];
+        foreach ($vocabs as $v) {
+            $word = trim((string)($v['word'] ?? ''));
+            if ($word !== '') {
+                $keywords[] = $word;
+            }
+        }
+        return array_unique($keywords);
     }
 
     /**
@@ -508,7 +508,11 @@ class AiService {
      * Parse AI output into title + HTML content (for articles).
      * Title is taken from first <h1>/<h2>/<h3>, or Markdown # line, or first non-empty text line as fallback.
      */
-    public function parseArticle(string $raw): array {
+    /**
+     * @param string $raw       AI raw output
+     * @param array  $seoKeywords  Plain-text keywords to populate keywords & meta_description
+     */
+    public function parseArticle(string $raw, array $seoKeywords = []): array {
         $content = $this->stripCodeFences($raw);
 
         $title = $this->extractArticleTitle($content, $raw);
@@ -520,12 +524,21 @@ class AiService {
             }
         }
 
-        // 若仍无标题，从正文取首段或首行非空文本作为兜底（避免「未命名文章」）
         if ($title === '') {
             $title = $this->extractFirstLineAsTitle($content);
         }
 
-        return ['title' => $title, 'content' => $content];
+        $keywords = !empty($seoKeywords) ? implode(',', $seoKeywords) : '';
+
+        $plain = trim(strip_tags($content));
+        $metaDesc = mb_substr($plain, 0, 160);
+
+        return [
+            'title' => $title,
+            'content' => $content,
+            'keywords' => $keywords,
+            'meta_description' => $metaDesc,
+        ];
     }
 
     /**
