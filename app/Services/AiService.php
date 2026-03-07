@@ -679,23 +679,27 @@ class AiService {
         return self::$authorPool[array_rand(self::$authorPool)];
     }
 
+    /** Redis 键 article_slug_id 的初始值，首次使用时若 key 未设置则设为该值，下次 INCR 即从 1122 起 */
+    private static $articleSlugIdInitial = 1121;
+
     /**
-     * 生成 slug：时间戳 + 编号。编号从 Redis 键 article_slug_id 自增取得（查一次涨一次），当前约 1122。
-     * Redis 不可用时回退为时间戳+随机数。格式示例：1738820123-1123
+     * 生成 slug：时间戳 + 编号。编号从 Redis 键 article_slug_id 自增取得（查一次涨一次）。
+     * 若 article_slug_id 尚未设置，会先设为 1121，首次得到 1122。Redis 不可用时回退为时间戳+随机数。
+     * 格式示例：1738820123-1123
      */
     public static function titleToSlug(string $title): string
     {
         $redis = \App\Core\Redis::getInstance();
         if ($redis->isAvailable()) {
-            $id = $redis->incr('article_slug_id');
-            if (!$id) {
-                $id = 1122;
+            if (!$redis->exists('article_slug_id')) {
+                $redis->set('article_slug_id', self::$articleSlugIdInitial);
             }
+            $id = $redis->incr('article_slug_id');
             if ($id > 0) {
-                return  $id;
+                return time() . '-' . $id;
             }
         }
-        return time();
+        return time() . '-' . mt_rand(10000, 99999);
     }
 
     /**
