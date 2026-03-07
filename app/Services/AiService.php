@@ -696,10 +696,10 @@ class AiService {
             }
             $id = $redis->incr('article_slug_id');
             if ($id > 0) {
-                return time() . '-' . $id;
+                return $id;
             }
         }
-        return time() . '-' . mt_rand(10000, 99999);
+        return time();
     }
 
     /**
