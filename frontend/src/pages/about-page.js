@@ -5,16 +5,23 @@ class AboutPage extends LitElement {
   static styles = css`
     :host {
       display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       padding-bottom: 60px;
       color: #131316;
       background: #fff;
+      overflow-x: hidden;
+      box-sizing: border-box;
     }
 
     /* Hero section - two-column layout */
     .hero {
+      width: 100%;
       max-width: 1200px;
       margin: 0 auto;
       padding: 80px 40px 60px;
+      box-sizing: border-box;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 48px;
@@ -273,7 +280,7 @@ class AboutPage extends LitElement {
     @media (max-width: 900px) {
       .hero {
         grid-template-columns: 1fr;
-        padding: 48px 16px 40px;
+        padding: 48px 24px 40px;
         text-align: center;
       }
       .hero::before {
@@ -289,10 +296,10 @@ class AboutPage extends LitElement {
         font-size: 36px;
       }
       .icon-carousel {
-        padding: 48px 16px;
+        padding: 48px 24px;
       }
       .panels {
-        padding: 0 16px 24px;
+        padding: 0 24px 24px;
       }
       .panel {
         grid-template-columns: 1fr;
@@ -305,8 +312,21 @@ class AboutPage extends LitElement {
         order: -1;
       }
       .footnotes {
-        padding: 0 16px;
+        padding: 0 24px;
       }
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 32px 16px 28px; }
+      .hero-title { font-size: 28px; }
+      .hero-btn { padding: 10px 20px; font-size: 13px; }
+      .hero-visual-inner { max-width: 100%; }
+      .icon-carousel { padding: 32px 16px; }
+      .carousel-title { font-size: 20px; }
+      .panels { padding: 0 16px 16px; }
+      .panel { padding: 24px 16px; gap: 20px; }
+      .panel-title { font-size: 22px; }
+      .footnotes { padding: 0 16px; }
+      .footnote { font-size: 12px; }
     }
   `;
 

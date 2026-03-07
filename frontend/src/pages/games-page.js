@@ -17,7 +17,14 @@ class GamesPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 48px; background: transparent; }
+    :host {
+      display: block;
+      padding-bottom: 48px;
+      background: transparent;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -39,10 +46,12 @@ class GamesPage extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 48px;
+      width: 100%;
       max-width: var(--ms-content-max-width, 1600px);
       margin: 48px auto 0;
       padding: 0 38px;
       box-sizing: border-box;
+      min-width: 0;
     }
 
     /* === dual-collection-layout: flex 50/50 with 12px gap === */
@@ -273,14 +282,20 @@ class GamesPage extends LitElement {
       line-height: 1.4;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1200px) {
       .dual-collection-layout { flex-direction: column; }
       .gamepass-banner a { padding: 20px 24px; }
     }
     @media (max-width: 900px) {
-      .product-collections-wrap { margin: 48px 20px 0; padding: 0 20px; }
+      .product-collections-wrap { margin: 32px 24px 0; padding: 0 24px; gap: 32px; }
       .topgames-grid { grid-template-columns: 1fr; }
       .gamepass-icons-scatter { width: 140px; height: 80px; }
+    }
+    @media (max-width: 600px) {
+      .product-collections-wrap { margin: 24px 16px 0; padding: 0 16px; gap: 24px; }
+      .gamepass-banner a { padding: 16px; flex-direction: column; text-align: center; }
+      .gamepass-icons-area { align-self: center; }
+      :host { padding-bottom: 24px; }
     }
   `;
 

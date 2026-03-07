@@ -796,6 +796,7 @@ return array (
   '抬' => 'tai',
   '扶' => 'fu',
   '搬' => 'ban',
+  '砖' => 'zhuan',
   '搭' => 'da',
   '递' => 'di',
   '传' => 'chuan',

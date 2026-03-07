@@ -4,14 +4,18 @@ class MsFooter extends LitElement {
   static styles = css`
     :host {
       display: block;
+      width: 100%;
+      min-width: 0;
       background: #f2f2f2;
       margin-top: 48px;
     }
     .footer-content {
+      width: 100%;
       max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
       padding: 36px 38px 16px;
       box-sizing: border-box;
+      min-width: 0;
     }
     .footer-columns {
       display: grid;
@@ -68,11 +72,13 @@ class MsFooter extends LitElement {
       color: #1a1a1a;
     }
     @media (max-width: 900px) {
-      .footer-columns { grid-template-columns: repeat(2, 1fr); }
+      .footer-content { padding: 28px 24px 16px; }
+      .footer-columns { grid-template-columns: repeat(2, 1fr); gap: 24px; }
     }
     @media (max-width: 600px) {
-      .footer-content { padding: 24px 12px 12px; }
-      .footer-columns { grid-template-columns: 1fr; gap: 20px; }
+      .footer-content { padding: 24px 16px 12px; }
+      .footer-columns { grid-template-columns: 1fr; gap: 20px; margin-bottom: 24px; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 16px; }
     }
   `;
 

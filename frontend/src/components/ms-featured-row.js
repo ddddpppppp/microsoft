@@ -86,8 +86,10 @@ class MsFeaturedRow extends LitElement {
       .banner-card { height: 140px; }
     }
     @media (max-width: 600px) {
-      :host { padding: 0 12px; }
-      .banner-card { height: 130px; }
+      :host { padding: 0 16px; }
+      .banner-card { height: 120px; }
+      .banner-content { padding: 12px 14px; }
+      .banner-title { font-size: 14px; }
     }
   `;
 

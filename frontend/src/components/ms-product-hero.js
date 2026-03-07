@@ -146,6 +146,14 @@ class MsProductHero extends LitElement {
       font-size: 9px; font-weight: 700; color: #fff;
       background: #c42b1c; padding: 1px 4px; border-radius: 2px; line-height: 1.2;
     }
+
+    @media (max-width: 600px) {
+      :host { min-width: 0; width: 100%; max-width: 100%; }
+      a.product.product-wide-details { flex-direction: column; min-height: auto; }
+      .container { flex-direction: column; }
+      .image-wrap { width: 100%; min-width: 0; min-height: 120px; }
+      .details { padding: 12px 14px; }
+    }
   `;
 
   constructor() {

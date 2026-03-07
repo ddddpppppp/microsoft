@@ -10,7 +10,13 @@ class ArticleDetailPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 64px; }
+    :host {
+      display: block;
+      padding-bottom: 64px;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
     .loading {
       text-align: center; padding: 120px 0;
       color: #767676; font-size: 16px;
@@ -24,12 +30,24 @@ class ArticleDetailPage extends LitElement {
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .container {
-      max-width: 1200px; margin: 0 auto; padding: 40px 24px;
-      display: grid; grid-template-columns: 1fr 320px; gap: 40px;
+      max-width: 1200px;
+      width: 100%;
+      min-width: 0;
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 40px;
+      box-sizing: border-box;
     }
+    .main-content { min-width: 0; }
 
     .breadcrumb {
-      font-size: 13px; color: #999; margin-bottom: 16px;
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 16px;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
     .breadcrumb a {
       color: #0078d4; text-decoration: none;
@@ -70,7 +88,11 @@ class ArticleDetailPage extends LitElement {
     .article-content h3 { font-size: 18px; }
     .article-content p { margin: 0 0 16px; }
     .article-content img {
-      max-width: 100%; border-radius: 8px; margin: 16px 0;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 16px 0;
+      display: block;
     }
     .article-content a { color: #0078d4; }
     .article-content blockquote {
@@ -84,8 +106,14 @@ class ArticleDetailPage extends LitElement {
     }
     .article-content li { margin-bottom: 8px; }
     .article-content pre {
-      background: #1e1e1e; color: #d4d4d4; padding: 16px;
-      border-radius: 8px; overflow-x: auto; font-size: 14px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 14px;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .article-content code {
       background: #f0f0f0; padding: 2px 6px;
@@ -164,11 +192,31 @@ class ArticleDetailPage extends LitElement {
     .back-link:hover { background: #e0e0e0; }
 
     @media (max-width: 900px) {
-      .container { grid-template-columns: 1fr; }
+      .container { grid-template-columns: 1fr; gap: 32px; padding: 32px 24px; }
+      .sidebar { order: 2; min-width: 0; }
     }
     @media (max-width: 600px) {
-      .article-header h1 { font-size: 22px; }
-      .container { padding: 24px 16px; }
+      .container { padding: 24px 16px; gap: 24px; }
+      .article-header h1 { font-size: 22px; line-height: 1.35; }
+      .article-meta { gap: 10px; font-size: 12px; }
+      .article-meta .cat { padding: 2px 10px; font-size: 11px; }
+      .cover-img { max-height: 220px; margin-bottom: 20px; }
+      .article-content { font-size: 15px; line-height: 1.75; }
+      .article-content h2 { font-size: 20px; margin: 24px 0 12px; }
+      .article-content h3 { font-size: 17px; margin: 20px 0 10px; }
+      .article-content blockquote { padding: 10px 16px; margin: 12px 0; }
+      .article-content pre { padding: 12px; font-size: 13px; }
+      .article-tags { margin-top: 24px; padding-top: 20px; gap: 6px; }
+      .tag { padding: 3px 12px; font-size: 12px; }
+      .sidebar-card { padding: 16px; }
+      .sidebar-card h4 { font-size: 15px; margin-bottom: 12px; padding-bottom: 10px; }
+      .related-item { gap: 10px; padding: 8px 0; }
+      .related-item img { width: 72px; height: 50px; }
+      .related-item .r-title { font-size: 13px; }
+      .popular-item { padding: 8px 0; }
+      .popular-num { font-size: 18px; width: 24px; }
+      .popular-item .p-title { font-size: 13px; }
+      .back-link { display: flex; justify-content: center; width: 100%; margin-top: 24px; padding: 12px 20px; box-sizing: border-box; }
     }
   `;
 

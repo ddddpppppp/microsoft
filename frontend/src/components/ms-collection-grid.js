@@ -193,9 +193,9 @@ class MsCollectionGrid extends LitElement {
     .badge-discount { background: #c42b1c; color: #fff; }
 
     @media (max-width: 600px) {
-      :host { padding: 0 12px; }
-      .card { min-width: 148px; width: 148px; }
-      .card-title { font-size: 16px; }
+      :host { padding: 0 16px; }
+      .card { min-width: 140px; width: 140px; }
+      .scroll-btn { min-width: 44px; min-height: 44px; }
     }
   `;
 

@@ -109,6 +109,11 @@ class MsProductCard extends LitElement {
       color: #0067b8;
       font-weight: 500;
     }
+
+    @media (max-width: 600px) {
+      :host { min-width: 0; width: 50%; box-sizing: border-box; }
+      .card { min-height: 44px; }
+    }
   `;
 
   constructor() {

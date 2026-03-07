@@ -239,6 +239,13 @@ class MsCollectionRow extends LitElement {
       text-decoration: line-through;
       font-weight: 400;
     }
+
+    @media (max-width: 600px) {
+      .scroll-container { padding: 8px 4px; -webkit-overflow-scrolling: touch; }
+      .scroll-btn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+      .two-col-card { padding: 20px 16px; }
+      .two-col-grid { grid-template-columns: 1fr; }
+    }
   `;
 
   constructor() {

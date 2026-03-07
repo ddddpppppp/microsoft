@@ -141,6 +141,10 @@ class MsProductTallCard extends LitElement {
       color: #fff;
       font-weight: 600;
     }
+
+    @media (max-width: 600px) {
+      :host { min-width: 0; width: 150px; }
+    }
   `;
 
   constructor() {

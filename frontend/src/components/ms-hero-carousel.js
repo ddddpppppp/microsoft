@@ -357,24 +357,31 @@ class MsHeroCarousel extends LitElement {
     .side-card-half .side-card-title { font-size: 14px; }
     .side-card-half .side-card-subtitle { font-size: 11px; margin-top: 0; }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 900px) {
       .hero-layout {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
+        padding: 0 24px;
       }
-      .carousel-wrapper { grid-column: 1; grid-row: 1; }
-      .hero-layout .side-cards { grid-column: 1; grid-row: 2; height: auto; flex-direction: row; }
+      .carousel-wrapper { grid-column: 1; grid-row: 1; min-width: 0; }
+      .hero-layout .side-cards { grid-column: 1; grid-row: 2; height: auto; flex-direction: row; flex-wrap: wrap; gap: 8px; min-width: 0; }
       .hero-layout .dots-row { grid-column: 1; grid-row: 3; }
-      .side-card { min-height: 150px; }
+      .side-card { min-height: 150px; min-width: 0; flex: 1 1 200px; }
+      .side-card.side-card-split { min-width: 0; flex: 1 1 200px; }
     }
-    @media (max-width: 700px) {
-      :host { padding: 8px 12px 0; }
-      .hero-layout { grid-template-rows: 240px auto auto; }
-      .carousel { height: 240px; }
-      .slide { padding: 0 24px 32px; }
-      .title { font-size: 20px; }
-      .side-cards { flex-direction: column; }
-      .side-card { min-height: 110px; }
+    @media (max-width: 600px) {
+      :host { padding: 8px 0 0; }
+      .hero-layout { padding: 0 16px; grid-template-rows: 220px auto auto; gap: 8px; min-width: 0; }
+      .carousel-wrapper { min-width: 0; }
+      .carousel { height: 220px; }
+      .slide { padding: 0 16px 24px; }
+      .slide-content { max-width: 100%; }
+      .title { font-size: 18px; }
+      .subtitle { font-size: 12px; }
+      .side-cards { flex-direction: column; flex-wrap: nowrap; }
+      .side-card { min-height: 100px; min-width: 0; width: 100%; flex: none; }
+      .side-card.side-card-split { width: 100%; grid-template-columns: 1fr 1fr; }
+      .arrow { width: 32px; height: 32px; }
     }
   `;
 

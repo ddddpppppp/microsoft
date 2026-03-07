@@ -259,7 +259,17 @@ class AiService {
     public static function buildVocabInstructions(array $vocabs): string {
         if (empty($vocabs)) return '';
 
-        $lines = ["关键词约束（只用下方给出的词，有URL的用<a href>，无URL用纯文本，不要新增链接）："];
+        $lines = [
+            "关键词约束（严格执行）：",
+            "1. 只允许使用下方给出的关键词，不要创造近义词或替换词。",
+            "2. 有 URL 的关键词，必须严格写成 <a href=\"URL\">关键词</a>，锚文本必须与关键词逐字一致。",
+            "3. 禁止把有 URL 的关键词替换成其它锚文本（例如“Microsoft Store”等）。",
+            "4. 禁止新增任何未在清单中的 <a href> 链接。",
+            "5. 每个关键词出现次数必须严格等于给定次数（×N），不能多也不能少。",
+            "6. 输出前请自检一次以上规则。",
+            "",
+            "关键词清单：",
+        ];
         foreach ($vocabs as $v) {
             $word = $v['word'] ?? '';
             $url = $v['url'] ?? '';
@@ -293,6 +303,68 @@ class AiService {
         $mismatches = [];
         $words = [];
         $rawCounts = [];
+        $expectedUrlToWords = [];
+        $expectedWordToRepeat = [];
+        $actualLinkedWordCounts = [];
+
+        foreach ($vocabs as $v) {
+            $word = trim((string)($v['word'] ?? ''));
+            if ($word === '') {
+                continue;
+            }
+            $expectedWordToRepeat[$word] = max(1, (int)($v['repeat'] ?? 1));
+            $url = trim((string)($v['url'] ?? ''));
+            if ($url !== '') {
+                if (!isset($expectedUrlToWords[$url])) {
+                    $expectedUrlToWords[$url] = [];
+                }
+                $expectedUrlToWords[$url][] = $word;
+                $actualLinkedWordCounts[$word] = 0;
+            }
+        }
+
+        if (!empty($expectedUrlToWords)) {
+            if (preg_match_all('/<a\b[^>]*href\s*=\s*(["\'])(.*?)\1[^>]*>(.*?)<\/a>/is', $content, $anchorMatches, PREG_SET_ORDER)) {
+                foreach ($anchorMatches as $anchor) {
+                    $href = trim(html_entity_decode($anchor[2] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    $anchorText = self::normalizeHtmlText($anchor[3] ?? '');
+
+                    if (!isset($expectedUrlToWords[$href])) {
+                        $mismatches[] = [
+                            'type' => 'unexpected_link',
+                            'href' => $href,
+                            'text' => $anchorText,
+                        ];
+                        continue;
+                    }
+
+                    $allowedWords = $expectedUrlToWords[$href];
+                    if (!in_array($anchorText, $allowedWords, true)) {
+                        $mismatches[] = [
+                            'type' => 'anchor_text_mismatch',
+                            'href' => $href,
+                            'expected_words' => $allowedWords,
+                            'actual_text' => $anchorText,
+                        ];
+                        continue;
+                    }
+
+                    $actualLinkedWordCounts[$anchorText] = ($actualLinkedWordCounts[$anchorText] ?? 0) + 1;
+                }
+            }
+
+            foreach ($actualLinkedWordCounts as $word => $count) {
+                $expected = (int)($expectedWordToRepeat[$word] ?? 0);
+                if ($count !== $expected) {
+                    $mismatches[] = [
+                        'type' => 'linked_word_count_mismatch',
+                        'word' => $word,
+                        'expected' => $expected,
+                        'actual' => $count,
+                    ];
+                }
+            }
+        }
 
         foreach ($vocabs as $v) {
             $word = trim((string)($v['word'] ?? ''));
@@ -347,6 +419,12 @@ class AiService {
             }
         }
         return max(0, $actual);
+    }
+
+    private static function normalizeHtmlText(string $html): string {
+        $plain = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $plain = preg_replace('/\s+/u', ' ', $plain);
+        return trim((string)$plain);
     }
 
     /**
@@ -680,8 +758,14 @@ class AiService {
     }
 
     /**
+     * Max length for slug (chars). Truncate at last segment boundary to keep readable.
+     */
+    private static $maxSlugLength = 20;
+
+    /**
      * Generate a URL-friendly slug from a Chinese/English title.
      * Uses pinyin transliteration for Chinese chars, falls back to timestamp if empty.
+     * Slug is capped at ~50 chars, truncated at last complete pinyin segment.
      */
     public static function titleToSlug(string $title): string
     {
@@ -692,11 +776,17 @@ class AiService {
 
         $base = self::pinyinSlugify($title);
 
-        if ($base === '' || strlen($base) < 3) {
+        // 拼音结果过短、为空、或全是未收录字（曾为 x-x-x-...）时，用时间戳
+        if ($base === '' || strlen($base) < 5 || preg_match('/^(x-)*x$/i', $base)) {
             $base = time() . '-' . mt_rand(1000, 9999);
         }
 
-        $base = substr($base, 0, 120);
+        // 过长时在最后一个完整段处截断，避免截断拼音中间
+        if (strlen($base) > self::$maxSlugLength) {
+            $cut = substr($base, 0, self::$maxSlugLength);
+            $lastDash = strrpos($cut, '-');
+            $base = $lastDash > 20 ? substr($base, 0, $lastDash) : substr($base, 0, self::$maxSlugLength);
+        }
 
         $db = \App\Core\Database::getInstance();
         $slug = $base;
@@ -752,19 +842,33 @@ class AiService {
 
     /**
      * Single Chinese character to pinyin (covers ~3000 most common chars).
+     * Returns empty string for unmapped chars so slug is not filled with "x".
+     * Loads map from BASE_PATH or, if not set, relative to this file (app/Services -> ../../config).
      */
     private static function charToPinyin(string $char): string
     {
         static $map = null;
         if ($map === null) {
-            $mapFile = defined('BASE_PATH') ? BASE_PATH . '/config/pinyin_map.php' : '';
-            if ($mapFile && file_exists($mapFile)) {
+            $mapFile = null;
+            if (defined('BASE_PATH')) {
+                $candidate = BASE_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'pinyin_map.php';
+                if (@is_readable($candidate)) {
+                    $mapFile = $candidate;
+                }
+            }
+            if ($mapFile === null && @is_readable(__DIR__ . '/../../config/pinyin_map.php')) {
+                $mapFile = realpath(__DIR__ . '/../../config/pinyin_map.php') ?: __DIR__ . '/../../config/pinyin_map.php';
+            }
+            if ($mapFile !== null) {
                 $map = require $mapFile;
+                if (!is_array($map)) {
+                    $map = [];
+                }
             } else {
                 $map = [];
             }
         }
-        return isset($map[$char]) ? $map[$char] : 'x';
+        return isset($map[$char]) ? $map[$char] : '';
     }
 
     // ── Internal utilities ─────────────────────────────────

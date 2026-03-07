@@ -15,7 +15,14 @@ class DetailPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 60px; background: #fff; }
+    :host {
+      display: block;
+      padding-bottom: 60px;
+      background: #fff;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
 
     .loading {
       text-align: center;
@@ -48,8 +55,11 @@ class DetailPage extends LitElement {
 
     .detail-container {
       max-width: 1200px;
+      width: 100%;
+      min-width: 0;
       margin: 0 auto;
       padding: 32px 40px;
+      box-sizing: border-box;
     }
 
     .detail-header {
@@ -198,9 +208,10 @@ class DetailPage extends LitElement {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 48px;
+      min-width: 0;
     }
 
-    .main-content { }
+    .main-content { min-width: 0; }
 
     .section {
       margin-bottom: 32px;
@@ -286,6 +297,7 @@ class DetailPage extends LitElement {
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       padding: 8px 0;
+      min-width: 0;
     }
     .screenshots-row::-webkit-scrollbar {
       display: none;
@@ -393,20 +405,22 @@ class DetailPage extends LitElement {
     .reviews-bars {
       flex: 1;
       max-width: 300px;
+      min-width: 0;
     }
     .bar-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       font-size: 13px;
       color: #767676;
     }
     .bar-label {
-      width: 20px;
+      width: 28px;
       text-align: right;
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 2px;
     }
     .bar-label svg {
@@ -416,10 +430,17 @@ class DetailPage extends LitElement {
     }
     .bar-track {
       flex: 1;
+      min-width: 0;
       height: 8px;
       background: #eee;
       border-radius: 4px;
       overflow: hidden;
+    }
+    .bar-count {
+      width: 24px;
+      text-align: right;
+      font-size: 12px;
+      color: #999;
     }
     .bar-fill {
       height: 100%;
@@ -634,16 +655,129 @@ class DetailPage extends LitElement {
     }
 
     @media (max-width: 900px) {
-      .detail-header { flex-direction: column; align-items: center; text-align: center; }
-      .detail-body { grid-template-columns: 1fr; }
-      .detail-container { padding: 24px 16px; }
-      .action-row { flex-wrap: wrap; justify-content: center; }
+      .detail-header { flex-direction: column; align-items: flex-start; text-align: left; gap: 24px; }
+      .detail-body { grid-template-columns: 1fr; gap: 32px; }
+      .detail-container { padding: 24px 24px; }
+      .action-row { flex-wrap: wrap; justify-content: flex-start; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
+      .sidebar { min-width: 0; }
     }
     @media (max-width: 600px) {
-      .product-icon { width: 96px; height: 96px; }
-      .product-title { font-size: 22px; }
-      .related-grid { grid-template-columns: 1fr 1fr; }
+      .detail-container {
+        padding: 24px 20px;
+        background: #f8f9fa;
+      }
+      .detail-header {
+        gap: 20px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .product-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 16px;
+      }
+      .product-title {
+        font-size: 24px;
+        line-height: 1.3;
+        word-break: break-word;
+      }
+      .product-developer { font-size: 13px; }
+      .product-category { font-size: 12px; }
+      .rating-row { gap: 8px; margin-bottom: 14px; }
+      .action-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        width: 100%;
+      }
+      .get-btn {
+        min-height: 44px;
+        justify-content: center;
+        padding: 10px 28px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+      .store-btn {
+        min-height: 40px;
+        justify-content: center;
+        padding: 8px 20px;
+        border-radius: 8px;
+      }
+      .age-rating { margin-top: 14px; }
+      .age-rating-icon { width: 28px; height: 28px; }
+      .section {
+        margin-bottom: 28px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .section h3 { font-size: 18px; margin-bottom: 12px; }
+      .screenshots {
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .screenshots h3 { font-size: 18px; margin-bottom: 12px; }
+      .screenshots-row { padding: 8px 0; gap: 12px; }
+      .screenshot-img {
+        width: 280px;
+        height: 196px;
+        border-radius: 8px;
+      }
+      .screenshots-nav.prev { left: 12px; width: 40px; height: 40px; }
+      .screenshots-nav.next { right: 12px; width: 40px; height: 40px; }
+      .screenshots-nav svg { width: 20px; height: 20px; }
+      .whats-new { padding: 14px; border-radius: 8px; }
+      .whats-new-text { font-size: 14px; }
+      .reviews-section {
+        margin-top: 28px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .reviews-header h3 { font-size: 18px; margin-bottom: 16px; }
+      .reviews-summary { flex-direction: column; gap: 16px; margin-bottom: 20px; }
+      .reviews-score .big-number { font-size: 42px; }
+      .reviews-score .total-count { font-size: 12px; }
+      .reviews-bars { max-width: none; }
+      .bar-row { font-size: 12px; }
+      .reviews-list { max-height: 320px; }
+      .review-item { padding: 12px 0; }
+      .review-title, .review-content { font-size: 13px; }
+      .review-meta { font-size: 11px; gap: 12px; }
+      .info-card {
+        padding: 20px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+      .info-card h4 { font-size: 14px; margin-bottom: 12px; }
+      .info-row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 0; font-size: 13px; }
+      .info-value { text-align: left; max-width: none; }
+      .related-section {
+        margin-top: 28px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      .related-header h3 { font-size: 18px; }
+      .related-grid { grid-template-columns: 1fr; gap: 14px; }
+      .related-card {
+        padding: 16px;
+        border-radius: 12px;
+      }
+      .related-icon { width: 60px; height: 60px; margin-bottom: 12px; border-radius: 12px; }
+      .related-title { font-size: 14px; }
+      .related-meta, .related-category, .related-price { font-size: 12px; }
     }
   `;
 
@@ -863,7 +997,7 @@ class DetailPage extends LitElement {
     if (!this.reviewData || !this.reviewData.reviews || this.reviewData.reviews.length === 0) return '';
 
     const { reviews, avg_rating, total_count, distribution } = this.reviewData;
-    const maxDist = Math.max(...Object.values(distribution), 1);
+    const dist = distribution && typeof distribution === 'object' ? distribution : {};
     const starSvg = html`<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
 
     return html`
@@ -878,12 +1012,13 @@ class DetailPage extends LitElement {
           </div>
           <div class="reviews-bars">
             ${[5,4,3,2,1].map(star => {
-              const cnt = distribution[star] || 0;
-              const pct = (cnt / maxDist) * 100;
+              const cnt = Number(dist[star] ?? dist[String(star)] ?? 0);
+              const pct = total_count > 0 ? (cnt / total_count) * 100 : 0;
               return html`
                 <div class="bar-row">
                   <div class="bar-label">${star}${starSvg}</div>
                   <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+                  <span class="bar-count">${cnt}</span>
                 </div>
               `;
             })}

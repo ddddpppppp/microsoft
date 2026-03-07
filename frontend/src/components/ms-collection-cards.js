@@ -125,8 +125,9 @@ class MsCollectionCards extends LitElement {
       text-overflow: ellipsis;
     }
     @media (max-width: 600px) {
-      :host { padding: 0 12px; }
-      .card { width: 200px; height: 116px; }
+      :host { padding: 0 16px; }
+      .card { width: 200px; height: 116px; min-width: 180px; }
+      .scroll-btn { width: 36px; height: 36px; min-width: 44px; min-height: 44px; }
     }
   `;
 

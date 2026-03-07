@@ -195,34 +195,38 @@ function processArticleTask(array $task): void {
 
     $result = null;
     $parsed = null;
-    $maxAttempts = 1; // 关键词次数校验已注释，不再重试
+    $maxAttempts = empty($selectedVocabsForValidation) ? 1 : 3;
     $retryPrompt = $task['prompt'];
+    $lastMismatch = [];
     for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
         $result = $aiService->generateArticle($task['ai_provider'], $retryPrompt, $options);
         if (!$result['success']) {
             break;
         }
         $parsed = $aiService->parseArticle($result['content'], $seoKeywords);
-        break;
-        // --- 关键词次数校验功能（已注释）---
-        // if (empty($selectedVocabsForValidation)) {
-        //     break;
-        // }
-        // $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
-        // if (!empty($validation['ok'])) {
-        //     break;
-        // }
-        // $lastMismatch = $validation['mismatches'] ?? [];
-        // if ($attempt < $maxAttempts) {
-        //     $retryPrompt = $task['prompt'] . "\n\n上一次输出未满足关键词次数约束，请严格修正后重写全文：\n"
-        //         . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
-        // } else {
-        //     $result = [
-        //         'success' => false,
-        //         'error' => '关键词次数约束未满足，请重试',
-        //         'mismatches' => $lastMismatch,
-        //     ];
-        // }
+
+        if (empty($selectedVocabsForValidation)) {
+            break;
+        }
+
+        $validation = AiService::validateVocabUsage($parsed['content'], $selectedVocabsForValidation);
+        if (!empty($validation['ok'])) {
+            break;
+        }
+
+        $lastMismatch = $validation['mismatches'] ?? [];
+        if ($attempt < $maxAttempts) {
+            $retryPrompt = $task['prompt']
+                . "\n\n上一次输出未满足关键词约束，请严格修正后重写全文（仅输出HTML正文）：\n"
+                . json_encode($lastMismatch, JSON_UNESCAPED_UNICODE);
+            continue;
+        }
+
+        $result = [
+            'success' => false,
+            'error' => '关键词约束未满足，请重试',
+            'mismatches' => $lastMismatch,
+        ];
     }
 
     if (!$result['success']) {

@@ -23,11 +23,24 @@ class MsApp extends LitElement {
   static styles = css`
     :host {
       display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       min-height: 100vh;
       background: var(--ms-page-bg);
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+    main {
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
     }
     .page-slot {
       display: none;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
     }
     .page-slot.active {
       display: block;

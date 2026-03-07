@@ -86,6 +86,11 @@ class MsProductSocialCard extends LitElement {
       overflow: hidden;
       margin: 0;
     }
+
+    @media (max-width: 600px) {
+      :host { min-width: 0; width: 100%; max-width: 100%; }
+      a.card { height: 280px; }
+    }
   `;
 
   constructor() {

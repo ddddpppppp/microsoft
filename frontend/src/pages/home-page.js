@@ -13,7 +13,14 @@ class HomePage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 48px; background: transparent; }
+    :host {
+      display: block;
+      padding-bottom: 48px;
+      background: transparent;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -32,11 +39,13 @@ class HomePage extends LitElement {
     @keyframes spin { to { transform: rotate(360deg); } }
     .section-spacer { height: 48px; }
     .two-column-wrap {
+      width: 100%;
       max-width: var(--ms-content-max-width, 1600px);
       margin: 0 auto;
       padding: 0 38px;
       background: transparent;
       box-sizing: border-box;
+      min-width: 0;
     }
     .two-column {
       display: grid;
@@ -52,15 +61,23 @@ class HomePage extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 48px;
+      width: 100%;
       max-width: var(--ms-content-max-width, 1600px);
       margin: 48px auto 0;
       padding: 0 38px;
       box-sizing: border-box;
+      min-width: 0;
     }
     @media (max-width: 900px) {
-      .two-column-wrap { padding: 0 20px; }
+      .two-column-wrap { padding: 0 24px; }
       .two-column { grid-template-columns: 1fr; gap: 0; }
-      .product-collections-wrap { margin: 48px 20px 0; padding: 0 20px; }
+      .product-collections-wrap { margin: 32px 24px 0; padding: 0 24px; gap: 32px; }
+    }
+    @media (max-width: 600px) {
+      .two-column-wrap { padding: 0 16px; }
+      .product-collections-wrap { margin: 24px 16px 0; padding: 0 16px; gap: 24px; }
+      .section-spacer { height: 24px; }
+      :host { padding-bottom: 24px; }
     }
   `;
 

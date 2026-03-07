@@ -10,7 +10,13 @@ class ArticlesPage extends LitElement {
   };
 
   static styles = css`
-    :host { display: block; padding-bottom: 64px; }
+    :host {
+      display: block;
+      padding-bottom: 64px;
+      max-width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
     .loading {
       text-align: center; padding: 120px 0;
       color: #767676; font-size: 16px;
@@ -40,6 +46,7 @@ class ArticlesPage extends LitElement {
 
     .categories {
       display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
+      min-width: 0;
     }
     .cat-tag {
       display: inline-block; padding: 6px 16px; border-radius: 20px;
@@ -158,7 +165,7 @@ class ArticlesPage extends LitElement {
     }
 
     @media (max-width: 900px) {
-      .container { grid-template-columns: 1fr; }
+      .container { grid-template-columns: 1fr; gap: 32px; }
       .article-card { flex-direction: column; }
       .article-cover { width: 100%; min-height: 200px; }
       .article-body { padding: 16px; }
@@ -166,6 +173,14 @@ class ArticlesPage extends LitElement {
     @media (max-width: 600px) {
       .page-banner h1 { font-size: 24px; }
       .page-banner { padding: 32px 0 24px; margin-bottom: 24px; }
+      .page-banner .inner { padding: 0 16px; max-width: 100%; }
+      .container { padding: 0 16px; gap: 24px; max-width: 100%; min-width: 0; }
+      .categories { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+      .cat-tag { flex-shrink: 0; }
+      .article-cover { min-height: 160px; }
+      .article-body h3 { font-size: 16px; }
+      .pagination { margin-top: 24px; }
+      .page-btn { min-width: 44px; min-height: 44px; }
     }
   `;
 
