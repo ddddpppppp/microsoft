@@ -680,7 +680,7 @@ class AiService {
     }
 
     /** Redis 键 article_slug_id 的初始值，首次使用时若 key 未设置则设为该值，下次 INCR 即从 1122 起 */
-    private static $articleSlugIdInitial = 1121;
+    private static $articleSlugIdInitial = 1122;
 
     /**
      * 生成 slug：时间戳 + 编号。编号从 Redis 键 article_slug_id 自增取得（查一次涨一次）。
