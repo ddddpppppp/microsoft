@@ -63,13 +63,11 @@ $ssrNav .= '<a href="/about" style="color:#005FB8;text-decoration:none">关于</
 $ssrNav .= '</nav>';
 
 $seoContent = $seo_content ?? '';
-$ssrBlock = $ssrNav;
+$ssrBlock = '<noscript>' . "\n" . $ssrNav;
 if ($seoContent) {
     $ssrBlock .= "\n" . $seoContent;
 }
-
-$hideScript = '<script>customElements.whenDefined("ms-app").then(function(){var e=document.getElementById("seo-content");if(e)e.style.display="none";var n=document.getElementById("ssr-nav");if(n)n.style.display="none";})</script>';
-$ssrBlock .= "\n" . $hideScript;
+$ssrBlock .= "\n" . '</noscript>';
 
 $distHtml = str_replace('<ms-app>', $ssrBlock . "\n<ms-app>", $distHtml);
 
