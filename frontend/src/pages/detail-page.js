@@ -23,6 +23,12 @@ class DetailPage extends LitElement {
       overflow-x: hidden;
       box-sizing: border-box;
     }
+    :host * {
+      box-sizing: border-box;
+    }
+    img {
+      max-width: 100%;
+    }
 
     .loading {
       text-align: center;
@@ -64,6 +70,7 @@ class DetailPage extends LitElement {
 
     .detail-header {
       display: flex;
+      align-items: flex-start;
       gap: 32px;
       margin-bottom: 40px;
     }
@@ -74,6 +81,7 @@ class DetailPage extends LitElement {
       object-fit: cover;
       flex-shrink: 0;
       background: #f3f3f3;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     }
     .header-info {
       flex: 1;
@@ -94,6 +102,7 @@ class DetailPage extends LitElement {
     .product-developer a {
       color: inherit;
       text-decoration: none;
+      overflow-wrap: anywhere;
     }
     .product-developer a:hover { text-decoration: underline; }
     .product-category {
@@ -104,6 +113,7 @@ class DetailPage extends LitElement {
     .rating-row {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -119,6 +129,7 @@ class DetailPage extends LitElement {
     .action-row {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 16px;
       margin-bottom: 12px;
     }
@@ -126,6 +137,7 @@ class DetailPage extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-height: 44px;
       padding: 10px 40px;
       border-radius: 6px;
       border: none;
@@ -143,6 +155,7 @@ class DetailPage extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-height: 44px;
       padding: 10px 20px;
       border-radius: 6px;
       border: 1px solid #0067b8;
@@ -181,6 +194,7 @@ class DetailPage extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      align-self: center;
       background: #107c10;
       color: #fff;
       font-size: 12px;
@@ -192,6 +206,7 @@ class DetailPage extends LitElement {
     .age-rating {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
       margin-top: 8px;
     }
@@ -207,6 +222,7 @@ class DetailPage extends LitElement {
     .detail-body {
       display: grid;
       grid-template-columns: 2fr 1fr;
+      align-items: start;
       gap: 48px;
       min-width: 0;
     }
@@ -215,6 +231,7 @@ class DetailPage extends LitElement {
 
     .section {
       margin-bottom: 32px;
+      min-width: 0;
     }
     .section h3 {
       font-size: 18px;
@@ -224,8 +241,10 @@ class DetailPage extends LitElement {
     }
     .description-wrapper {
       position: relative;
+      min-width: 0;
     }
     .description-text {
+      position: relative;
       font-size: 14px;
       color: #616161;
       line-height: 1.8;
@@ -252,6 +271,7 @@ class DetailPage extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      min-height: 40px;
       margin-top: 8px;
       padding: 0;
       border: none;
@@ -287,6 +307,7 @@ class DetailPage extends LitElement {
     }
     .screenshots-container {
       position: relative;
+      isolation: isolate;
     }
     .screenshots-row {
       display: flex;
@@ -298,6 +319,8 @@ class DetailPage extends LitElement {
       scrollbar-width: none;
       padding: 8px 0;
       min-width: 0;
+      scroll-snap-type: x proximity;
+      scroll-padding-inline: 4px;
     }
     .screenshots-row::-webkit-scrollbar {
       display: none;
@@ -308,14 +331,11 @@ class DetailPage extends LitElement {
       border-radius: 8px;
       object-fit: contain;
       flex-shrink: 0;
+      scroll-snap-align: start;
       background: #f3f3f3;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .screenshot-img:hover { 
-      transform: scale(1.02); 
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     }
     .screenshots-nav {
       position: absolute;
@@ -356,6 +376,18 @@ class DetailPage extends LitElement {
       opacity: 0;
       pointer-events: none;
     }
+    .screenshots-nav:focus-visible,
+    .get-btn:focus-visible,
+    .store-btn:focus-visible,
+    .description-toggle:focus-visible,
+    .reviews-toggle:focus-visible,
+    .info-link:focus-visible,
+    .related-card:focus-visible,
+    .product-developer a:focus-visible,
+    .not-found a:focus-visible {
+      outline: 3px solid rgba(0, 103, 184, 0.28);
+      outline-offset: 3px;
+    }
 
     .whats-new {
       background: #f9f9f9;
@@ -386,6 +418,8 @@ class DetailPage extends LitElement {
       gap: 32px;
       margin-bottom: 24px;
       align-items: flex-start;
+      min-width: 0;
+      width: 100%;
     }
     .reviews-score {
       text-align: center;
@@ -404,6 +438,7 @@ class DetailPage extends LitElement {
     }
     .reviews-bars {
       flex: 1;
+      width: 100%;
       max-width: 300px;
       min-width: 0;
     }
@@ -479,6 +514,7 @@ class DetailPage extends LitElement {
     .review-top {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 6px;
     }
@@ -497,6 +533,7 @@ class DetailPage extends LitElement {
       font-size: 14px;
       font-weight: 600;
       color: #131316;
+      overflow-wrap: anywhere;
     }
     .review-content {
       font-size: 14px;
@@ -507,6 +544,7 @@ class DetailPage extends LitElement {
     .review-meta {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 16px;
       font-size: 12px;
       color: #999;
@@ -517,6 +555,7 @@ class DetailPage extends LitElement {
     .review-helpful {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 12px;
     }
     .review-helpful span {
@@ -533,6 +572,7 @@ class DetailPage extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      min-height: 40px;
       margin-top: 12px;
       padding: 0;
       border: none;
@@ -554,7 +594,7 @@ class DetailPage extends LitElement {
       transform: rotate(180deg);
     }
 
-    .sidebar { }
+    .sidebar { min-width: 0; }
     .info-card {
       background: #f3f3f3;
       border-radius: 10px;
@@ -570,17 +610,20 @@ class DetailPage extends LitElement {
     .info-row {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
       padding: 6px 0;
       font-size: 13px;
       border-bottom: 1px solid #e5e5e5;
     }
     .info-row:last-child { border-bottom: none; }
     .info-label { color: #767676; }
-    .info-value { color: #131316; text-align: right; max-width: 60%; }
+    .info-value { color: #131316; text-align: right; max-width: 60%; overflow-wrap: anywhere; }
     .info-link {
       color: #0078d4;
       text-decoration: none;
       font-size: 13px;
+      overflow-wrap: anywhere;
     }
     .info-link:hover { text-decoration: underline; }
 
@@ -609,15 +652,13 @@ class DetailPage extends LitElement {
     .related-card {
       display: flex;
       flex-direction: column;
+      min-width: 0;
       padding: 16px;
       border-radius: 12px;
+      border: 1px solid #ececec;
       background: #f9f9f9;
       text-decoration: none;
       transition: all 0.2s;
-    }
-    .related-card:hover {
-      background: #f0f0f0;
-      transform: translateY(-2px);
     }
     .related-icon {
       width: 64px;
@@ -633,8 +674,10 @@ class DetailPage extends LitElement {
       color: #131316;
       margin-bottom: 4px;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
     }
     .related-meta {
       display: flex;
@@ -647,6 +690,7 @@ class DetailPage extends LitElement {
     .related-category {
       font-size: 12px;
       color: #767676;
+      word-break: break-word;
     }
     .related-price {
       font-size: 13px;
@@ -654,130 +698,243 @@ class DetailPage extends LitElement {
       font-weight: 500;
     }
 
+    @media (max-width: 1200px) and (min-width: 601px) {
+      .related-grid {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 6px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+      }
+      .related-card {
+        flex: 0 0 188px;
+        scroll-snap-align: start;
+      }
+    }
+
+    @media (hover: hover) {
+      .screenshot-img:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      }
+      .related-card:hover {
+        background: #f0f0f0;
+        transform: translateY(-2px);
+      }
+    }
+
     @media (max-width: 900px) {
-      .detail-header { flex-direction: column; align-items: flex-start; text-align: left; gap: 24px; }
+      .detail-container { padding: 28px 24px; }
+      .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .product-icon {
+        width: 112px;
+        height: 112px;
+      }
       .detail-body { grid-template-columns: 1fr; gap: 32px; }
-      .detail-container { padding: 24px 24px; }
-      .action-row { flex-wrap: wrap; justify-content: flex-start; }
+      .action-row { justify-content: flex-start; }
+      .screenshots-nav.prev { left: 8px; }
+      .screenshots-nav.next { right: 8px; }
+      .reviews-summary { gap: 24px; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .sidebar { min-width: 0; }
     }
     @media (max-width: 600px) {
       .detail-container {
-        padding: 24px 20px;
+        padding: 16px 14px 28px;
         background: #f8f9fa;
       }
       .detail-header {
-        gap: 20px;
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-        padding: 20px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding: 18px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       }
       .product-icon {
         width: 96px;
         height: 96px;
         border-radius: 16px;
       }
+      .header-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
       .product-title {
-        font-size: 24px;
-        line-height: 1.3;
+        font-size: 22px;
+        line-height: 1.25;
         word-break: break-word;
       }
       .product-developer { font-size: 13px; }
-      .product-category { font-size: 12px; }
-      .rating-row { gap: 8px; margin-bottom: 14px; }
+      .product-category { font-size: 12px; margin-bottom: 8px; }
+      .rating-row { gap: 8px; margin-bottom: 12px; }
       .action-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+        gap: 10px;
         width: 100%;
+        margin-bottom: 10px;
       }
       .get-btn {
-        min-height: 44px;
+        width: 100%;
+        min-height: 48px;
         justify-content: center;
-        padding: 10px 28px;
+        padding: 12px 20px;
         font-size: 15px;
         font-weight: 600;
-        border-radius: 8px;
+        border-radius: 10px;
       }
-      .store-btn {
-        min-height: 40px;
-        justify-content: center;
-        padding: 8px 20px;
-        border-radius: 8px;
+      .gamepass-badge {
+        align-self: flex-start;
+        padding: 5px 10px;
       }
-      .age-rating { margin-top: 14px; }
+      .age-rating {
+        margin-top: 10px;
+        gap: 6px;
+      }
       .age-rating-icon { width: 28px; height: 28px; }
       .section {
-        margin-bottom: 28px;
-        padding: 20px;
+        margin-bottom: 20px;
+        padding: 18px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       }
-      .section h3 { font-size: 18px; margin-bottom: 12px; }
+      .section h3 { font-size: 17px; margin-bottom: 10px; }
       .screenshots {
-        padding: 20px;
+        padding: 18px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       }
-      .screenshots h3 { font-size: 18px; margin-bottom: 12px; }
-      .screenshots-row { padding: 8px 0; gap: 12px; }
+      .screenshots h3 { font-size: 17px; margin-bottom: 10px; }
+      .screenshots-row { padding: 4px 0 8px; gap: 10px; }
       .screenshot-img {
-        width: 280px;
-        height: 196px;
+        width: min(280px, calc(100vw - 72px));
+        height: auto;
+        aspect-ratio: 16 / 10;
         border-radius: 8px;
       }
-      .screenshots-nav.prev { left: 12px; width: 40px; height: 40px; }
-      .screenshots-nav.next { right: 12px; width: 40px; height: 40px; }
-      .screenshots-nav svg { width: 20px; height: 20px; }
+      .screenshots-nav { display: none; }
       .whats-new { padding: 14px; border-radius: 8px; }
       .whats-new-text { font-size: 14px; }
       .reviews-section {
-        margin-top: 28px;
-        padding: 20px;
+        margin-top: 20px;
+        padding: 18px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       }
-      .reviews-header h3 { font-size: 18px; margin-bottom: 16px; }
+      .reviews-header h3 { font-size: 17px; margin-bottom: 14px; }
       .reviews-summary { flex-direction: column; gap: 16px; margin-bottom: 20px; }
-      .reviews-score .big-number { font-size: 42px; }
+      .reviews-score {
+        text-align: left;
+        min-width: 0;
+      }
+      .reviews-score .big-number { font-size: 40px; }
       .reviews-score .total-count { font-size: 12px; }
-      .reviews-bars { max-width: none; }
-      .bar-row { font-size: 12px; }
+      .reviews-bars {
+        max-width: none;
+        width: 100%;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) 28px;
+        align-items: center;
+        font-size: 12px;
+      }
+      .bar-label {
+        width: auto;
+      }
+      .bar-count {
+        width: auto;
+      }
       .reviews-list { max-height: 320px; }
       .review-item { padding: 12px 0; }
       .review-title, .review-content { font-size: 13px; }
-      .review-meta { font-size: 11px; gap: 12px; }
+      .review-meta { font-size: 11px; gap: 10px 12px; }
       .info-card {
-        padding: 20px;
-        margin-bottom: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
         border-radius: 12px;
       }
       .info-card h4 { font-size: 14px; margin-bottom: 12px; }
-      .info-row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 0; font-size: 13px; }
+      .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 8px 0;
+        font-size: 13px;
+      }
       .info-value { text-align: left; max-width: none; }
       .related-section {
-        margin-top: 28px;
-        padding: 20px;
+        margin-top: 20px;
+        padding: 18px;
         background: #fff;
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       }
-      .related-header h3 { font-size: 18px; }
+      .related-header {
+        margin-bottom: 14px;
+      }
+      .related-header h3 { font-size: 17px; }
       .related-grid { grid-template-columns: 1fr; gap: 14px; }
       .related-card {
-        padding: 16px;
+        padding: 14px;
         border-radius: 12px;
       }
       .related-icon { width: 60px; height: 60px; margin-bottom: 12px; border-radius: 12px; }
       .related-title { font-size: 14px; }
       .related-meta, .related-category, .related-price { font-size: 12px; }
+    }
+    @media (max-width: 420px) {
+      .detail-container {
+        padding: 12px 12px 24px;
+      }
+      .detail-header {
+        grid-template-columns: 1fr;
+      }
+      .product-icon {
+        width: 88px;
+        height: 88px;
+      }
+      .product-title {
+        font-size: 20px;
+      }
+      .screenshot-img {
+        width: calc(100vw - 52px);
+      }
+      .reviews-score .big-number {
+        font-size: 36px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .loading-spinner,
+      .description-text,
+      .description-toggle svg,
+      .screenshots-row,
+      .screenshot-img,
+      .screenshots-nav,
+      .bar-fill,
+      .reviews-list,
+      .reviews-toggle svg,
+      .related-card,
+      .get-btn,
+      .store-btn {
+        animation: none;
+        transition: none;
+        scroll-behavior: auto;
+      }
     }
   `;
 
@@ -807,8 +964,9 @@ class DetailPage extends LitElement {
   _scrollScreenshots(direction) {
     const row = this.shadowRoot.querySelector('.screenshots-row');
     if (!row) return;
-    const scrollAmount = 320;
-    row.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const scrollAmount = Math.max(240, Math.round(row.clientWidth * 0.85));
+    row.scrollBy({ left: direction * scrollAmount, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
   }
 
   _toggleDescription() {
@@ -1048,7 +1206,7 @@ class DetailPage extends LitElement {
             })}
           </div>
           ${reviews.length > 2 ? html`
-            <button class="reviews-toggle ${this.reviewsExpanded ? 'expanded' : ''}" @click=${this._toggleReviews}>
+            <button type="button" class="reviews-toggle ${this.reviewsExpanded ? 'expanded' : ''}" @click=${this._toggleReviews}>
               ${this.reviewsExpanded ? '收起' : '阅读更多信息'}
               <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
             </button>
@@ -1148,13 +1306,13 @@ class DetailPage extends LitElement {
           <div class="screenshots">
             <h3>屏幕截图</h3>
             <div class="screenshots-container">
-              <button class="screenshots-nav prev" @click=${this._scrollScreenshots.bind(this, -1)}>
+              <button type="button" class="screenshots-nav prev" aria-label="查看上一张截图" @click=${this._scrollScreenshots.bind(this, -1)}>
                 <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
               </button>
               <div class="screenshots-row" @scroll=${this._onScreenshotsScroll}>
                 ${screenshots.map(s => html`<img class="screenshot-img" src=${s.url} alt=${s.alt || displayTitle} loading="lazy" />`)}
               </div>
-              <button class="screenshots-nav next" @click=${this._scrollScreenshots.bind(this, 1)}>
+              <button type="button" class="screenshots-nav next" aria-label="查看下一张截图" @click=${this._scrollScreenshots.bind(this, 1)}>
                 <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
               </button>
             </div>
@@ -1167,7 +1325,7 @@ class DetailPage extends LitElement {
               <h3>说明</h3>
               <div class="description-wrapper">
                 <div class="description-text ${this.descriptionExpanded ? 'expanded' : ''}">${p.description || '暂无描述信息。'}</div>
-                <button class="description-toggle ${this.descriptionExpanded ? 'expanded' : ''}" @click=${this._toggleDescription}>
+                <button type="button" class="description-toggle ${this.descriptionExpanded ? 'expanded' : ''}" @click=${this._toggleDescription}>
                   ${this.descriptionExpanded ? '收起' : '展开更多'}
                   <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
                 </button>

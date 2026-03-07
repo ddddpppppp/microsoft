@@ -680,53 +680,12 @@ class AiService {
     }
 
     /**
-     * Max length for slug (chars). Truncate at last segment boundary to keep readable.
-     */
-    private static $maxSlugLength = 20;
-
-    /**
-     * Generate a URL-friendly slug from a Chinese/English title.
-     * Uses pinyin transliteration for Chinese chars, falls back to timestamp if empty.
-     * Slug is capped at ~50 chars, truncated at last complete pinyin segment.
+     * 生成 slug：时间戳 + 随机数（保证唯一）。
+     * 格式示例：1738820123-5678
      */
     public static function titleToSlug(string $title): string
     {
-        $title = trim(strip_tags($title));
-        if ($title === '') {
-            return time() . '-' . mt_rand(1000, 9999);
-        }
-
-        $base = self::pinyinSlugify($title);
-
-        // 拼音结果过短、为空、或全是未收录字（曾为 x-x-x-...）时，用时间戳
-        if ($base === '' || strlen($base) < 5 || preg_match('/^(x-)*x$/i', $base)) {
-            $base = time() . '-' . mt_rand(1000, 9999);
-        }
-
-        // 过长时在最后一个完整段处截断，避免截断拼音中间
-        if (strlen($base) > self::$maxSlugLength) {
-            $cut = substr($base, 0, self::$maxSlugLength);
-            $lastDash = strrpos($cut, '-');
-            $base = $lastDash > 20 ? substr($base, 0, $lastDash) : substr($base, 0, self::$maxSlugLength);
-        }
-
-        $db = \App\Core\Database::getInstance();
-        $slug = $base;
-        $suffix = 0;
-
-        while (true) {
-            $exists = $db->fetch(
-                "SELECT id FROM articles WHERE slug = ? LIMIT 1",
-                [$slug]
-            );
-            if (!$exists) {
-                break;
-            }
-            $suffix++;
-            $slug = $base . '-' . $suffix;
-        }
-
-        return $slug;
+        return time() . '-' . mt_rand(10000, 99999);
     }
 
     /**

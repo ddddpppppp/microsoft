@@ -193,9 +193,15 @@ class MsCollectionGrid extends LitElement {
     .badge-discount { background: #c42b1c; color: #fff; }
 
     @media (max-width: 600px) {
-      :host { padding: 0 16px; }
-      .card { min-width: 140px; width: 140px; }
-      .scroll-btn { min-width: 44px; min-height: 44px; }
+      :host { padding: 0; }
+      .card { min-width: 130px; width: 130px; }
+      .card-top img { width: 72px; height: 72px; border-radius: 10px; }
+      .card-title { font-size: 12px; }
+      .scroll-btn { display: none; }
+    }
+    @media (max-width: 420px) {
+      .card { min-width: 120px; width: 120px; }
+      .card-top img { width: 64px; height: 64px; }
     }
   `;
 

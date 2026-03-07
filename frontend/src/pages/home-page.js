@@ -21,6 +21,9 @@ class HomePage extends LitElement {
       overflow-x: hidden;
       box-sizing: border-box;
     }
+    :host * {
+      box-sizing: border-box;
+    }
     .loading {
       text-align: center;
       padding: 200px 0;
@@ -69,15 +72,37 @@ class HomePage extends LitElement {
       min-width: 0;
     }
     @media (max-width: 900px) {
+      .section-spacer { height: 36px; }
       .two-column-wrap { padding: 0 24px; }
       .two-column { grid-template-columns: 1fr; gap: 0; }
-      .product-collections-wrap { margin: 32px 24px 0; padding: 0 24px; gap: 32px; }
+      .product-collections-wrap {
+        margin: 32px auto 0;
+        padding: 0 24px;
+        gap: 32px;
+      }
     }
     @media (max-width: 600px) {
-      .two-column-wrap { padding: 0 16px; }
-      .product-collections-wrap { margin: 24px 16px 0; padding: 0 16px; gap: 24px; }
-      .section-spacer { height: 24px; }
       :host { padding-bottom: 24px; }
+      .section-spacer { height: 20px; }
+      .two-column-wrap { padding: 0 16px; }
+      .product-collections-wrap {
+        margin: 20px auto 0;
+        padding: 0 16px;
+        gap: 20px;
+      }
+    }
+    @media (max-width: 420px) {
+      .two-column-wrap { padding: 0 12px; }
+      .product-collections-wrap {
+        padding: 0 12px;
+        gap: 16px;
+      }
+      .section-spacer { height: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .loading-spinner {
+        animation: none;
+      }
     }
   `;
 

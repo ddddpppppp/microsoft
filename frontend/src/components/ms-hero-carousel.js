@@ -371,17 +371,24 @@ class MsHeroCarousel extends LitElement {
     }
     @media (max-width: 600px) {
       :host { padding: 8px 0 0; }
-      .hero-layout { padding: 0 16px; grid-template-rows: 220px auto auto; gap: 8px; min-width: 0; }
+      .hero-layout { padding: 0 16px; grid-template-rows: 200px auto auto; gap: 8px; min-width: 0; }
       .carousel-wrapper { min-width: 0; }
-      .carousel { height: 220px; }
-      .slide { padding: 0 16px 24px; }
+      .carousel { height: 200px; border-radius: 12px; }
+      .slide { padding: 0 14px 20px; }
       .slide-content { max-width: 100%; }
-      .title { font-size: 18px; }
+      .title { font-size: 17px; line-height: 1.3; }
       .subtitle { font-size: 12px; }
-      .side-cards { flex-direction: column; flex-wrap: nowrap; }
-      .side-card { min-height: 100px; min-width: 0; width: 100%; flex: none; }
-      .side-card.side-card-split { width: 100%; grid-template-columns: 1fr 1fr; }
-      .arrow { width: 32px; height: 32px; }
+      .side-cards { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+      .side-card { min-height: 90px; min-width: 0; width: 100%; flex: none; border-radius: 10px; }
+      .side-card.side-card-split { width: 100%; grid-template-columns: 1fr 1fr; border-radius: 10px; }
+      .arrow { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
+    }
+    @media (max-width: 420px) {
+      .hero-layout { padding: 0 12px; grid-template-rows: 180px auto auto; gap: 6px; }
+      .carousel { height: 180px; }
+      .title { font-size: 16px; }
+      .slide { padding: 0 12px 16px; }
+      .side-card { min-height: 80px; }
     }
   `;
 

@@ -24,10 +24,11 @@ class AppsPage extends LitElement {
       max-width: 100%;
       overflow-x: hidden;
       box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
     }
     .loading {
       text-align: center;
-      padding: 200px 0;
+      padding: 120px 0;
       color: #767676;
       font-size: 16px;
     }
@@ -52,6 +53,7 @@ class AppsPage extends LitElement {
       padding: 0 38px;
       box-sizing: border-box;
       min-width: 0;
+      contain: layout style;
     }
 
     /* === dual-collection-layout: flex 50/50 with 12px gap === */
@@ -163,6 +165,17 @@ class AppsPage extends LitElement {
       display: flex;
       align-items: center;
       gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .topfree-item-meta span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .topfree-item-meta ms-rating {
+      flex-shrink: 0;
     }
     .topfree-item-price {
       font-size: 12px;
@@ -269,15 +282,44 @@ class AppsPage extends LitElement {
       .apppack-banner a { padding: 20px 24px; }
     }
     @media (max-width: 900px) {
-      .product-collections-wrap { margin: 32px 24px 0; padding: 0 24px; gap: 32px; }
-      .topfree-grid { grid-template-columns: 1fr; }
+      .product-collections-wrap { margin: 32px 0 0; padding: 0 20px; gap: 28px; }
+      .topfree-grid { grid-template-columns: 1fr; gap: 8px; }
+      .topfree-item { padding: 12px 16px; min-height: 72px; }
+      .topfree-item-icon { width: 56px; height: 56px; margin-right: 12px; }
       .apppack-icons-scatter { width: 140px; height: 80px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(1) { width: 44px; height: 44px; left: 56px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(2) { width: 32px; height: 32px; left: 106px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(3) { width: 30px; height: 30px; left: 18px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(4) { width: 36px; height: 36px; top: 44px; left: 0; }
+      .apppack-icons-scatter .apppack-icon:nth-child(5) { width: 40px; height: 40px; top: 40px; left: 44px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(6) { width: 32px; height: 32px; top: 48px; left: 90px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(7) { width: 28px; height: 28px; top: 34px; left: 126px; }
     }
     @media (max-width: 600px) {
-      .product-collections-wrap { margin: 24px 16px 0; padding: 0 16px; gap: 24px; }
-      .apppack-banner a { padding: 16px; flex-direction: column; text-align: center; }
-      .apppack-icons-area { align-self: center; }
       :host { padding-bottom: 24px; }
+      .loading { padding: 80px 0; }
+      .product-collections-wrap { margin: 20px 0 0; padding: 0 14px; gap: 20px; }
+      .topfree-title { font-size: 17px; }
+      .topfree-item-name { font-size: 13px; }
+      .apppack-banner a { padding: 16px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+      .apppack-banner .promo-title { font-size: 17px; }
+      .apppack-banner .promo-sub { font-size: 13px; margin-top: 2px; }
+      .apppack-icons-area { align-self: stretch; flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; }
+      .apppack-icons-scatter { width: 120px; height: 68px; flex-shrink: 0; }
+      .apppack-icons-scatter .apppack-icon:nth-child(1) { width: 38px; height: 38px; top: 0; left: 44px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(2) { width: 28px; height: 28px; top: 6px; left: 88px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(3) { width: 26px; height: 26px; top: 2px; left: 10px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(4) { width: 32px; height: 32px; top: 36px; left: 0; }
+      .apppack-icons-scatter .apppack-icon:nth-child(5) { width: 34px; height: 34px; top: 34px; left: 38px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(6) { width: 28px; height: 28px; top: 40px; left: 78px; }
+      .apppack-icons-scatter .apppack-icon:nth-child(7) { display: none; }
+      .apppack-bottom { flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 0; }
+      .apppack-install-btn { padding: 6px 20px; font-size: 13px; border-radius: 4px; }
+    }
+    @media (max-width: 400px) {
+      .product-collections-wrap { padding: 0 10px; gap: 16px; }
+      .apppack-icons-scatter { display: none; }
+      .apppack-icons-area { flex-direction: column; align-items: flex-start; }
     }
   `;
 
@@ -466,7 +508,8 @@ class AppsPage extends LitElement {
     const useNav = href.startsWith('/');
     return html`
       <a class="topfree-item" href=${href} ?data-nav=${useNav}
-        rel=${useNav ? '' : 'nofollow noopener'} ?target=${!useNav ? '_blank' : ''}>
+        rel=${useNav ? '' : 'nofollow noopener'}
+        target=${!useNav ? '_blank' : '_self'}>
         <ms-lazy-img class="topfree-item-icon" src=${icon} alt=${p.title || ''} width="64px" height="64px" radius="12px"></ms-lazy-img>
         <div class="topfree-item-info">
           <div class="topfree-item-name">${p.title || ''}</div>

@@ -60,14 +60,43 @@
                 </tbody>
             </table>
         </div>
-        <?php if (($pagination['total_pages'] ?? 1) > 1): ?>
+        <?php
+        $totalPages = (int)($pagination['total_pages'] ?? 1);
+        if ($totalPages > 1):
+            $currentPage = (int)($pagination['page'] ?? 1);
+            $searchParam = urlencode($search ?? '');
+            $radius = 2; // 当前页左右各显示页数
+            $pages = [];
+            if ($totalPages <= 7) {
+                for ($i = 1; $i <= $totalPages; $i++) $pages[] = $i;
+            } else {
+                $pages[] = 1;
+                $start = max(2, $currentPage - $radius);
+                $end = min($totalPages - 1, $currentPage + $radius);
+                if ($start > 2) $pages[] = '...';
+                for ($i = $start; $i <= $end; $i++) $pages[] = $i;
+                if ($end < $totalPages - 1) $pages[] = '...';
+                if ($totalPages > 1) $pages[] = $totalPages;
+            }
+            $pageUrl = function ($p) use ($searchParam) { return '/admin/articles?page=' . $p . '&search=' . $searchParam; };
+        ?>
         <nav>
-            <ul class="pagination justify-content-center mb-0">
-                <?php for ($p = 1; $p <= $pagination['total_pages']; $p++): ?>
-                <li class="page-item <?= $p == $pagination['page'] ? 'active' : '' ?>">
-                    <a class="page-link" href="/admin/articles?page=<?= $p ?>&search=<?= urlencode($search ?? '') ?>"><?= $p ?></a>
+            <ul class="pagination justify-content-center mb-0 flex-wrap">
+                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="<?= $currentPage <= 1 ? '#' : $pageUrl($currentPage - 1) ?>" aria-label="上一页">«</a>
                 </li>
-                <?php endfor; ?>
+                <?php foreach ($pages as $p): ?>
+                <?php if ($p === '...'): ?>
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                <?php else: ?>
+                <li class="page-item <?= $p == $currentPage ? 'active' : '' ?>">
+                    <a class="page-link" href="<?= $pageUrl($p) ?>"><?= $p ?></a>
+                </li>
+                <?php endif; ?>
+                <?php endforeach; ?>
+                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="<?= $currentPage >= $totalPages ? '#' : $pageUrl($currentPage + 1) ?>" aria-label="下一页">»</a>
+                </li>
             </ul>
         </nav>
         <?php endif; ?>

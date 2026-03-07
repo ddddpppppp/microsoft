@@ -241,10 +241,18 @@ class MsCollectionRow extends LitElement {
     }
 
     @media (max-width: 600px) {
-      .scroll-container { padding: 8px 4px; -webkit-overflow-scrolling: touch; }
-      .scroll-btn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
-      .two-col-card { padding: 20px 16px; }
-      .two-col-grid { grid-template-columns: 1fr; }
+      .section-header { margin-bottom: 8px; }
+      .section-title { font-size: 18px; }
+      .view-all-link { font-size: 12px; }
+      .nav-arrows { display: none; }
+      .scroll-container { padding: 6px 0; -webkit-overflow-scrolling: touch; }
+      .scroll-btn { display: none; }
+      .two-col-card { padding: 16px 14px; }
+      .two-col-grid { grid-template-columns: 1fr; gap: 10px; }
+    }
+    @media (max-width: 420px) {
+      .section-title { font-size: 16px; }
+      .two-col-card { padding: 14px 12px; }
     }
   `;
 

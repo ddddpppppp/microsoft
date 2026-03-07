@@ -125,9 +125,15 @@ class MsCollectionCards extends LitElement {
       text-overflow: ellipsis;
     }
     @media (max-width: 600px) {
-      :host { padding: 0 16px; }
-      .card { width: 200px; height: 116px; min-width: 180px; }
-      .scroll-btn { width: 36px; height: 36px; min-width: 44px; min-height: 44px; }
+      :host { padding: 0; }
+      .card { width: 180px; height: 110px; min-width: 160px; border-radius: 10px; }
+      .card-content { padding: 10px 12px; }
+      .card-name { font-size: 12px; }
+      .card-subtitle { font-size: 10px; }
+      .scroll-btn { display: none; }
+    }
+    @media (max-width: 420px) {
+      .card { width: 160px; height: 100px; min-width: 140px; }
     }
   `;
 
