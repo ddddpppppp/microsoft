@@ -174,11 +174,11 @@ class HomeController extends Controller {
         $uri = '/article/' . $slug;
 
         $articleModel = new Article();
-        $article = $articleModel->findBySlug($slug);
+        $article = $articleModel->findByIdOrSlug($slug);
 
         if ($article) {
             $base = SiteUrl::getBaseUrl();
-            $articleCanonical = $base . '/article/' . rawurlencode($slug);
+            $articleCanonical = $base . '/article/' . rawurlencode($article['slug'] ?? $slug);
             $articleTitle = $article['title'] ?: '资讯详情';
             $articleDesc = $article['meta_description'] ?? '';
             $articleImage = $article['cover_image'] ?? '';

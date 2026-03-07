@@ -11288,7 +11288,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
     .not-found a:hover { text-decoration: underline; }
 
     .detail-container {
-      max-width: 1200px;
+      max-width: 1320px;
       width: 100%;
       min-width: 0;
       margin: 0 auto;
@@ -11873,20 +11873,37 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       margin: 0;
     }
     .related-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      display: flex;
       gap: 16px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 6px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      scroll-padding-inline: 4px;
+      scrollbar-width: thin;
+    }
+    .related-grid::-webkit-scrollbar {
+      height: 6px;
+    }
+    .related-grid::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
     }
     .related-card {
       display: flex;
       flex-direction: column;
+      flex: 0 0 188px;
       min-width: 0;
+      scroll-snap-align: start;
       padding: 16px;
       border-radius: 12px;
       border: 1px solid #ececec;
       background: #f9f9f9;
       text-decoration: none;
-      transition: all 0.2s;
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     }
     .related-icon {
       width: 64px;
@@ -11926,21 +11943,6 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       font-weight: 500;
     }
 
-    @media (max-width: 1200px) and (min-width: 601px) {
-      .related-grid {
-        display: flex;
-        gap: 14px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 6px;
-        scroll-snap-type: x proximity;
-        scrollbar-width: thin;
-      }
-      .related-card {
-        flex: 0 0 188px;
-        scroll-snap-align: start;
-      }
-    }
 
     @media (hover: hover) {
       .screenshot-img:hover {
@@ -11950,6 +11952,14 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       .related-card:hover {
         background: #f0f0f0;
         transform: translateY(-2px);
+      }
+    }
+    /* 移动端双列时悬停仅改色，避免布局偏移 */
+    @media (max-width: 600px) and (hover: hover) {
+      .related-card:hover {
+        transform: none;
+        background: #f0f0f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       }
     }
 
@@ -11971,7 +11981,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       .screenshots-nav.prev { left: 8px; }
       .screenshots-nav.next { right: 8px; }
       .reviews-summary { gap: 24px; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
+      .related-card { flex: 0 0 172px; }
     }
     @media (max-width: 600px) {
       .detail-container {
@@ -12116,13 +12126,32 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
         margin-bottom: 14px;
       }
       .related-header h3 { font-size: 17px; }
-      .related-grid { grid-template-columns: 1fr; gap: 14px; }
+      /* 手机上一行 2 个：双列网格，触控友好（≥8px 间距、整卡可点） */
+      .related-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        overflow: visible;
+        padding-bottom: 0;
+        scroll-snap-type: none;
+        scrollbar-width: auto;
+        -webkit-overflow-scrolling: auto;
+      }
+      .related-grid::-webkit-scrollbar {
+        display: block;
+        height: auto;
+      }
       .related-card {
+        flex: none;
+        width: auto;
+        min-height: 0;
         padding: 14px;
         border-radius: 12px;
+        touch-action: manipulation;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
       }
-      .related-icon { width: 60px; height: 60px; margin-bottom: 12px; border-radius: 12px; }
-      .related-title { font-size: 14px; }
+      .related-icon { width: 56px; height: 56px; margin-bottom: 10px; border-radius: 10px; }
+      .related-title { font-size: 13px; -webkit-line-clamp: 2; }
       .related-meta, .related-category, .related-price { font-size: 12px; }
     }
     @media (max-width: 420px) {
@@ -12145,6 +12174,10 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       .reviews-score .big-number {
         font-size: 36px;
       }
+      .related-grid { gap: 10px; }
+      .related-card { padding: 12px; }
+      .related-icon { width: 48px; height: 48px; margin-bottom: 8px; border-radius: 8px; }
+      .related-title { font-size: 12px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .loading-spinner,
@@ -12157,6 +12190,7 @@ var Pr=Object.defineProperty;var Or=(e,t,i)=>t in e?Pr(e,t,{enumerable:!0,config
       .reviews-list,
       .reviews-toggle svg,
       .related-card,
+      .related-grid,
       .get-btn,
       .store-btn {
         animation: none;

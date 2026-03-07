@@ -231,7 +231,7 @@ class ApiController extends Controller {
 
     public function articleDetail($slug) {
         $articleModel = new Article();
-        $article = $articleModel->findBySlug($slug);
+        $article = $articleModel->findByIdOrSlug($slug);
         if (!$article || $article['status'] !== 'published') {
             $this->json(['error' => 'Article not found'], 404);
             return;

@@ -16,6 +16,19 @@ class Article extends Model {
         return $this->findBy('slug', $slug);
     }
 
+    /**
+     * 按 id 或 slug 查文章（/article/42 与 /article/1738820123-1122 均可进入）。
+     */
+    public function findByIdOrSlug($idOrSlug) {
+        $s = trim((string) $idOrSlug);
+        if ($s === '') return null;
+        if (ctype_digit($s)) {
+            $byId = $this->find((int) $s);
+            if ($byId) return $byId;
+        }
+        return $this->findBySlug($s);
+    }
+
     public function getRecommended($limit = 6) {
         return $this->db->fetchAll(
             "SELECT * FROM articles WHERE status = 'published' AND is_recommended = 1 ORDER BY created_at DESC LIMIT ?",
