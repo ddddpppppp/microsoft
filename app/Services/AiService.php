@@ -680,12 +680,22 @@ class AiService {
     }
 
     /**
-     * 生成 slug：时间戳 + 随机数（保证唯一）。
-     * 格式示例：1738820123-5678
+     * 生成 slug：时间戳 + 编号。编号从 Redis 键 article_slug_id 自增取得（查一次涨一次），当前约 1122。
+     * Redis 不可用时回退为时间戳+随机数。格式示例：1738820123-1123
      */
     public static function titleToSlug(string $title): string
     {
-        return time() . '-' . mt_rand(10000, 99999);
+        $redis = \App\Core\Redis::getInstance();
+        if ($redis->isAvailable()) {
+            $id = $redis->incr('article_slug_id');
+            if (!$id) {
+                $id = 1122;
+            }
+            if ($id > 0) {
+                return  $id;
+            }
+        }
+        return time();
     }
 
     /**
