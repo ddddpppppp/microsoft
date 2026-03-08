@@ -50,10 +50,10 @@ class SitemapController extends Controller {
         $this->addUrl($urls, $base . '/about', null, 'monthly', '0.6');
         $this->addUrl($urls, $base . '/articles', null, 'daily', '0.9');
 
-        // Articles list pagination (only first 5 pages)
+        // Articles list pagination (all pages)
         $articleModel = new Article();
         $firstPage = $articleModel->paginatePublished(1, 12, '');
-        $totalPages = min((int)($firstPage['total_pages'] ?? 1), 5);
+        $totalPages = (int)($firstPage['total_pages'] ?? 1);
         for ($p = 2; $p <= $totalPages; $p++) {
             $this->addUrl($urls, $base . '/articles/' . $p, null, 'daily', '0.8');
         }
@@ -81,8 +81,8 @@ class SitemapController extends Controller {
             }
         }
 
-        // Articles — published, newest 1000 only
-        $articles = $articleModel->getPublished(1000);
+        // Articles — all published
+        $articles = $articleModel->getPublished();
         foreach ($articles as $a) {
             $slug = trim((string)($a['slug'] ?? ''));
             if ($slug === '') continue;

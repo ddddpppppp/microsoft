@@ -127,6 +127,7 @@ class AiService {
 
         if (!empty($options['vocab_instructions'])) {
             $prompt .= "\n\n" . $options['vocab_instructions'];
+            $prompt .= "\n\n请务必遵守：凡约束列表中带 URL 的关键词，正文中必须用 <a href=\"该URL\">关键词</a> 形式出现，不得仅写纯文本。";
             unset($options['vocab_instructions']);
         } else {
             $prompt .= "\n\n不要输出任何<a href>超链接标签。";
@@ -259,7 +260,14 @@ class AiService {
     public static function buildVocabInstructions(array $vocabs): string {
         if (empty($vocabs)) return '';
 
-        $lines = ["关键词约束（只用下方给出的词，有URL的用<a href>，无URL用纯文本，不要新增链接）："];
+        $lines = [
+            "关键词约束（只使用下方列出的词，不要新增其他链接）：",
+            "- 带 URL 的关键词：必须在正文中以 <a href=\"对应URL\">关键词</a> 的形式出现，出现次数严格按 ×N 执行；禁止只写纯文本不加链接。",
+            "- 无 URL 的关键词：以纯文本出现即可。",
+            "- 示例：若要求「爱翻译」-> https://example.com ×1，则正文中至少有一处必须写成 <a href=\"https://example.com\">爱翻译</a>，不能只写「爱翻译」。",
+            "",
+            "约束列表：",
+        ];
         foreach ($vocabs as $v) {
             $word = $v['word'] ?? '';
             $url = $v['url'] ?? '';
