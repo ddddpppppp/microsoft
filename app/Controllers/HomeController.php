@@ -132,11 +132,14 @@ class HomeController extends Controller {
                 $jsonLd['author'] = ['@type' => 'Organization', 'name' => $product['developer']];
             }
             if ($product['rating'] ?? '') {
+                $reviewModel = new \App\Models\ProductReview();
+                $rc = (int)$reviewModel->getCountByProduct($product['id']);
                 $jsonLd['aggregateRating'] = [
                     '@type' => 'AggregateRating',
                     'ratingValue' => $product['rating'],
                     'bestRating' => '5',
-                    'worstRating' => '1'
+                    'worstRating' => '1',
+                    'ratingCount' => max($rc, 1)
                 ];
             }
             $jsonLd['offers'] = [
@@ -303,11 +306,14 @@ class HomeController extends Controller {
             $cpJsonLd['author'] = ['@type' => 'Organization', 'name' => $product['developer']];
         }
         if ($product['rating'] ?? '') {
+            $cpReviewModel = new \App\Models\ProductReview();
+            $cpRc = (int)$cpReviewModel->getCountByProduct($product['id']);
             $cpJsonLd['aggregateRating'] = [
                 '@type' => 'AggregateRating',
                 'ratingValue' => $product['rating'],
                 'bestRating' => '5',
-                'worstRating' => '1'
+                'worstRating' => '1',
+                'ratingCount' => max($cpRc, 1)
             ];
         }
         $cpJsonLd['offers'] = [
@@ -349,7 +355,13 @@ class HomeController extends Controller {
         $html .= '<h1>' . $title . '</h1>';
         if ($developer) $html .= '<p>Developer: ' . $developer . '</p>';
         if ($category) $html .= '<p>Category: ' . $category . '</p>';
-        if ($rating) $html .= '<p>Rating: ' . $rating . '</p>';
+        $reviewModel = new \App\Models\ProductReview();
+        $reviews = $reviewModel->getByProduct($p['id']);
+        $ratingCount = count($reviews);
+
+        if ($rating) {
+            $html .= '<p>Rating: ' . $rating . ' (' . max($ratingCount, 1) . ' ratings)</p>';
+        }
         $html .= '<p>Price: ' . $price . '</p>';
         if ($desc) $html .= '<div>' . nl2br($desc) . '</div>';
         if ($p['whats_new'] ?? '') {
@@ -362,6 +374,18 @@ class HomeController extends Controller {
             }
             $shotAlt = $h(($s['alt'] ?? '') !== '' ? $s['alt'] : 'Product screenshot');
             $html .= '<img src="' . $shotUrl . '" alt="' . $shotAlt . '" loading="lazy">';
+        }
+        if ($ratingCount > 0) {
+            $html .= '<section><h2>Ratings and Reviews</h2>';
+            foreach ($reviews as $r) {
+                $html .= '<div>';
+                $html .= '<p><strong>' . $h($r['title']) . '</strong> — ' . $h($r['rating']) . '/5</p>';
+                if ($r['content'] ?? '') $html .= '<p>' . nl2br($h($r['content'])) . '</p>';
+                $html .= '<p>' . $h($r['author_name']);
+                if ($r['created_at'] ?? '') $html .= ' · ' . $h(explode(' ', $r['created_at'])[0]);
+                $html .= '</p></div>';
+            }
+            $html .= '</section>';
         }
         $html .= $this->buildRelatedProductsSeoContent((int)($p['id'] ?? 0), $baseUrl);
         $html .= '</article></div>';
