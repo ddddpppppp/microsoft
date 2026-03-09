@@ -69,9 +69,11 @@ class DetailPage extends LitElement {
     }
 
     .detail-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 32px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 32px;
+      row-gap: 0;
+      align-items: start;
       margin-bottom: 40px;
     }
     .product-icon {
@@ -79,13 +81,27 @@ class DetailPage extends LitElement {
       height: 128px;
       border-radius: 16px;
       object-fit: cover;
-      flex-shrink: 0;
       background: #f3f3f3;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      grid-column: 1;
+      grid-row: 1 / 20;
+      align-self: start;
     }
     .header-info {
-      flex: 1;
-      min-width: 0;
+      display: contents;
+    }
+    .product-title,
+    .product-developer,
+    .product-category,
+    .rating-row {
+      grid-column: 2;
+    }
+    .action-row {
+      grid-column: 1 / -1;
+      margin-top: 16px;
+    }
+    .age-rating {
+      grid-column: 1 / -1;
     }
     .product-title {
       font-size: 28px;
@@ -138,7 +154,7 @@ class DetailPage extends LitElement {
       align-items: center;
       justify-content: center;
       min-height: 44px;
-      padding: 10px 40px;
+      padding: 10px 50px;
       border-radius: 6px;
       border: none;
       background: #0067b8;
@@ -738,15 +754,21 @@ class DetailPage extends LitElement {
     @media (max-width: 900px) {
       .detail-container { padding: 28px 24px; }
       .detail-header {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-        gap: 24px;
+        grid-template-columns: 1fr;
         margin-bottom: 32px;
       }
       .product-icon {
         width: 112px;
         height: 112px;
+        grid-row: auto;
+      }
+      .product-title,
+      .product-developer,
+      .product-category,
+      .rating-row,
+      .action-row,
+      .age-rating {
+        grid-column: 1;
       }
       .detail-body { grid-template-columns: 1fr; gap: 32px; }
       .action-row { justify-content: flex-start; }
@@ -763,7 +785,8 @@ class DetailPage extends LitElement {
       .detail-header {
         display: grid;
         grid-template-columns: auto 1fr;
-        gap: 16px;
+        column-gap: 16px;
+        row-gap: 0;
         margin-bottom: 20px;
         padding: 18px;
         background: #fff;
@@ -774,11 +797,24 @@ class DetailPage extends LitElement {
         width: 96px;
         height: 96px;
         border-radius: 16px;
+        grid-column: 1;
+        grid-row: 1 / 20;
+        align-self: start;
       }
       .header-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+        display: contents;
+      }
+      .product-title,
+      .product-developer,
+      .product-category,
+      .rating-row {
+        grid-column: 2;
+      }
+      .action-row {
+        grid-column: 1 / -1;
+      }
+      .age-rating {
+        grid-column: 1 / -1;
       }
       .product-title {
         font-size: 22px;
@@ -930,12 +966,9 @@ class DetailPage extends LitElement {
       .detail-container {
         padding: 12px 12px 24px;
       }
-      .detail-header {
-        grid-template-columns: 1fr;
-      }
       .product-icon {
-        width: 88px;
-        height: 88px;
+        width: 72px;
+        height: 72px;
       }
       .product-title {
         font-size: 20px;

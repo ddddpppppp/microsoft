@@ -20,7 +20,7 @@ class MsHeader extends LitElement {
       max-width: 100%;
       min-width: 0;
       background-color: var(--theme-header-background-color, #fff);
-      overflow-x: hidden;
+      overflow-x: clip;
       overflow-y: visible;
     }
     header {
@@ -28,8 +28,7 @@ class MsHeader extends LitElement {
       width: 100%;
       max-width: 100%;
       border-bottom: 1px solid rgba(0,0,0,0.06);
-      overflow-x: hidden;
-      overflow-y: visible;
+      overflow: visible;
     }
     header.sticky {
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -44,7 +43,6 @@ class MsHeader extends LitElement {
       padding: 0 38px;
       box-sizing: border-box;
       min-width: 0;
-      overflow-x: hidden;
     }
     .home-logo-link { order: 1; }
     .nav-tabs { order: 2; }
