@@ -114,9 +114,29 @@ class MsApp extends LitElement {
     }
   }
 
+  _storeOriginRef() {
+    try {
+      if (sessionStorage.getItem('__msOriginRef')) return;
+      const ref = document.referrer || '';
+      if (!ref) return;
+      let refHost = '';
+      try {
+        const u = new URL(ref);
+        refHost = (u.hostname || '').replace(/:\d+$/, '').toLowerCase();
+        if (refHost === '127.0.0.1') refHost = 'localhost';
+      } catch { return; }
+      let ourHost = (window.location.hostname || '').replace(/:\d+$/, '').toLowerCase();
+      if (ourHost === '127.0.0.1') ourHost = 'localhost';
+      if (refHost && refHost !== ourHost) {
+        sessionStorage.setItem('__msOriginRef', ref);
+      }
+    } catch (_) {}
+  }
+
   connectedCallback() {
     super.connectedCallback();
     window.msApp = this;
+    this._storeOriginRef();
     document.addEventListener('click', (e) => {
       const path = e.composedPath();
       const link = path.find(el => el instanceof HTMLAnchorElement && el.hasAttribute('data-nav'));

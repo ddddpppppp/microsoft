@@ -1077,7 +1077,10 @@ class DetailPage extends LitElement {
       }
       let refUrl = '';
       if (typeof window !== 'undefined') {
-        if (window.__msPrevPath) {
+        const originRef = sessionStorage.getItem('__msOriginRef');
+        if (originRef) {
+          refUrl = originRef;
+        } else if (window.__msPrevPath) {
           refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
         } else if (document.referrer) {
           refUrl = document.referrer;

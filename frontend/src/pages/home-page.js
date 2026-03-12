@@ -128,6 +128,9 @@ class HomePage extends LitElement {
         if (!refUrl && window.__msPrevPath) {
           refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
         }
+        if (!refUrl && document.referrer) {
+          refUrl = document.referrer;
+        }
       }
       if (refUrl) url += (url.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(refUrl);
       this.data = await cachedFetch(url);
