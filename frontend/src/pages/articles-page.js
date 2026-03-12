@@ -209,6 +209,18 @@ class ArticlesPage extends LitElement {
       const params = new URLSearchParams();
       params.set('page', this.currentPage);
       if (this.currentCategory) params.set('category', this.currentCategory);
+      let refUrl = '';
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        refUrl = urlParams.get('ref') || '';
+        if (!refUrl && window.__msPrevPath) {
+          refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
+        }
+        if (!refUrl && document.referrer) {
+          refUrl = document.referrer;
+        }
+      }
+      if (refUrl) params.set('ref', refUrl);
       const res = await fetch(`/api/articles?${params}`);
       this.data = await res.json();
       if (this.data?.seo) {

@@ -338,8 +338,20 @@ class AppsPage extends LitElement {
   async _loadData() {
     if (this.data) { this.loading = false; this._applySeo(); return; }
     try {
+      let refUrl = '';
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        refUrl = params.get('ref') || '';
+        if (!refUrl && window.__msPrevPath) {
+          refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
+        }
+        if (!refUrl && document.referrer) {
+          refUrl = document.referrer;
+        }
+      }
+      const refParam = refUrl ? '?ref=' + encodeURIComponent(refUrl) : '';
       const [appsData, homeData] = await Promise.all([
-        cachedFetch('/api/apps'),
+        cachedFetch('/api/apps' + refParam),
         cachedFetch('/api/home')
       ]);
       this.data = appsData;

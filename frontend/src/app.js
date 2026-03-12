@@ -103,9 +103,20 @@ class MsApp extends LitElement {
     const fromPath = window.location.pathname || '/';
     window.__msPrevPath = fromPath;
     const isToHome = path === '/' || path === '/home';
+    const isToApps = path === '/apps';
     if (isToHome && fromPath !== '/' && fromPath !== '/home') {
       const refUrl = window.location.origin + (fromPath.startsWith('/') ? fromPath : '/' + fromPath);
       fetch('/api/record-home-view?ref=' + encodeURIComponent(refUrl)).catch(() => {});
+    }
+    if (isToApps && fromPath !== '/apps') {
+      const refUrl = window.location.origin + (fromPath.startsWith('/') ? fromPath : '/' + fromPath);
+      fetch('/api/apps?ref=' + encodeURIComponent(refUrl)).catch(() => {});
+    }
+    const isToArticles = path === '/articles' || /^\/articles\/\d+$/.test(path);
+    if (isToArticles && fromPath !== path && !fromPath.startsWith('/articles')) {
+      const refUrl = window.location.origin + (fromPath.startsWith('/') ? fromPath : '/' + fromPath);
+      const page = path === '/articles' ? 1 : parseInt(path.replace(/^\/articles\//, ''), 10) || 1;
+      fetch(`/api/articles?page=${page}&ref=` + encodeURIComponent(refUrl)).catch(() => {});
     }
     window.history.pushState({}, '', path);
     this._handleRoute();

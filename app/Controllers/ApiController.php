@@ -35,6 +35,7 @@ class ApiController extends Controller {
     }
 
     public function apps() {
+        $this->recordStatEvent(0, 'view');
         $bannerModel = new Banner();
         $collectionModel = new Collection();
         $settingModel = new Setting();
@@ -211,6 +212,7 @@ class ApiController extends Controller {
     }
 
     public function articles() {
+        $this->recordStatEvent(0, 'view');
         $articleModel = new Article();
         $settingModel = new Setting();
         $page = (int)($_GET['page'] ?? 1);
