@@ -565,6 +565,55 @@ INSERT INTO `product_stats` (`id`, `product_id`, `stat_date`, `view_count`, `dow
 -- --------------------------------------------------------
 
 --
+-- 表的结构 `product_stat_events`（明细表，按月分区，便于定时删除旧数据）
+-- referrer_type: home=首页 category=分类 search=搜索 collection=收藏 direct=直接 external=外链 other=其他
+-- device_type: mobile=手机 pc=PC unknown=未知
+--
+
+CREATE TABLE `product_stat_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `product_id` int(11) NOT NULL,
+  `event_type` enum('view','download_click') NOT NULL,
+  `referrer_type` varchar(50) DEFAULT 'other',
+  `device_type` enum('mobile','pc','unknown') DEFAULT 'unknown',
+  `referrer_url` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`,`created_at`),
+  KEY `idx_product_event` (`product_id`,`event_type`,`created_at`),
+  KEY `idx_referrer_device` (`referrer_type`,`device_type`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+PARTITION BY RANGE (TO_DAYS(`created_at`)) (
+  PARTITION p_202603 VALUES LESS THAN (TO_DAYS('2026-04-01')),
+  PARTITION p_202604 VALUES LESS THAN (TO_DAYS('2026-05-01')),
+  PARTITION p_202605 VALUES LESS THAN (TO_DAYS('2026-06-01')),
+  PARTITION p_202606 VALUES LESS THAN (TO_DAYS('2026-07-01')),
+  PARTITION p_202607 VALUES LESS THAN (TO_DAYS('2026-08-01')),
+  PARTITION p_202608 VALUES LESS THAN (TO_DAYS('2026-09-01')),
+  PARTITION p_202609 VALUES LESS THAN (TO_DAYS('2026-10-01')),
+  PARTITION p_202610 VALUES LESS THAN (TO_DAYS('2026-11-01')),
+  PARTITION p_202611 VALUES LESS THAN (TO_DAYS('2026-12-01')),
+  PARTITION p_202612 VALUES LESS THAN (TO_DAYS('2027-01-01')),
+  PARTITION p_202701 VALUES LESS THAN (TO_DAYS('2027-02-01')),
+  PARTITION p_202702 VALUES LESS THAN (TO_DAYS('2027-03-01')),
+  PARTITION p_202703 VALUES LESS THAN (TO_DAYS('2027-04-01')),
+  PARTITION p_202704 VALUES LESS THAN (TO_DAYS('2027-05-01')),
+  PARTITION p_202705 VALUES LESS THAN (TO_DAYS('2027-06-01')),
+  PARTITION p_202706 VALUES LESS THAN (TO_DAYS('2027-07-01')),
+  PARTITION p_202707 VALUES LESS THAN (TO_DAYS('2027-08-01')),
+  PARTITION p_202708 VALUES LESS THAN (TO_DAYS('2027-09-01')),
+  PARTITION p_202709 VALUES LESS THAN (TO_DAYS('2027-10-01')),
+  PARTITION p_202710 VALUES LESS THAN (TO_DAYS('2027-11-01')),
+  PARTITION p_202711 VALUES LESS THAN (TO_DAYS('2027-12-01')),
+  PARTITION p_202712 VALUES LESS THAN (TO_DAYS('2028-01-01')),
+  PARTITION p_202801 VALUES LESS THAN (TO_DAYS('2028-02-01')),
+  PARTITION p_202802 VALUES LESS THAN (TO_DAYS('2028-03-01')),
+  PARTITION p_202803 VALUES LESS THAN (TO_DAYS('2028-04-01')),
+  PARTITION p_future VALUES LESS THAN MAXVALUE
+);
+
+-- --------------------------------------------------------
+
+--
 -- 表的结构 `related_products`
 --
 
@@ -804,6 +853,12 @@ ALTER TABLE `products`
 --
 ALTER TABLE `product_reviews`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- 使用表AUTO_INCREMENT `product_stat_events`
+--
+ALTER TABLE `product_stat_events`
+  MODIFY `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT;
 
 --
 -- 使用表AUTO_INCREMENT `product_stats`

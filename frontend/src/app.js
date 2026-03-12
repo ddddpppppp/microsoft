@@ -100,6 +100,13 @@ class MsApp extends LitElement {
 
   navigate(path) {
     const prevRoute = this.currentRoute;
+    const fromPath = window.location.pathname || '/';
+    window.__msPrevPath = fromPath;
+    const isToHome = path === '/' || path === '/home';
+    if (isToHome && fromPath !== '/' && fromPath !== '/home') {
+      const refUrl = window.location.origin + (fromPath.startsWith('/') ? fromPath : '/' + fromPath);
+      fetch('/api/record-home-view?ref=' + encodeURIComponent(refUrl)).catch(() => {});
+    }
     window.history.pushState({}, '', path);
     this._handleRoute();
     if (this.currentRoute !== prevRoute) {

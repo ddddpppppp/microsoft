@@ -120,7 +120,17 @@ class HomePage extends LitElement {
   async _loadData() {
     if (this.data) { this.loading = false; this._applySeo(); return; }
     try {
-      this.data = await cachedFetch('/api/home');
+      let url = '/api/home';
+      let refUrl = '';
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        refUrl = params.get('ref') || '';
+        if (!refUrl && window.__msPrevPath) {
+          refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
+        }
+      }
+      if (refUrl) url += (url.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(refUrl);
+      this.data = await cachedFetch(url);
     } catch (e) {
       console.error('Failed to load home data:', e);
     }

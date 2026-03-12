@@ -9,10 +9,17 @@ use App\Models\Setting;
 use App\Models\Article;
 use App\Models\ProductReview;
 use App\Models\ProductStats;
+use App\Models\ProductStatEvent;
 use App\Core\Redis;
 
 class ApiController extends Controller {
+    public function recordHomeView() {
+        $this->recordStatEvent(0, 'view');
+        $this->json(['ok' => true]);
+    }
+
     public function home() {
+        $this->recordStatEvent(0, 'view');
         $bannerModel = new Banner();
         $collectionModel = new Collection();
         $settingModel = new Setting();
@@ -75,6 +82,7 @@ class ApiController extends Controller {
         }
         $statsModel = new ProductStats();
         $statsModel->incrementView($product['id']);
+        $this->recordStatEvent($product['id'], 'view');
         $this->json($product);
     }
 
@@ -90,6 +98,7 @@ class ApiController extends Controller {
         }
         $statsModel = new ProductStats();
         $statsModel->incrementDownloadClick($product['id']);
+        $this->recordStatEvent($product['id'], 'download_click');
         $this->json(['ok' => true]);
     }
 
@@ -107,6 +116,7 @@ class ApiController extends Controller {
         }
         $statsModel = new ProductStats();
         $statsModel->incrementView($product['id']);
+        $this->recordStatEvent($product['id'], 'view');
         $this->json($product);
     }
 
@@ -250,6 +260,26 @@ class ApiController extends Controller {
             'related' => $related,
             'popular' => $popular
         ]);
+    }
+
+    /**
+     * 记录统计明细到 product_stat_events（来源、设备维度），用于按来源/设备分析
+     * 优先使用前端传入的 ref（document.referrer），否则用 HTTP_REFERER
+     */
+    private function recordStatEvent(int $productId, string $eventType): void {
+        try {
+            $eventModel = new ProductStatEvent();
+            $ref = $_GET['ref'] ?? $_SERVER['HTTP_REFERER'] ?? null;
+            $eventModel->record(
+                $productId,
+                $eventType,
+                ProductStatEvent::detectReferrerType(),
+                ProductStatEvent::detectDeviceType(),
+                is_string($ref) ? $ref : null
+            );
+        } catch (\Throwable $e) {
+            // 明细记录失败不影响主流程，静默忽略
+        }
     }
 
     /**

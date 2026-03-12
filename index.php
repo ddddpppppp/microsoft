@@ -83,6 +83,7 @@ $router->get('/robots.txt', [\App\Controllers\RobotsController::class, 'index'])
 // API routes
 $router->group('/api', function($r) {
     $r->get('/home', [\App\Controllers\ApiController::class, 'home']);
+    $r->get('/record-home-view', [\App\Controllers\ApiController::class, 'recordHomeView']);
     $r->get('/apps', [\App\Controllers\ApiController::class, 'apps']);
     $r->get('/games', [\App\Controllers\ApiController::class, 'games']);
     $r->get('/about', [\App\Controllers\ApiController::class, 'about']);

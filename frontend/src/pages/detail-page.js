@@ -1061,6 +1061,12 @@ class DetailPage extends LitElement {
 
   async _loadData() {
     if (!this.productId && !this.customUrl) { this.loading = false; return; }
+    const loadKey = `${this.productId || ''}:${this.customUrl || ''}`;
+    if (this._lastLoadKey === loadKey && Date.now() - (this._lastLoadTime || 0) < 2000) {
+      return;
+    }
+    this._lastLoadKey = loadKey;
+    this._lastLoadTime = Date.now();
     this.loading = true;
     try {
       let url;
@@ -1069,6 +1075,15 @@ class DetailPage extends LitElement {
       } else {
         url = `/api/product/${this.productId}`;
       }
+      let refUrl = '';
+      if (typeof window !== 'undefined') {
+        if (window.__msPrevPath) {
+          refUrl = window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath);
+        } else if (document.referrer) {
+          refUrl = document.referrer;
+        }
+      }
+      if (refUrl) url += (url.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(refUrl);
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -1126,7 +1141,12 @@ class DetailPage extends LitElement {
   _onDownloadClick(e) {
     if (!this.data) return;
     const id = this.data.ms_id || this.data.id;
-    const url = `/api/product/${id}/download-click`;
+    let url = `/api/product/${id}/download-click`;
+    let refUrl = '';
+    if (typeof window !== 'undefined') {
+      refUrl = window.__msPrevPath ? (window.location.origin + (window.__msPrevPath === '/' ? '/' : window.__msPrevPath)) : (document.referrer || '');
+    }
+    if (refUrl) url += '?ref=' + encodeURIComponent(refUrl);
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url);
     } else {

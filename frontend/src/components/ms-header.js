@@ -632,6 +632,18 @@ class MsHeader extends LitElement {
     return !!(p.is_own_product && p.custom_url);
   }
 
+  _onMicrosoftLogoClick(e) {
+    e.preventDefault();
+    const fromPath = window.location.pathname || '/';
+    const isHome = fromPath === '/' || fromPath === '/home';
+    let url = '/';
+    if (!isHome) {
+      const refUrl = window.location.origin + (fromPath.startsWith('/') ? fromPath : '/' + fromPath);
+      url += '?ref=' + encodeURIComponent(refUrl);
+    }
+    window.open(url, '_blank', 'noopener');
+  }
+
   _onResultClick(e, p) {
     this._searchOpen = false;
     const href = this._getResultHref(p);
@@ -646,7 +658,7 @@ class MsHeader extends LitElement {
       <header>
         <nav>
           <div class="home-logo-link">
-            <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Microsoft">
+            <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Microsoft" @click=${this._onMicrosoftLogoClick}>
               <img class="msft-logo" src="/assets/icons/microsoft-logo-dark-1.png" alt="Microsoft" />
             </a>
             <a href="/" data-nav aria-label="Microsoft Store">
