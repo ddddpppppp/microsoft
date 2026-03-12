@@ -381,6 +381,36 @@
         #editor { border-color: var(--border) !important; border-radius: 10px; }
         .ql-toolbar.ql-snow { border-color: var(--border) !important; border-radius: 10px 10px 0 0; }
         .ql-container.ql-snow { border-color: var(--border) !important; border-radius: 0 0 10px 10px; }
+
+        /* ── Table Loading Overlay ── */
+        .tbl-loading-wrap { position: relative; }
+        .tbl-loading-wrap .tbl-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,.72);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .18s ease;
+        }
+        .tbl-loading-wrap.is-loading .tbl-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .tbl-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: tbl-spin .7s linear infinite;
+        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -444,6 +474,40 @@
         <?= $content ?? '' ?>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    /**
+     * AdminUI — 全局 UI 组件工具集
+     *
+     * tableLoading(el, loading)
+     *   el      — 要遮罩的容器元素（或 CSS 选择器字符串）
+     *   loading — true 显示 loading，false 隐藏
+     *
+     * 用法示例：
+     *   AdminUI.tableLoading('#rankingTable', true);
+     *   AdminUI.tableLoading(document.querySelector('.table-responsive'), false);
+     */
+    window.AdminUI = (function () {
+        function tableLoading(el, loading) {
+            if (typeof el === 'string') el = document.querySelector(el);
+            if (!el) return;
+
+            el.classList.add('tbl-loading-wrap');
+
+            let overlay = el.querySelector(':scope > .tbl-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'tbl-overlay';
+                overlay.innerHTML = '<div class="tbl-spinner"></div>';
+                el.style.position = el.style.position || 'relative';
+                el.insertBefore(overlay, el.firstChild);
+            }
+
+            el.classList.toggle('is-loading', !!loading);
+        }
+
+        return { tableLoading };
+    })();
+    </script>
     <script>
         (function() {
             var panel = document.getElementById('userPanel');

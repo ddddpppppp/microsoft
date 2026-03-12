@@ -116,7 +116,7 @@ class AdminController extends Controller {
         $totalStats = $statsModel->getTotalStats();
         $todayStats = $statsModel->getTodayStats();
         $dailyTrend = $statsModel->getDailyTrend(30);
-        $ranking = $statsModel->getProductRanking(10);
+        $ranking = $statsModel->getProductRanking(50);
 
         echo View::renderWithLayout('admin/layout', 'admin/dashboard', [
             'pageTitle' => '仪表盘',
@@ -1413,6 +1413,28 @@ class AdminController extends Controller {
         $created = $vocabModel->batchCreate($groupId, $items);
 
         echo json_encode(['success' => true, 'count' => $created], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function dashboardRankingApi() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $orderBy   = trim($_GET['order_by'] ?? 'total_views');
+        $direction = trim($_GET['direction'] ?? 'desc');
+        $limit     = 50;
+
+        $statsModel = new ProductStats();
+        $rows = $statsModel->getProductRankingSorted($limit, $orderBy, $direction);
+
+        foreach ($rows as &$r) {
+            $r['conversion_rate'] = ($r['total_views'] > 0)
+                ? round($r['total_downloads'] / $r['total_views'] * 100, 1)
+                : 0;
+        }
+        unset($r);
+
+        echo json_encode(['success' => true, 'data' => $rows], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

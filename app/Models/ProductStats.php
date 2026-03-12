@@ -63,8 +63,23 @@ class ProductStats extends Model {
         );
     }
 
-    public function getProductRanking($limit = 10) {
+    public function getProductRanking($limit = 50) {
+        return $this->getProductRankingSorted($limit, 'total_views', 'desc');
+    }
+
+    public function getProductRankingSorted($limit = 50, $orderBy = 'total_views', $direction = 'desc') {
+        $allowed = ['total_views', 'total_downloads', 'today_views', 'today_downloads', 'conversion_rate'];
+        if (!in_array($orderBy, $allowed, true)) {
+            $orderBy = 'total_views';
+        }
+        $direction = strtolower($direction) === 'asc' ? 'ASC' : 'DESC';
+        $limit = max(1, min(200, (int)$limit));
         $today = date('Y-m-d');
+
+        $orderExpr = $orderBy === 'conversion_rate'
+            ? 'IF(total_views > 0, total_downloads / total_views, 0)'
+            : $orderBy;
+
         return $this->db->fetchAll(
             "SELECT p.id,
                     IF(p.custom_title IS NOT NULL AND p.custom_title != '', p.custom_title, p.title) AS product_name,
@@ -76,7 +91,7 @@ class ProductStats extends Model {
              LEFT JOIN product_stats ps ON ps.product_id = p.id
              WHERE p.is_own_product = 1
              GROUP BY p.id
-             ORDER BY total_views DESC
+             ORDER BY {$orderExpr} {$direction}
              LIMIT ?",
             [$today, $today, $limit]
         );
