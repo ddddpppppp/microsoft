@@ -14,6 +14,7 @@ use App\Models\ProductReview;
 use App\Models\AiVocabularyGroup;
 use App\Models\AiVocabulary;
 use App\Models\ProductStats;
+use App\Models\ProductStatEvent;
 use App\Core\HtmlCache;
 use App\Services\SitemapCache;
 use App\Services\LoginAttemptService;
@@ -116,7 +117,6 @@ class AdminController extends Controller {
         $totalStats = $statsModel->getTotalStats();
         $todayStats = $statsModel->getTodayStats();
         $dailyTrend = $statsModel->getDailyTrend(30);
-        $ranking = $statsModel->getProductRanking(50);
 
         echo View::renderWithLayout('admin/layout', 'admin/dashboard', [
             'pageTitle' => '仪表盘',
@@ -125,7 +125,43 @@ class AdminController extends Controller {
             'todayViews' => $todayStats['today_views'] ?? 0,
             'todayDownloads' => $todayStats['today_downloads'] ?? 0,
             'dailyTrend' => json_encode($dailyTrend),
+        ]);
+    }
+
+    public function stats() {
+        $this->requireLogin();
+        $today = date('Y-m-d');
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate = trim($_GET['end_date'] ?? '');
+        if ($startDate === '' || $endDate === '') {
+            $endDate = $today;
+            $startDate = date('Y-m-d', strtotime('-30 days'));
+        }
+
+        $statsModel = new ProductStats();
+        $eventModel = new ProductStatEvent();
+
+        $ranking = $statsModel->getProductRankingFiltered(50, 'total_views', 'desc', $startDate, $endDate);
+        $bingGoogle = $eventModel->getBingGoogleStats($startDate, $endDate);
+        $deviceStats = $eventModel->getDeviceStats($startDate, $endDate);
+
+        foreach ($ranking as &$r) {
+            $r['conversion_rate'] = ($r['total_views'] > 0)
+                ? round($r['total_downloads'] / $r['total_views'] * 100, 1)
+                : 0;
+        }
+        unset($r);
+
+        echo View::renderWithLayout('admin/layout', 'admin/stats', [
+            'pageTitle' => '统计',
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'ranking' => $ranking,
+            'bingCount' => $bingGoogle['bing'] ?? 0,
+            'googleCount' => $bingGoogle['google'] ?? 0,
+            'pcCount' => $deviceStats['pc'] ?? 0,
+            'mobileCount' => $deviceStats['mobile'] ?? 0,
+            'unknownCount' => $deviceStats['unknown'] ?? 0,
         ]);
     }
 
@@ -1435,6 +1471,58 @@ class AdminController extends Controller {
         unset($r);
 
         echo json_encode(['success' => true, 'data' => $rows], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function statsRankingApi() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $orderBy   = trim($_GET['order_by'] ?? 'total_views');
+        $direction = trim($_GET['direction'] ?? 'desc');
+        $limit     = 50;
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate   = trim($_GET['end_date'] ?? '');
+
+        $statsModel = new ProductStats();
+        $rows = $statsModel->getProductRankingFiltered($limit, $orderBy, $direction, $startDate ?: null, $endDate ?: null);
+
+        foreach ($rows as &$r) {
+            $r['conversion_rate'] = ($r['total_views'] > 0)
+                ? round($r['total_downloads'] / $r['total_views'] * 100, 1)
+                : 0;
+        }
+        unset($r);
+
+        echo json_encode(['success' => true, 'data' => $rows], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function statsBingGoogleApi() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate   = trim($_GET['end_date'] ?? '');
+
+        $eventModel = new ProductStatEvent();
+        $data = $eventModel->getBingGoogleStats($startDate ?: null, $endDate ?: null);
+
+        echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function statsDeviceApi() {
+        $this->requireLogin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate   = trim($_GET['end_date'] ?? '');
+
+        $eventModel = new ProductStatEvent();
+        $data = $eventModel->getDeviceStats($startDate ?: null, $endDate ?: null);
+
+        echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

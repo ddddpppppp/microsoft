@@ -103,6 +103,7 @@ $router->group('/api', function($r) {
 // Admin routes
 $router->group('/admin', function($r) {
     $r->get('', [\App\Controllers\AdminController::class, 'index']);
+    $r->get('/stats', [\App\Controllers\AdminController::class, 'stats']);
     $r->get('/login', [\App\Controllers\AdminController::class, 'loginForm']);
     $r->post('/login', [\App\Controllers\AdminController::class, 'login']);
     $r->get('/captcha/refresh', [\App\Controllers\AdminController::class, 'captchaRefresh']);
@@ -143,6 +144,9 @@ $router->group('/admin', function($r) {
     $r->post('/ai-vocabulary/batch-add', [\App\Controllers\AdminController::class, 'aiVocabularyBatchAdd']);
     $r->get('/api/product-search', [\App\Controllers\AdminController::class, 'apiProductSearch']);
     $r->get('/api/dashboard-ranking', [\App\Controllers\AdminController::class, 'dashboardRankingApi']);
+    $r->get('/api/stats-ranking', [\App\Controllers\AdminController::class, 'statsRankingApi']);
+    $r->get('/api/stats-bing-google', [\App\Controllers\AdminController::class, 'statsBingGoogleApi']);
+    $r->get('/api/stats-device', [\App\Controllers\AdminController::class, 'statsDeviceApi']);
     // AI review generation
     $r->get('/ai-review', [\App\Controllers\AdminController::class, 'aiReview']);
     $r->get('/ai-review-task/create', [\App\Controllers\AdminController::class, 'aiReviewTaskCreate']);

@@ -130,6 +130,72 @@ class ProductStatEvent extends Model {
     }
 
     /**
+     * 统计 Bing / Google 来源访问量（仅 product_id=0 的 view 事件）
+     */
+    public function getBingGoogleStats(?string $startDate, ?string $endDate): array {
+        $where = ["product_id = 0", "event_type = 'view'"];
+        $params = [];
+        if ($startDate !== null && $startDate !== '') {
+            $where[] = 'DATE(created_at) >= ?';
+            $params[] = $startDate;
+        }
+        if ($endDate !== null && $endDate !== '') {
+            $where[] = 'DATE(created_at) <= ?';
+            $params[] = $endDate;
+        }
+        $where = implode(' AND ', $where);
+
+        $rows = $this->db->fetchAll(
+            "SELECT
+                SUM(CASE WHEN LOWER(referrer_url) LIKE '%google%' THEN 1 ELSE 0 END) AS google_count,
+                SUM(CASE WHEN LOWER(referrer_url) LIKE '%bing%' THEN 1 ELSE 0 END) AS bing_count
+             FROM {$this->table}
+             WHERE {$where}",
+            $params
+        );
+        $r = $rows[0] ?? [];
+        return [
+            'google' => (int)($r['google_count'] ?? 0),
+            'bing' => (int)($r['bing_count'] ?? 0),
+        ];
+    }
+
+    /**
+     * 按设备类型聚合统计（仅 product_id=0 的 view 事件）
+     */
+    public function getDeviceStats(?string $startDate, ?string $endDate): array {
+        $where = ["product_id = 0", "event_type = 'view'"];
+        $params = [];
+        if ($startDate !== null && $startDate !== '') {
+            $where[] = 'DATE(created_at) >= ?';
+            $params[] = $startDate;
+        }
+        if ($endDate !== null && $endDate !== '') {
+            $where[] = 'DATE(created_at) <= ?';
+            $params[] = $endDate;
+        }
+        $where = implode(' AND ', $where);
+
+        $rows = $this->db->fetchAll(
+            "SELECT device_type, COUNT(*) AS cnt
+             FROM {$this->table}
+             WHERE {$where}
+             GROUP BY device_type",
+            $params
+        );
+        $result = ['pc' => 0, 'mobile' => 0, 'unknown' => 0];
+        foreach ($rows as $r) {
+            $k = $r['device_type'] ?? 'unknown';
+            if (isset($result[$k])) {
+                $result[$k] = (int)$r['cnt'];
+            } else {
+                $result['unknown'] += (int)$r['cnt'];
+            }
+        }
+        return $result;
+    }
+
+    /**
      * 按来源、设备聚合统计（用于后台报表）
      */
     public function getStatsByReferrerAndDevice(int $productId = 0, string $startDate = '', string $endDate = '', int $limit = 50): array {
