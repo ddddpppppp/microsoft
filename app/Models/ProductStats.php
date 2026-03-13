@@ -155,6 +155,7 @@ class ProductStats extends Model {
 
     /**
      * 按时间范围获取产品排行榜（用于统计页时间筛选）
+     * 使用子查询先聚合 product_stats，再 JOIN products，避免 LEFT JOIN + GROUP BY 聚合异常
      */
     public function getProductRankingFiltered(int $limit = 50, string $orderBy = 'total_views', string $direction = 'desc', ?string $startDate = null, ?string $endDate = null): array {
         $allowed = ['total_views', 'total_downloads', 'today_views', 'today_downloads', 'conversion_rate'];
@@ -165,28 +166,36 @@ class ProductStats extends Model {
         $limit = max(1, min(200, $limit));
         $today = date('Y-m-d');
 
-        $joinCondition = 'ps.product_id = p.id';
+        $dateFilter = '';
         $params = [];
         if ($startDate !== null && $startDate !== '' && $endDate !== null && $endDate !== '') {
-            $joinCondition .= ' AND ps.stat_date >= ? AND ps.stat_date <= ?';
+            $dateFilter = ' WHERE stat_date >= ? AND stat_date <= ?';
             $params[] = $startDate;
             $params[] = $endDate;
         }
 
         $orderExpr = $orderBy === 'conversion_rate'
-            ? 'IF(total_views > 0, total_downloads / total_views, 0)'
-            : $orderBy;
+            ? 'IF(agg.total_views > 0, agg.total_downloads / agg.total_views, 0)'
+            : 'agg.' . $orderBy;
 
         $sql = "SELECT p.id,
                     IF(p.custom_title IS NOT NULL AND p.custom_title != '', p.custom_title, p.title) AS product_name,
-                    COALESCE(SUM(ps.view_count), 0) AS total_views,
-                    COALESCE(SUM(ps.download_click_count), 0) AS total_downloads,
-                    COALESCE(SUM(CASE WHEN ps.stat_date = ? THEN ps.view_count ELSE 0 END), 0) AS today_views,
-                    COALESCE(SUM(CASE WHEN ps.stat_date = ? THEN ps.download_click_count ELSE 0 END), 0) AS today_downloads
+                    COALESCE(agg.total_views, 0) AS total_views,
+                    COALESCE(agg.total_downloads, 0) AS total_downloads,
+                    COALESCE(agg.today_views, 0) AS today_views,
+                    COALESCE(agg.today_downloads, 0) AS today_downloads
              FROM products p
-             LEFT JOIN product_stats ps ON {$joinCondition}
+             LEFT JOIN (
+                 SELECT product_id,
+                        SUM(view_count) AS total_views,
+                        SUM(download_click_count) AS total_downloads,
+                        SUM(CASE WHEN stat_date = ? THEN view_count ELSE 0 END) AS today_views,
+                        SUM(CASE WHEN stat_date = ? THEN download_click_count ELSE 0 END) AS today_downloads
+                 FROM product_stats
+                 {$dateFilter}
+                 GROUP BY product_id
+             ) agg ON agg.product_id = p.id
              WHERE p.is_own_product = 1
-             GROUP BY p.id
              ORDER BY {$orderExpr} {$direction}
              LIMIT ?";
 
