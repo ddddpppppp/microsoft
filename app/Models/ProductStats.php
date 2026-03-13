@@ -167,11 +167,11 @@ class ProductStats extends Model {
         $today = date('Y-m-d');
 
         $dateFilter = '';
-        $params = [];
+        $dateParams = [];
         if ($startDate !== null && $startDate !== '' && $endDate !== null && $endDate !== '') {
             $dateFilter = ' WHERE stat_date >= ? AND stat_date <= ?';
-            $params[] = $startDate;
-            $params[] = $endDate;
+            $dateParams[] = $startDate;
+            $dateParams[] = $endDate;
         }
 
         $orderExpr = $orderBy === 'conversion_rate'
@@ -199,7 +199,8 @@ class ProductStats extends Model {
              ORDER BY {$orderExpr} {$direction}
              LIMIT ?";
 
-        $params = array_merge($params, [$today, $today, $limit]);
+        // 参数顺序必须与 SQL 中 ? 出现顺序一致：today×2 → dateFilter参数 → limit
+        $params = array_merge([$today, $today], $dateParams, [$limit]);
         return $this->db->fetchAll($sql, $params);
     }
 }
