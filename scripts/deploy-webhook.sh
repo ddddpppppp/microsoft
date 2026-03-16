@@ -47,4 +47,3 @@ LOCK_FILE="${LOCK_FILE:-/tmp/microsoft-webhook-deploy.lock}"
 
   echo "[INFO] Deploy done."
 } >> "${LOG_FILE}" 2>&1
-
