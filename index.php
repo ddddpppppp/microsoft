@@ -4,6 +4,9 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
 ini_set('display_errors', 1);
 
 define('BASE_PATH', __DIR__);
+
+require_once BASE_PATH . '/core/functions.php';
+
 // 确保 session 目录可写
 $sessionPath = BASE_PATH . '/storage/sessions';
 if (!is_dir($sessionPath)) {
