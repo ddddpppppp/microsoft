@@ -10,17 +10,7 @@
  * Note: pcntl_fork is Linux only. On Windows, tasks run serially as fallback.
  */
 
-define('BASE_PATH', dirname(__DIR__));
-
-spl_autoload_register(function ($class) {
-    $prefix = 'App\\';
-    $baseDir = BASE_PATH . '/app/';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) return;
-    $relativeClass = substr($class, $len);
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-    if (file_exists($file)) require $file;
-});
+require __DIR__ . '/bootstrap.php';
 
 use App\Services\AiService;
 use App\Models\AiArticleTask;

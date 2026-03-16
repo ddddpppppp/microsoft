@@ -1,7 +1,10 @@
 node_modules/
+vendor/
 .env
 debug*
 storage/
 uploads/*
 *.zip
 *.7z
+.cursor/
+.vscode/

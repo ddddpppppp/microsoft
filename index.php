@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 define('BASE_PATH', __DIR__);
 
-require_once BASE_PATH . '/core/functions.php';
+require BASE_PATH . '/vendor/autoload.php';
 
 // 确保 session 目录可写
 $sessionPath = BASE_PATH . '/storage/sessions';
@@ -14,16 +14,6 @@ if (!is_dir($sessionPath)) {
 }
 ini_set('session.save_path', $sessionPath);
 session_start();
-
-spl_autoload_register(function ($class) {
-    $prefix = 'App\\';
-    $baseDir = BASE_PATH . '/app/';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) return;
-    $relativeClass = substr($class, $len);
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-    if (file_exists($file)) require $file;
-});
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
 

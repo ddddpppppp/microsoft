@@ -34,9 +34,16 @@ LOCK_FILE="${LOCK_FILE:-/tmp/microsoft-webhook-deploy.lock}"
 
   echo "[INFO] Copy files to target..."
   rsync -a "${REPO_DIR}/app/" "${TARGET_DIR}/app/"
+  rsync -a "${REPO_DIR}/config/" "${TARGET_DIR}/config/"
   rsync -a "${REPO_DIR}/public/" "${TARGET_DIR}/public/"
   rsync -a "${REPO_DIR}/scripts/" "${TARGET_DIR}/scripts/"
   rsync -a "${REPO_DIR}/index.php" "${TARGET_DIR}/index.php"
+  rsync -a "${REPO_DIR}/composer.json" "${TARGET_DIR}/composer.json"
+  [[ -f "${REPO_DIR}/composer.lock" ]] && rsync -a "${REPO_DIR}/composer.lock" "${TARGET_DIR}/composer.lock"
+
+  echo "[INFO] Running composer install..."
+  cd "${TARGET_DIR}"
+  composer install --no-dev --optimize-autoloader --no-interaction 2>&1
 
   echo "[INFO] Deploy done."
 } >> "${LOG_FILE}" 2>&1

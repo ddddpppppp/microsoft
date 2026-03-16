@@ -10,4 +10,3 @@ if (!function_exists('str_contains')) {
         return mb_strpos($haystack, $needle) !== false;
     }
 }
-

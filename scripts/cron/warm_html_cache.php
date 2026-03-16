@@ -14,12 +14,7 @@
 
 if (php_sapi_name() !== 'cli') die('CLI only.');
 
-define('BASE_PATH', dirname(__DIR__));
-spl_autoload_register(function ($class) {
-    $prefix = 'App\\';
-    $base = BASE_PATH . '/app/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
-    if (strncmp($prefix, $class, strlen($prefix)) === 0 && file_exists($base)) require $base;
-});
+require __DIR__ . '/bootstrap.php';
 
 $argv = $argv ?? [];
 $baseUrl = rtrim(getenv('SITE_BASE_URL') ?: 'http://localhost:8081', '/');

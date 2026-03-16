@@ -1,0 +1,16 @@
+{
+    "name": "microsoft/app",
+    "description": "Microsoft Apps Store",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/Core/functions.php"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
